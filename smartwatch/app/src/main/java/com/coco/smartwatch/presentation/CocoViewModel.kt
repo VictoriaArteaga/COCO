@@ -23,9 +23,13 @@ class CocoViewModel(private val register: RegisterHabitUseCase, private val undo
     fun save(type: HabitType, value: Double?, note: String?) = viewModelScope.launch {
         runCatching { register(HabitRecord(type = type, value = value, note = note, recordedAt = System.currentTimeMillis())) }
             .onSuccess { id ->
-                _lastSavedId.value = id; _message.value = "Registro guardado. ${type.label}."
+                _lastSavedId.value = id
+                _message.value = "Registro guardado. ${type.label}."
                 delay(5_000)
-                if (_lastSavedId.value == id) _lastSavedId.value = null
+                if (_lastSavedId.value == id) {
+                    _lastSavedId.value = null
+                    _message.value = null
+                }
             }
             .onFailure { _message.value = it.message ?: "No pudimos guardar el registro. Inténtalo de nuevo." }
     }

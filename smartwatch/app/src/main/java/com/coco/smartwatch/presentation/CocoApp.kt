@@ -68,7 +68,7 @@ private enum class Section(val title: String) { HOME("Inicio"), REGISTER("Regist
     HabitType.entries.forEach { item -> FilterChip(selected = type == item, onClick = { onType(item) }, label = { Text(item.label) }) }
     if (type == HabitType.BEHAVIOR) OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("¿Qué notaste?") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
     else {
-        OutlinedTextField(value = value, onValueChange = { input -> if (input.matches(Regex("^\d{0,5}([.,]\d{0,1})?$"))) value = input }, label = { Text("Cantidad (${type.unit})") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = value, onValueChange = { input -> if (input.matches(Regex("""^\d{0,5}([.,]\d{0,1})?$"""))) value = input }, label = { Text("Cantidad (${type.unit})") }, modifier = Modifier.fillMaxWidth())
         Row { listOf(-1.0, 1.0).forEach { delta -> TextButton(onClick = { value = (max(0.0, (value.replace(',', '.').toDoubleOrNull() ?: 0.0) + delta)).toInt().toString() }) { Text(if (delta > 0) "+1" else "−1") } } }
     }
     Button(onClick = { onSave(value.replace(',', '.').toDoubleOrNull(), note.takeIf { it.isNotBlank() }) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), enabled = type != HabitType.BEHAVIOR || note.isNotBlank()) { Text("Guardar") }
