@@ -1,10 +1,8 @@
 package com.coco.backend.application.usecase;
 
 import com.coco.backend.domain.enums.HabitType;
-import com.coco.backend.domain.enums.RecordStatus;
 import com.coco.backend.domain.exception.DuplicateRecordException;
 import com.coco.backend.domain.model.HabitRecord;
-import com.coco.backend.infrastructure.adapter.output.persistence.entity.HabitRecordEntity;
 import com.coco.backend.infrastructure.adapter.output.persistence.mapper.HabitRecordEntityMapper;
 import com.coco.backend.infrastructure.adapter.output.persistence.repository.HabitRecordJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -22,15 +22,23 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for RegisterHabitUseCase.
+ *
+ * Uses LENIENT strictness to avoid issues with Mockito inline mocks on Java 21+.
+ * HabitRecordEntityMapper is instantiated directly (no external deps) to avoid
+ * byte-buddy instrumentation issues.
+ */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("RegisterHabitUseCase")
 class RegisterHabitUseCaseTest {
 
     @Mock
     private HabitRecordJpaRepository repository;
 
-    @Mock
-    private HabitRecordEntityMapper mapper;
+    // Instantiated directly — no external dependencies, avoids instrumentation issues
+    private final HabitRecordEntityMapper mapper = new HabitRecordEntityMapper();
 
     private RegisterHabitUseCase useCase;
 
@@ -47,19 +55,8 @@ class RegisterHabitUseCaseTest {
         Instant now = Instant.now();
 
         when(repository.existsByClientRecordId(clientId)).thenReturn(false);
-
-        HabitRecordEntity mockEntity = new HabitRecordEntity(
-                UUID.randomUUID(), clientId, rabbitId,
-                HabitType.FOOD, 50.0, null, now, "WATCH",
-                RecordStatus.SYNCED, now, null
-        );
-        when(mapper.toEntity(any())).thenReturn(mockEntity);
-        when(repository.save(any())).thenReturn(mockEntity);
-        when(mapper.toDomain(mockEntity)).thenReturn(
-                new HabitRecord(mockEntity.getId(), clientId, rabbitId,
-                        HabitType.FOOD, 50.0, null, now, "WATCH",
-                        RecordStatus.SYNCED, now, null)
-        );
+        // Simulate save returning the entity passed to it
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         HabitRecord result = useCase.execute(
                 clientId, rabbitId, HabitType.FOOD, 50.0, null, now, "WATCH"
