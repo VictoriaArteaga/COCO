@@ -20,6 +20,7 @@
 
     <properties>
         <java.version>17</java.version>
+        <byte-buddy.version>1.14.19</byte-buddy.version>
     </properties>
 
     <dependencies>
@@ -101,6 +102,21 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <!--
+                Mockito subclass mocking on Java 17+.
+                Module system access opened for reflection.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                        --add-opens java.base/java.time=ALL-UNNAMED
+                    </argLine>
                 </configuration>
             </plugin>
         </plugins>
