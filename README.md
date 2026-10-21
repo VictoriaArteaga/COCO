@@ -1,202 +1,74 @@
 # COCO — Cuaderno de Observación y Cuidado Oportuno
 
-**"Observa. Registra. Cuida."**
+COCO ayuda a registrar y consultar hábitos de conejos domésticos: alimentación, agua, sueño, juego y comportamiento. No diagnostica ni reemplaza la valoración veterinaria.
 
-Mascota: **Coquito** 🐇
+## Arquitectura
 
-COCO es un sistema de monitoreo preventivo del bienestar de conejos domésticos. Permite registrar y consultar alimentación, agua, sueño, juego y comportamiento. COCO no diagnostica enfermedades, no realiza pronósticos veterinarios y no reemplaza al veterinario.
-
----
-
-## Arquitectura general
-
-```
-               COCO
-                │
-      ┌─────────┴─────────┐
-      │                   │
-  SMARTWATCH             WEB
-      │                   │
-    Room               Next.js
-      │                   │
-  SyncManager         API Client
-      │                   │
-      └─────────┬─────────┘
-                │
-             BACKEND
-                │
-        Spring Boot REST
-                │
-            PostgreSQL
+```text
+Wear OS (Kotlin + Room) ── sincronización REST ── Spring Boot API ── H2 efímero por defecto
+                                                   └─ PostgreSQL opcional (perfil postgres)
+Next.js App Router ── repositorios demo locales; API client preparado para backend
+Análisis web ── AnalysisService ── AnalysisProvider ── MockAnalysisProvider
 ```
 
----
+La interfaz web no conoce proveedores de análisis ni detalles de persistencia. El análisis actual es una observación demo, no IA. El backend arranca localmente con almacenamiento H2 en memoria y datos de ejemplo; al detenerlo, esos datos desaparecen. PostgreSQL permanece como perfil opcional de desarrollo futuro.
 
-## Componentes del sistema
+## Estructura
 
-### Smartwatch (Wear OS)
-- Kotlin, Jetpack Compose, Room, Coroutines, Retrofit
-- Registro local de los 5 variables de hábitos
-- Sincronización offline-first con el backend
-- MVVM: `presentation → domain → data`
+- `smartwatch/`: app Wear OS, Room, casos de uso, UI Compose y sincronización.
+- `backend/`: API Java 17 / Spring Boot 3, controladores REST, casos de uso, DTOs y adaptador JPA.
+- `web/`: Next.js 15 App Router, TypeScript, Tailwind y Recharts.
+- `docs/`: arquitectura, API, design system y fronteras futuras de IA y datos.
 
-### Backend (Spring Boot)
-- Java 17, Spring Boot 3, Spring Data JPA, Spring Security
-- Arquitectura Clean/Hexagonal: `domain → application → infrastructure`
-- PostgreSQL, Flyway para migraciones
-- API REST: `/api/rabbits`, `/api/habits`, `/api/history`, `/api/trends`, `/api/summary/daily`, `/api/sync/habits`
-
-### Web (Next.js)
-- Next.js 15 (App Router), TypeScript, Tailwind CSS
-- Design System con tokens COCO
-- Atomic Design: átomos, moléculas, organismos
-- Rutas: `/login`, `/dashboard`, `/history`, `/trends`, `/analysis`, `/profile`, `/reminders`, `/settings`, `/synchronization`
-
----
-
-## Estructura de carpetas
-
-```
-COCO/
-├── smartwatch/       # Aplicación Wear OS
-├── backend/          # Spring Boot API
-├── web/              # Next.js plataforma web
-└── README.md
-```
-
----
-
-## Tecnologías
-
-| Componente    | Tecnologías principales                                   |
-|---------------|-----------------------------------------------------------|
-| Smartwatch    | Kotlin, Compose, Room, Retrofit, OkHttp, Coroutines       |
-| Backend       | Java 17, Spring Boot 3, JPA, PostgreSQL, Flyway, Security |
-| Web           | Next.js 15, TypeScript, Tailwind CSS, Recharts            |
-
----
-
-## Configuración local
-
-### Backend
-
-1. Instalar PostgreSQL y crear la base de datos `coco_db`.
-2. Copiar `backend/.env.example` como `backend/.env` y rellenar las credenciales.
-3. Ejecutar con Maven:
-
-```bash
-cd backend
-./mvnw spring-boot:run
-```
-
-La primera ejecución aplica la migración Flyway automáticamente.
-
-### Smartwatch
-
-1. Abrir el proyecto en Android Studio con JDK 17 y Android SDK 36.
-2. Configurar `BACKEND_URL` en el ambiente de build (por defecto `http://10.0.2.2:8080/` para emulador).
-3. Ejecutar en un emulador Wear OS o dispositivo.
+## Ejecutar
 
 ### Web
 
 ```bash
 cd web
 npm install
-cp .env.example .env.local   # Editar con la URL del backend
 npm run dev
 ```
 
----
-
-## Variables de entorno
-
-### Backend (`backend/.env`)
-
-| Variable              | Descripción                         |
-|-----------------------|-------------------------------------|
-| `DB_URL`              | URL JDBC de PostgreSQL              |
-| `DB_USERNAME`         | Usuario de la base de datos         |
-| `DB_PASSWORD`         | Contraseña de la base de datos      |
-| `SERVER_PORT`         | Puerto del servidor (defecto: 8080) |
-| `CORS_ALLOWED_ORIGINS`| Orígenes CORS permitidos            |
-
-### Web (`web/.env.local`)
-
-| Variable              | Descripción                         |
-|-----------------------|-------------------------------------|
-| `NEXT_PUBLIC_API_URL` | URL base del backend                |
-
-### Smartwatch (build)
-
-| Variable      | Descripción                                  |
-|---------------|----------------------------------------------|
-| `BACKEND_URL` | URL del backend (`BuildConfig.BACKEND_URL`)  |
-| `RABBIT_ID`   | ID del conejo (placeholder hasta semana 5)   |
-
----
-
-## Pruebas
+La web usa datos locales demo por defecto. Copia `web/.env.example` a `.env.local` solo si necesitas definir `NEXT_PUBLIC_API_URL` para llamadas al backend.
 
 ### Backend
 
 ```bash
 cd backend
-./mvnw test
+./mvnw spring-boot:run
 ```
+
+No requiere variables para iniciar; usa H2 efímero y carga Coquito con observaciones demo. Ejecuta pruebas con `./mvnw test`.
+
+Perfil PostgreSQL opcional (no requerido por la demo): copia `backend/.env.example` a tu entorno, configura `DB_URL`, `DB_USERNAME` y `DB_PASSWORD`, y activa `SPRING_PROFILES_ACTIVE=postgres`.
 
 ### Smartwatch
 
+Abre el proyecto en Android Studio con JDK 17 y el SDK indicado por `smartwatch/app/build.gradle.kts`. Ejecuta en un emulador Wear OS. La URL de backend se configura en build y para emulador Android suele usar `http://10.0.2.2:8080/`.
+
+## Endpoints
+
+| Método | Ruta | Uso |
+| --- | --- | --- |
+| GET/POST | `/api/rabbits` | Consultar y crear conejos |
+| GET | `/api/rabbits/{id}` | Consultar conejo |
+| PUT | `/api/rabbits/{id}` | Actualizar nombre |
+| GET/POST | `/api/habits` | Listar y registrar hábitos |
+| GET | `/api/habits/{id}` | Consultar registro |
+| GET | `/api/history` | Historial filtrado y paginado |
+| GET | `/api/trends/{habitType}` | Conteos diarios |
+| GET | `/api/summary/daily` | Resumen diario |
+| POST | `/api/sync/habits` | Sincronización idempotente del reloj |
+
+## Configuración y futuras integraciones
+
+No hay claves ni credenciales en el repositorio. Los ejemplos están en `web/.env.example` y `backend/.env.example`. La capa de análisis actual es `MockAnalysisProvider`; el punto futuro para IA está documentado en [docs/future-ai.md](docs/future-ai.md). La configuración de persistencia actual usa H2 efímero o PostgreSQL por perfil; las decisiones para una sustitución por repositorios de dominio se describen en [docs/future-database.md](docs/future-database.md).
+
+## Verificación
+
 ```bash
+cd web && npm run type-check && npm run build
+cd backend && ./mvnw test
 ./gradlew :smartwatch:app:testDebugUnitTest
 ```
-
----
-
-## Endpoints REST
-
-| Método | Ruta                   | Descripción                              |
-|--------|------------------------|------------------------------------------|
-| GET    | /api/rabbits           | Lista de conejos activos                 |
-| GET    | /api/rabbits/{id}      | Detalle de un conejo                     |
-| POST   | /api/rabbits           | Crear conejo                             |
-| PUT    | /api/rabbits/{id}      | Actualizar nombre del conejo             |
-| POST   | /api/habits            | Registrar hábito individual              |
-| GET    | /api/habits            | Lista paginada de hábitos                |
-| GET    | /api/habits/{id}       | Detalle de un hábito                     |
-| GET    | /api/history           | Historial con filtros (rabbit, tipo, fecha) |
-| GET    | /api/trends/{tipo}     | Tendencias por tipo de hábito            |
-| GET    | /api/summary/daily     | Resumen diario                           |
-| POST   | /api/sync/habits       | Sincronización en lote desde smartwatch  |
-
----
-
-## Progreso por semanas
-
-| Semana | Estado | Descripción                                              |
-|--------|--------|----------------------------------------------------------|
-| 1      | ✅      | Estructura Wear OS, Room, registro local, design system  |
-| 2      | ✅      | Tendencias, resumen, análisis, estados de sync           |
-| 3      | ✅      | Backend Spring Boot + PostgreSQL, arquitectura Clean     |
-| 4      | ✅      | Sincronización smartwatch↔backend, base Next.js         |
-| 5      | 🔜     | Autenticación JWT, dashboard completo, historial web     |
-| 6      | 🔜     | Gráficas Recharts, análisis explicable                   |
-
----
-
-## Modelo de datos
-
-```
-User
-  └── Rabbit
-        └── HabitRecord (FOOD | WATER | SLEEP | PLAY | BEHAVIOR)
-```
-
-HabitRecord incluye `clientRecordId` (UUID generado en el cliente) como clave de idempotencia para prevenir duplicados durante la sincronización.
-
----
-
-## Notas
-
-- COCO **no diagnostica enfermedades**.
-- COCO **no reemplaza la valoración veterinaria**.
-- La IA se integrará en fases posteriores como herramienta de análisis explicable.
