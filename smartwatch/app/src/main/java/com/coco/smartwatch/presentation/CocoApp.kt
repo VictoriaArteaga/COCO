@@ -12,9 +12,11 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.coco.smartwatch.data.sync.SyncState
 import com.coco.smartwatch.design.CocoColors
 import com.coco.smartwatch.domain.model.HabitRecord
 import com.coco.smartwatch.domain.model.HabitType
+import com.coco.smartwatch.domain.model.SyncStatus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -29,6 +31,7 @@ private enum class Section(val title: String) { HOME("Inicio"), REGISTER("Regist
     val records by viewModel.records.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val lastSavedId by viewModel.lastSavedId.collectAsStateWithLifecycle()
+    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     val types = HabitType.entries
     Surface(Modifier.fillMaxSize(), color = CocoColors.Background) {
@@ -38,11 +41,15 @@ private enum class Section(val title: String) { HOME("Inicio"), REGISTER("Regist
             Spacer(Modifier.height(12.dp))
             when (section) {
                 Section.HOME -> Home(records.size, types) { selectedType = it; section = Section.REGISTER }
-                Section.REGISTER -> Registration(selectedType, onType = { selectedType = it }, onSave = { value, note -> viewModel.save(selectedType, value, note); haptic.performHapticFeedback(HapticFeedbackType.Confirm); section = Section.HOME })
+                Section.REGISTER -> Registration(selectedType, onType = { selectedType = it }, onSave = { value, note -> viewModel.save(selectedType, value, note); haptic.performHapticFeedback(HapticFeedbackType.LongPress); section = Section.HOME })
                 Section.TRENDS -> Trends(records, selectedType, trendPeriod, { selectedType = it }, { trendPeriod = it })
                 Section.ANALYSIS -> Analysis(records)
                 Section.SUMMARY -> Summary(records)
-                Section.SYNC -> Sync(records.count { it.syncPending })
+                Section.SYNC -> Sync(
+                    pending = records.count { it.syncStatus == SyncStatus.PENDING },
+                    syncState = syncState,
+                    onSyncNow = { viewModel.retrySync() }
+                )
             }
             message?.let { msg ->
                 Spacer(Modifier.height(8.dp)); Text(msg, color = CocoColors.Normal, style = MaterialTheme.typography.bodySmall)
@@ -110,9 +117,35 @@ private enum class Section(val title: String) { HOME("Inicio"), REGISTER("Regist
     HabitType.entries.forEach { type -> val latest = todaysRecords.firstOrNull { it.type == type }; Text("${type.label}: ${latest?.value?.let { "${it.toInt()} ${type.unit}" } ?: "Sin registros"}", color = CocoColors.Text) }
 }
 
-@Composable private fun Sync(pending: Int) {
+@Composable private fun Sync(pending: Int, syncState: SyncState, onSyncNow: () -> Unit) {
     Text("Sincronización", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-    Text("Tus registros se guardan en el reloj.", color = CocoColors.Text)
-    Text("La sincronización se conectará en una siguiente fase.", color = CocoColors.Offline, style = MaterialTheme.typography.labelSmall)
-    Text("$pending registros pendientes de sincronizar", color = CocoColors.Secondary)
+    Text("Tus registros se guardan localmente en el reloj.", color = CocoColors.Text)
+    Spacer(Modifier.height(8.dp))
+
+    val (statusText, statusColor) = when (syncState) {
+        is SyncState.Idle       -> "Sin cambios pendientes" to CocoColors.Normal
+        is SyncState.Syncing    -> "Sincronizando… (${syncState.count} registros)" to CocoColors.Info
+        is SyncState.Synced     -> "Sincronizado (${syncState.count} registros)" to CocoColors.Normal
+        is SyncState.PartialSync-> "Parcial: ${syncState.synced} enviados, ${syncState.remaining} pendientes" to CocoColors.Attention
+        is SyncState.Offline    -> "Sin conexión" to CocoColors.Offline
+        is SyncState.Failed     -> "No se pudo sincronizar" to CocoColors.Offline
+    }
+    Text(statusText, color = statusColor, style = MaterialTheme.typography.bodySmall)
+    Spacer(Modifier.height(4.dp))
+    Text("$pending registros pendientes de enviar", color = CocoColors.Secondary, style = MaterialTheme.typography.labelSmall)
+    Spacer(Modifier.height(12.dp))
+
+    Button(
+        onClick = onSyncNow,
+        enabled = syncState !is SyncState.Syncing,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+    ) {
+        Text(if (syncState is SyncState.Syncing) "Sincronizando…" else "Sincronizar ahora")
+    }
+    Spacer(Modifier.height(4.dp))
+    Text(
+        "COCO no diagnostica enfermedades.",
+        color = CocoColors.Secondary,
+        style = MaterialTheme.typography.labelSmall
+    )
 }
