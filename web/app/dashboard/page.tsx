@@ -3,27 +3,27 @@ import { DashboardHeader } from '@/components/organisms/DashboardHeader'
 import { HabitOverview } from '@/components/organisms/HabitOverview'
 import { RecentRecords } from '@/components/organisms/RecentRecords'
 import { SyncStatus } from '@/components/molecules/SyncStatus'
-import { MOCK_RABBIT, MOCK_RECORDS } from '@/lib/mock/dashboard'
+import { habitRepository } from '@/services/repositories'
+import { TrendChart } from '@/components/organisms/TrendChart'
 
 export const metadata: Metadata = { title: 'Inicio' }
 
 /**
  * Dashboard page — home screen for the web platform.
  *
- * Week 4 scope: structural skeleton with mock data.
- * Mocks are clearly labelled and will be replaced by real API calls in week 5.
- * No mock data is sent to the backend.
+ * Dashboard uses the local demo repository until a remote adapter is configured.
  */
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const [rabbit, records] = await Promise.all([habitRepository.getRabbit(), habitRepository.listRecords()])
   return (
     <div className="flex flex-col gap-6 p-6 lg:p-8">
       {/* Header: rabbit selector + date */}
-      <DashboardHeader rabbit={MOCK_RABBIT} />
+      <DashboardHeader rabbit={rabbit} />
 
       {/* Sync status indicator */}
       <SyncStatus
-        status="synced"
-        label="Todos los registros sincronizados"
+        status="partial"
+        label="4 de 5 registros recientes sincronizados · 1 pendiente"
         className="self-start"
       />
 
@@ -32,7 +32,7 @@ export default function DashboardPage() {
         <h2 id="habits-heading" className="sr-only">
           Resumen de hábitos
         </h2>
-        <HabitOverview records={MOCK_RECORDS} />
+        <HabitOverview records={records} />
       </section>
 
       {/* Recent records table / list */}
@@ -40,17 +40,15 @@ export default function DashboardPage() {
         <h2 id="recent-heading" className="text-lg font-semibold text-text mb-3">
           Registros recientes
         </h2>
-        <RecentRecords records={MOCK_RECORDS} />
+        <RecentRecords records={records} />
       </section>
 
-      {/* Chart area — prepared for week 5 */}
       <section
         aria-labelledby="charts-heading"
-        className="card min-h-[200px] flex items-center justify-center"
+        className="card"
       >
-        <p className="text-text-secondary text-sm">
-          Las gráficas de tendencias estarán disponibles en la próxima fase.
-        </p>
+        <div className="mb-4"><h2 id="charts-heading" className="text-lg font-semibold">Actividad de los últimos 7 días</h2><p className="text-sm text-text-secondary">Observaciones registradas por variable.</p></div>
+        <TrendChart records={records} />
       </section>
     </div>
   )

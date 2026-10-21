@@ -10,14 +10,14 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-surface">
+    <div className="flex min-h-screen flex-col bg-surface md:h-screen md:flex-row md:overflow-hidden">
       {/* Persistent navigation sidebar */}
       <Sidebar />
 
       {/* Main content area — scrollable */}
       <main
         id="main-content"
-        className="flex-1 overflow-y-auto"
+        className="min-w-0 flex-1 overflow-y-auto"
         tabIndex={-1}
       >
         {children}
