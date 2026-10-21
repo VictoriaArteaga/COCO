@@ -39,9 +39,9 @@ export function Sidebar() {
     <nav
       aria-label="Navegación principal"
       className="
-        flex flex-col w-60 flex-shrink-0
+        flex flex-col w-full md:w-60 flex-shrink-0
         bg-white border-r border-green-light
-        h-full py-6 px-3
+        md:h-full py-4 md:py-6 px-3
       "
     >
       {/* Brand */}
@@ -51,7 +51,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation links */}
-      <ul className="flex flex-col gap-1 flex-1" role="list">
+      <ul className="flex flex-row flex-wrap gap-1 md:flex-col md:flex-nowrap md:flex-1" role="list">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
 
@@ -62,7 +62,7 @@ export function Sidebar() {
                 aria-label={item.ariaLabel}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'flex items-center gap-3 rounded-coco px-3 py-2.5 text-sm font-medium transition-colors',
+                  'flex items-center gap-2 rounded-coco px-3 py-2 text-sm font-medium transition-colors',
                   'hover:bg-green-light hover:text-green-dark',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green',
                   isActive
