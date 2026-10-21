@@ -16,20 +16,52 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
 
-    buildFeatures { compose = true }
-    compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs += listOf(
-            "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api"
+        // Backend base URL — override with your local IP during development.
+        // Example for emulator:  http://10.0.2.2:8080/
+        // Example for real device: http://192.168.x.x:8080/
+        // Set the BACKEND_URL environment variable in CI / local.properties to change this.
+        buildConfigField(
+            "String",
+            "BACKEND_URL",
+            "\"${System.getenv("BACKEND_URL") ?: "http://10.0.2.2:8080/"}\""
+        )
+
+        // Placeholder rabbit ID — will be replaced by the authenticated user's rabbit in week 5.
+        buildConfigField(
+            "String",
+            "RABBIT_ID",
+            "\"${System.getenv("RABBIT_ID") ?: "00000000-0000-0000-0000-000000000001"}\""
         )
     }
+
+    // Local backend URLs use HTTP. Allow it only in debug builds; release builds
+    // must use HTTPS so test configuration cannot weaken the shipped app.
+    buildTypes {
+        debug {
+            manifestPlaceholders["usesCleartextTraffic"] = "true"
+        }
+        release {
+            manifestPlaceholders["usesCleartextTraffic"] = "false"
+        }
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = "17" }
+
     ksp {
         arg("room.schemaLocation", "$projectDir/schemas")
         arg("room.incremental", "true")
     }
+
     testOptions { unitTests.isReturnDefaultValues = true }
 }
 
@@ -49,7 +81,11 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging)
     ksp(libs.room.compiler)
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     debugImplementation(libs.compose.ui.tooling)
 }
