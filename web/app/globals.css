@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── COCO Design Tokens as CSS Custom Properties ────────────────────────── */
+:root {
+  /* Brand */
+  --color-green: #356B55;
+  --color-green-dark: #244C3C;
+  --color-green-light: #DCEBE2;
+
+  /* Backgrounds */
+  --color-surface: #F7F5EF;
+  --color-white: #FFFFFF;
+
+  /* Text */
+  --color-text: #26332D;
+  --color-text-secondary: #65716B;
+
+  /* Semantic states */
+  --color-normal: #2E7D5B;
+  --color-attention: #B7791F;
+  --color-alert: #B5483A;
+  --color-info: #3B6EA5;
+  --color-offline: #7A8580;
+
+  /* Habit type variables */
+  --color-food: #5B8E69;
+  --color-water: #4387A8;
+  --color-sleep: #70659A;
+  --color-play: #C4778C;
+  --color-behavior: #C87945;
+}
+
+/* ─── Base Styles ────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-surface text-text font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Accessible focus ring */
+  *:focus-visible {
+    outline: 2px solid var(--color-green);
+    outline-offset: 2px;
+  }
+
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-text;
+  }
+}
+
+/* ─── Component Utilities ─────────────────────────────────────────────────── */
+@layer components {
+  /* Card base */
+  .card {
+    @apply bg-white rounded-coco border border-green-light p-5 shadow-sm;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-green text-white font-medium rounded-coco px-4 py-2
+           hover:bg-green-dark focus-visible:ring-2 focus-visible:ring-green
+           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Secondary (outline) button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+           border border-green text-green font-medium rounded-coco px-4 py-2
+           hover:bg-green-light focus-visible:ring-2 focus-visible:ring-green
+           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+}
