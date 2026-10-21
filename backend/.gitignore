@@ -1,0 +1,38 @@
+# =====================================================
+# COCO Backend -- .gitignore
+# =====================================================
+
+# Credenciales y secretos -- NUNCA subir
+.env
+.env.local
+.env.*.local
+*.env
+application-local.properties
+application-secrets.properties
+secrets.properties
+
+# Maven
+target/
+*.jar
+*.war
+*.ear
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.factorypath
+
+# OS
+.DS_Store
+Thumbs.db

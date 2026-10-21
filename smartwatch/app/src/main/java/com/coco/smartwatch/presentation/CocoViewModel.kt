@@ -2,26 +2,51 @@ package com.coco.smartwatch.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.smartwatch.data.sync.SyncState
 import com.coco.smartwatch.domain.model.HabitRecord
 import com.coco.smartwatch.domain.model.HabitType
+import com.coco.smartwatch.domain.repository.HabitRepository
 import com.coco.smartwatch.domain.usecase.GetHabitHistoryUseCase
 import com.coco.smartwatch.domain.usecase.RegisterHabitUseCase
 import com.coco.smartwatch.domain.usecase.UndoHabitUseCase
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class CocoViewModel(private val register: RegisterHabitUseCase, private val undo: UndoHabitUseCase, history: GetHabitHistoryUseCase) : ViewModel() {
-    val records = history().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+/**
+ * ViewModel principal de COCO.
+ * Expone registros, estado de sync y mensajes de confirmación a la UI.
+ * NO realiza peticiones HTTP directamente — delega al Repository → SyncManager.
+ */
+class CocoViewModel(
+    private val register: RegisterHabitUseCase,
+    private val undo: UndoHabitUseCase,
+    history: GetHabitHistoryUseCase,
+    private val repository: HabitRepository
+) : ViewModel() {
+
+    val records = history().stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        emptyList()
+    )
+
     private val _message = MutableStateFlow<String?>(null)
     val message = _message.asStateFlow()
+
     private val _lastSavedId = MutableStateFlow<Long?>(null)
     val lastSavedId = _lastSavedId.asStateFlow()
+
+    /** Estado de sincronización observable por la UI */
+    val syncState = repository.syncState
+
     fun save(type: HabitType, value: Double?, note: String?) = viewModelScope.launch {
-        runCatching { register(HabitRecord(type = type, value = value, note = note, recordedAt = System.currentTimeMillis())) }
+        runCatching {
+            register(HabitRecord(type = type, value = value, note = note, recordedAt = System.currentTimeMillis()))
+        }
             .onSuccess { id ->
                 _lastSavedId.value = id
                 _message.value = "Registro guardado. ${type.label}."
@@ -30,8 +55,30 @@ class CocoViewModel(private val register: RegisterHabitUseCase, private val undo
                     _lastSavedId.value = null
                     _message.value = null
                 }
+                // Intentar sync después de guardar
+                triggerSync()
             }
-            .onFailure { _message.value = it.message ?: "No pudimos guardar el registro. Inténtalo de nuevo." }
+            .onFailure {
+                _message.value = it.message ?: "No pudimos guardar el registro. Inténtalo de nuevo."
+            }
     }
-    fun undoLast() = viewModelScope.launch { _lastSavedId.value?.let { undo(it); _lastSavedId.value = null; _message.value = "Registro deshecho." } }
+
+    fun undoLast() = viewModelScope.launch {
+        _lastSavedId.value?.let {
+            undo(it)
+            _lastSavedId.value = null
+            _message.value = "Registro deshecho."
+        }
+    }
+
+    /** Inicia manualmente un ciclo de sincronización */
+    fun triggerSync() = viewModelScope.launch {
+        repository.sync()
+    }
+
+    /** Manual retry also requeues records that reached the automatic retry limit. */
+    fun retrySync() = viewModelScope.launch {
+        repository.retryExhaustedRecords()
+        repository.sync()
+    }
 }
