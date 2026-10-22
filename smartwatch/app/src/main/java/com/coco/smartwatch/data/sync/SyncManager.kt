@@ -32,7 +32,7 @@ import java.time.Instant
 class SyncManager(
     private val dao: HabitDao,
     private val api: CocoApiService,
-    private val rabbitId: String
+    private val rabbitId: () -> String?
 ) {
 
     companion object {
@@ -56,6 +56,12 @@ class SyncManager(
             return
         }
 
+        val selectedRabbitId = rabbitId()
+        if (selectedRabbitId == null) {
+            _syncState.value = SyncState.Failed("Inicia sesión y selecciona un conejo para sincronizar")
+            return
+        }
+
         _syncState.value = SyncState.Syncing(pending.size)
 
         // Marcar todos como SYNCING antes de enviar
@@ -63,7 +69,7 @@ class SyncManager(
 
         try {
             val batch = SyncBatchDto(
-                records = pending.map { it.toSyncDto(rabbitId) }
+                records = pending.map { it.toSyncDto(selectedRabbitId) }
             )
 
             val response = api.syncHabits(batch)
@@ -92,7 +98,7 @@ class SyncManager(
             } else {
                 // El servidor respondió con error HTTP
                 pending.forEach { dao.markFailed(it.id) }
-                _syncState.value = SyncState.Failed("Error del servidor: ${response.code()}")
+                _syncState.value = SyncState.Failed(if (response.code() == 401) "Sesión vencida. Inicia sesión de nuevo" else "Error del servidor: ${response.code()}")
             }
 
         } catch (e: Exception) {

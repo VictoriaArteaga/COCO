@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
  */
 object NetworkModule {
 
-    fun createApiService(baseUrl: String): CocoApiService {
+    fun createApiService(baseUrl: String, accessToken: () -> String?): CocoApiService {
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BASIC
         }
@@ -24,6 +24,12 @@ object NetworkModule {
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder().apply {
+                    accessToken()?.let { header("Authorization", "Bearer $it") }
+                }.build()
+                chain.proceed(request)
+            }
             .addInterceptor(logging)
             .build()
 

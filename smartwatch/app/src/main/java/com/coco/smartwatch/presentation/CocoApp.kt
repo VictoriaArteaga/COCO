@@ -24,7 +24,7 @@ import kotlin.math.max
 
 private enum class Section(val title: String) { HOME("Inicio"), REGISTER("Registrar"), TRENDS("Tendencias"), ANALYSIS("Análisis"), SUMMARY("Resumen"), SYNC("Sincronización") }
 
-@Composable fun CocoApp(viewModel: CocoViewModel) {
+@Composable fun CocoApp(viewModel: CocoViewModel, onLogout: () -> Unit = {}) {
     var section by remember { mutableStateOf(Section.HOME) }
     var selectedType by remember { mutableStateOf(HabitType.FOOD) }
     var trendPeriod by remember { mutableStateOf("7 días") }
@@ -38,6 +38,7 @@ private enum class Section(val title: String) { HOME("Inicio"), REGISTER("Regist
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text("COCO  🐇", style = MaterialTheme.typography.titleLarge, color = CocoColors.GreenDark, fontWeight = FontWeight.Bold)
             Text("Observa. Registra. Cuida.", style = MaterialTheme.typography.labelMedium, color = CocoColors.Secondary)
+            TextButton(onClick = onLogout) { Text("Cerrar sesión", color = CocoColors.Secondary) }
             Spacer(Modifier.height(12.dp))
             when (section) {
                 Section.HOME -> Home(records.size, types) { selectedType = it; section = Section.REGISTER }

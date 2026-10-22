@@ -11,6 +11,7 @@ junit = "4.13.2"
 coroutines = "1.9.0"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
+securityCrypto = "1.1.0-alpha06"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -41,3 +42,4 @@ junit = { module = "junit:junit", version.ref = "junit" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
+security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
