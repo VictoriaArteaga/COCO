@@ -1,74 +1,46 @@
-# COCO — Cuaderno de Observación y Cuidado Oportuno
+# COCO — Observa. Registra. Cuida.
 
-COCO ayuda a registrar y consultar hábitos de conejos domésticos: alimentación, agua, sueño, juego y comportamiento. No diagnostica ni reemplaza la valoración veterinaria.
+COCO registra y consulta hábitos de conejos domésticos. No diagnostica ni reemplaza la valoración veterinaria.
 
 ## Arquitectura
 
-```text
-Wear OS (Kotlin + Room) ── sincronización REST ── Spring Boot API ── H2 efímero por defecto
-                                                   └─ PostgreSQL opcional (perfil postgres)
-Next.js App Router ── repositorios demo locales; API client preparado para backend
-Análisis web ── AnalysisService ── AnalysisProvider ── MockAnalysisProvider
-```
+- `backend/`: Java 17, Spring Boot 3, Spring Security, JWT HS256, JPA y Flyway. H2 es local; PostgreSQL se activa con el perfil `postgres`.
+- `web/`: Next.js 15, TypeScript y Tailwind. Los JWT viven en cookies `HttpOnly`; las llamadas al backend pasan por Route Handlers del mismo origen.
+- `smartwatch/`: Wear OS con Kotlin, Compose y Room offline-first. El usuario inicia sesión en el reloj y selecciona un conejo autorizado antes de sincronizar.
 
-La interfaz web no conoce proveedores de análisis ni detalles de persistencia. El análisis actual es una observación demo, no IA. El backend arranca localmente con almacenamiento H2 en memoria y datos de ejemplo; al detenerlo, esos datos desaparecen. PostgreSQL permanece como perfil opcional de desarrollo futuro.
+El esquema de base de datos inicial se conserva en `backend/src/main/resources/db/migration/V1__esquema_inicial.sql`. No se añade migración: las tablas actuales ya contienen los datos requeridos por autenticación y propiedad.
 
-## Estructura
+## Inicio rápido
 
-- `smartwatch/`: app Wear OS, Room, casos de uso, UI Compose y sincronización.
-- `backend/`: API Java 17 / Spring Boot 3, controladores REST, casos de uso, DTOs y adaptador JPA.
-- `web/`: Next.js 15 App Router, TypeScript, Tailwind y Recharts.
-- `docs/`: arquitectura, API, design system y fronteras futuras de IA y datos.
+1. Configura `JWT_SECRET` con una cadena Base64 generada con `openssl rand -base64 32` y `JWT_EXPIRATION_SECONDS=3600`.
+2. Ejecuta el backend desde `backend` con `.\mvnw.cmd spring-boot:run` (PowerShell) o `./mvnw spring-boot:run`.
+3. Copia `web/.env.example` a `web/.env.local`, configura `COCO_API_URL=http://localhost:8080` y ejecuta `npm install` y `npm run dev` desde `web`.
+4. Registra una cuenta en la web, crea un conejo desde el panel y luego inicia sesión en Wear OS con la misma cuenta para asociar el reloj.
 
-## Ejecutar
+Para PostgreSQL configura `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` y `SPRING_PROFILES_ACTIVE=postgres`. Usa credenciales propias del entorno; no las guardes en el repositorio.
 
-### Web
+## Rutas principales
 
-```bash
-cd web
-npm install
-npm run dev
-```
-
-La web usa datos locales demo por defecto. Copia `web/.env.example` a `.env.local` solo si necesitas definir `NEXT_PUBLIC_API_URL` para llamadas al backend.
-
-### Backend
-
-```bash
-cd backend
-./mvnw spring-boot:run
-```
-
-No requiere variables para iniciar; usa H2 efímero y carga Coquito con observaciones demo. Ejecuta pruebas con `./mvnw test`.
-
-Perfil PostgreSQL opcional (no requerido por la demo): copia `backend/.env.example` a tu entorno, configura `DB_URL`, `DB_USERNAME` y `DB_PASSWORD`, y activa `SPRING_PROFILES_ACTIVE=postgres`.
-
-### Smartwatch
-
-Abre el proyecto en Android Studio con JDK 17 y el SDK indicado por `smartwatch/app/build.gradle.kts`. Ejecuta en un emulador Wear OS. La URL de backend se configura en build y para emulador Android suele usar `http://10.0.2.2:8080/`.
-
-## Endpoints
-
-| Método | Ruta | Uso |
+| Método | Ruta | Acceso |
 | --- | --- | --- |
-| GET/POST | `/api/rabbits` | Consultar y crear conejos |
-| GET | `/api/rabbits/{id}` | Consultar conejo |
-| PUT | `/api/rabbits/{id}` | Actualizar nombre |
-| GET/POST | `/api/habits` | Listar y registrar hábitos |
-| GET | `/api/habits/{id}` | Consultar registro |
-| GET | `/api/history` | Historial filtrado y paginado |
-| GET | `/api/trends/{habitType}` | Conteos diarios |
-| GET | `/api/summary/daily` | Resumen diario |
-| POST | `/api/sync/habits` | Sincronización idempotente del reloj |
+| POST | `/api/auth/register` | Público |
+| POST | `/api/auth/login` | Público |
+| GET/POST | `/api/rabbits` | JWT y propietario |
+| GET/PUT | `/api/rabbits/{id}` | JWT y propietario |
+| GET/POST | `/api/habits` | JWT y conejo autorizado |
+| GET | `/api/history`, `/api/trends/{habitType}`, `/api/summary/daily` | JWT y datos del propietario |
+| POST | `/api/sync/habits` | JWT, propietario e idempotencia por `clientRecordId` |
 
-## Configuración y futuras integraciones
+## Pruebas
 
-No hay claves ni credenciales en el repositorio. Los ejemplos están en `web/.env.example` y `backend/.env.example`. La capa de análisis actual es `MockAnalysisProvider`; el punto futuro para IA está documentado en [docs/future-ai.md](docs/future-ai.md). La configuración de persistencia actual usa H2 efímero o PostgreSQL por perfil; las decisiones para una sustitución por repositorios de dominio se describen en [docs/future-database.md](docs/future-database.md).
-
-## Verificación
-
-```bash
-cd web && npm run type-check && npm run build
-cd backend && ./mvnw test
-./gradlew :smartwatch:app:testDebugUnitTest
+```powershell
+cd backend
+.\mvnw.cmd test
+cd ..\web
+npm run type-check
+npm run build
+cd ..
+.\gradlew.bat :smartwatch:app:testDebugUnitTest
 ```
+
+La configuración y ejemplos de autenticación, PostgreSQL y sincronización están en [docs/authentication-security-and-device-setup.md](docs/authentication-security-and-device-setup.md).

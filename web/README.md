@@ -29,10 +29,10 @@ web/
 
 ## Variables de entorno
 
-Copia `.env.example` como `.env.local` y configura:
+Copia `.env.example` como `.env.local` y configura la URL de servidor:
 
 ```
-NEXT_PUBLIC_API_URL=http://localhost:8080
+COCO_API_URL=http://localhost:8080
 ```
 
 ## Ejecución
