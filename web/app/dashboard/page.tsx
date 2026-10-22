@@ -3,27 +3,29 @@ import { DashboardHeader } from '@/components/organisms/DashboardHeader'
 import { HabitOverview } from '@/components/organisms/HabitOverview'
 import { RecentRecords } from '@/components/organisms/RecentRecords'
 import { SyncStatus } from '@/components/molecules/SyncStatus'
-import { habitRepository } from '@/services/repositories'
+import { getDashboardData } from '@/lib/api/server'
 import { TrendChart } from '@/components/organisms/TrendChart'
+import { CreateRabbitForm } from '@/components/organisms/CreateRabbitForm'
 
 export const metadata: Metadata = { title: 'Inicio' }
 
 /**
  * Dashboard page — home screen for the web platform.
  *
- * Dashboard uses the local demo repository until a remote adapter is configured.
+ * Dashboard data is loaded from the authenticated backend session.
  */
 export default async function DashboardPage() {
-  const [rabbit, records] = await Promise.all([habitRepository.getRabbit(), habitRepository.listRecords()])
+  const { rabbit, rabbits, records } = await getDashboardData()
   return (
     <div className="flex flex-col gap-6 p-6 lg:p-8">
       {/* Header: rabbit selector + date */}
-      <DashboardHeader rabbit={rabbit} />
+      <DashboardHeader rabbit={rabbit} rabbits={rabbits} />
+      {!rabbit && <CreateRabbitForm />}
 
       {/* Sync status indicator */}
       <SyncStatus
-        status="partial"
-        label="4 de 5 registros recientes sincronizados · 1 pendiente"
+        status="synced"
+        label="Datos cargados desde tu cuenta"
         className="self-start"
       />
 
