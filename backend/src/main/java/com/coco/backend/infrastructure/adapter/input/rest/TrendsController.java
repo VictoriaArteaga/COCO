@@ -5,6 +5,9 @@ import com.coco.backend.application.usecase.GetTrendsUseCase;
 import com.coco.backend.domain.enums.HabitType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import com.coco.backend.infrastructure.adapter.output.persistence.repository.RabbitJpaRepository;
+import com.coco.backend.domain.exception.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,9 +21,11 @@ import java.util.UUID;
 public class TrendsController {
 
     private final GetTrendsUseCase getTrendsUseCase;
+    private final RabbitJpaRepository rabbits;
 
-    public TrendsController(GetTrendsUseCase getTrendsUseCase) {
+    public TrendsController(GetTrendsUseCase getTrendsUseCase, RabbitJpaRepository rabbits) {
         this.getTrendsUseCase = getTrendsUseCase;
+        this.rabbits = rabbits;
     }
 
     /**
@@ -32,8 +37,11 @@ public class TrendsController {
     public ResponseEntity<List<TrendPointResponse>> getTrends(
             @PathVariable HabitType habitType,
             @RequestParam UUID rabbitId,
-            @RequestParam(defaultValue = "7") int days
+            @RequestParam(defaultValue = "7") int days,
+            Authentication auth
     ) {
+        if (rabbits.findByIdAndUserId(rabbitId, UUID.fromString(auth.getName())).filter(com.coco.backend.infrastructure.adapter.output.persistence.entity.RabbitEntity::isActive).isEmpty())
+            throw new ResourceNotFoundException("Rabbit", rabbitId.toString());
         if (days < 1 || days > 90) {
             days = 7;
         }
