@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import com.coco.backend.infrastructure.adapter.output.persistence.repository.RabbitJpaRepository;
 
 /**
  * Caso de uso: sincronizar lote de registros enviados desde el smartwatch.
@@ -23,19 +25,25 @@ import java.util.List;
 public class SyncRecordsUseCase {
 
     private final RegisterHabitUseCase registerHabitUseCase;
+    private final RabbitJpaRepository rabbits;
 
-    public SyncRecordsUseCase(RegisterHabitUseCase registerHabitUseCase) {
+    public SyncRecordsUseCase(RegisterHabitUseCase registerHabitUseCase, RabbitJpaRepository rabbits) {
         this.registerHabitUseCase = registerHabitUseCase;
+        this.rabbits = rabbits;
     }
 
     @Transactional
-    public SyncResultResponse execute(List<SyncHabitRequest> requests) {
+    public SyncResultResponse execute(UUID userId, List<SyncHabitRequest> requests) {
         List<String> synced = new ArrayList<>();
         List<String> duplicates = new ArrayList<>();
         List<String> failed = new ArrayList<>();
 
         for (SyncHabitRequest req : requests) {
             try {
+                if (rabbits.findByIdAndUserId(req.getRabbitId(), userId).filter(com.coco.backend.infrastructure.adapter.output.persistence.entity.RabbitEntity::isActive).isEmpty()) {
+                    failed.add(req.getClientRecordId());
+                    continue;
+                }
                 HabitRecord record = registerHabitUseCase.execute(
                         req.getClientRecordId(),
                         req.getRabbitId(),

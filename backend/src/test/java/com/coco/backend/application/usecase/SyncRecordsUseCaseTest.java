@@ -21,6 +21,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import com.coco.backend.infrastructure.adapter.output.persistence.repository.RabbitJpaRepository;
+import com.coco.backend.infrastructure.adapter.output.persistence.entity.RabbitEntity;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SyncRecordsUseCase")
@@ -28,12 +33,16 @@ class SyncRecordsUseCaseTest {
 
     @Mock
     private RegisterHabitUseCase registerHabitUseCase;
+    @Mock
+    private RabbitJpaRepository rabbitRepository;
 
     private SyncRecordsUseCase syncUseCase;
 
     @BeforeEach
     void setUp() {
-        syncUseCase = new SyncRecordsUseCase(registerHabitUseCase);
+        syncUseCase = new SyncRecordsUseCase(registerHabitUseCase, rabbitRepository);
+        lenient().when(rabbitRepository.findByIdAndUserId(any(), any()))
+                .thenReturn(java.util.Optional.of(new RabbitEntity(UUID.randomUUID(), "test", UUID.randomUUID(), true, Instant.now())));
     }
 
     private SyncHabitRequest makeRequest(String clientId) {
@@ -59,7 +68,7 @@ class SyncRecordsUseCaseTest {
         when(registerHabitUseCase.execute(eq(id2), any(), any(), any(), any(), any(), any()))
                 .thenReturn(mockRecord2);
 
-        SyncResultResponse result = syncUseCase.execute(List.of(makeRequest(id1), makeRequest(id2)));
+        SyncResultResponse result = syncUseCase.execute(UUID.randomUUID(), List.of(makeRequest(id1), makeRequest(id2)));
 
         assertThat(result.getSynced()).containsExactlyInAnyOrder(id1, id2);
         assertThat(result.getDuplicates()).isEmpty();
@@ -78,12 +87,25 @@ class SyncRecordsUseCaseTest {
                 .thenThrow(new DuplicateRecordException(idDuplicado));
 
         SyncResultResponse result = syncUseCase.execute(
-                List.of(makeRequest(idNuevo), makeRequest(idDuplicado))
+                UUID.randomUUID(), List.of(makeRequest(idNuevo), makeRequest(idDuplicado))
         );
 
         assertThat(result.getSynced()).containsExactly(idNuevo);
         assertThat(result.getDuplicates()).containsExactly(idDuplicado);
         assertThat(result.getFailed()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("no acepta conejos que no pertenecen al usuario en la sincronización")
+    void rechazaConejoAjenoEnSync() {
+        String clientId = UUID.randomUUID().toString();
+        SyncHabitRequest request = makeRequest(clientId);
+        when(rabbitRepository.findByIdAndUserId(eq(request.getRabbitId()), any())).thenReturn(java.util.Optional.empty());
+
+        SyncResultResponse result = syncUseCase.execute(UUID.randomUUID(), List.of(request));
+
+        assertThat(result.getFailed()).containsExactly(clientId);
+        verify(registerHabitUseCase, never()).execute(eq(clientId), any(), any(), any(), any(), any(), any());
     }
 
     private HabitRecord mockRecord(String clientId) {
