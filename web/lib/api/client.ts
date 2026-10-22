@@ -1,17 +1,8 @@
 /**
  * Base HTTP client for the COCO backend API.
  *
- * The base URL is read from the NEXT_PUBLIC_API_URL environment variable.
- * It must be set in .env.local for development.
- * It must NEVER be hardcoded here.
+ * Authenticated browser requests stay same-origin and are proxied by a Route Handler.
  */
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '')
-
-if (!API_BASE_URL && typeof window !== 'undefined') {
-  // Warn at runtime in the browser; build-time check is handled by type-check script.
-  console.warn('[COCO] NEXT_PUBLIC_API_URL is not set. API calls will fail.')
-}
 
 export class ApiError extends Error {
   constructor(
@@ -39,12 +30,7 @@ interface RequestOptions {
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, params } = options
 
-  // Build query string
-  if (!API_BASE_URL) {
-    throw new Error('NEXT_PUBLIC_API_URL is not configured. Set it in web/.env.local.')
-  }
-
-  let url = `${API_BASE_URL}/${path.replace(/^\//, '')}`
+  let url = `/api/backend/${path.replace(/^\/?api\/?/, '').replace(/^\//, '')}`
   if (params) {
     const searchParams = new URLSearchParams()
     for (const [key, value] of Object.entries(params)) {
@@ -63,8 +49,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       Accept: 'application/json',
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
-    // next.js cache — revalidate every 30 s for GET requests
-    ...(method === 'GET' ? { next: { revalidate: 30 } } : {}),
+    credentials: 'same-origin',
+    cache: 'no-store',
   })
 
   if (!response.ok) {

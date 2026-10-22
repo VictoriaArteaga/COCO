@@ -3,8 +3,8 @@
  * All environment variables are read here — never scattered across components.
  */
 
-/** Backend REST API base URL. Set NEXT_PUBLIC_API_URL in .env.local */
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
+/** Server-only backend URL; browser calls use the same-origin proxy. */
+export const API_URL = process.env.COCO_API_URL ?? ''
 
 /** Default number of trend days to request from the backend */
 export const DEFAULT_TREND_DAYS = 7
