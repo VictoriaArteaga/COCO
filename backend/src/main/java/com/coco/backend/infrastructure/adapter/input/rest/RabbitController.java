@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.time.Instant;
 import java.util.List;
@@ -45,10 +46,9 @@ public class RabbitController {
      * Por ahora retorna todos (la autenticación completa es semana 5+).
      */
     @GetMapping
-    public ResponseEntity<List<RabbitResponse>> listRabbits() {
-        List<RabbitResponse> rabbits = rabbitRepository.findAll()
+    public ResponseEntity<List<RabbitResponse>> listRabbits(Authentication auth) {
+        List<RabbitResponse> rabbits = rabbitRepository.findByUserIdAndActiveTrue(UUID.fromString(auth.getName()))
                 .stream()
-                .filter(RabbitEntity::isActive)
                 .map(rabbitEntityMapper::toDomain)
                 .map(dtoMapper::toRabbitResponse)
                 .toList();
@@ -60,8 +60,8 @@ public class RabbitController {
      * Obtiene un conejo por su ID.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<RabbitResponse> getRabbit(@PathVariable UUID id) {
-        RabbitEntity entity = rabbitRepository.findById(id)
+    public ResponseEntity<RabbitResponse> getRabbit(@PathVariable UUID id, Authentication auth) {
+        RabbitEntity entity = rabbitRepository.findByIdAndUserIdAndActiveTrue(id, UUID.fromString(auth.getName()))
                 .orElseThrow(() -> new ResourceNotFoundException("Rabbit", id.toString()));
         return ResponseEntity.ok(dtoMapper.toRabbitResponse(rabbitEntityMapper.toDomain(entity)));
     }
@@ -71,14 +71,12 @@ public class RabbitController {
      * Crea un nuevo conejo.
      */
     @PostMapping
-    public ResponseEntity<RabbitResponse> createRabbit(@Valid @RequestBody CreateRabbitRequest request) {
-        // TODO semana 5: extraer userId del token de autenticación
-        UUID placeholderUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    public ResponseEntity<RabbitResponse> createRabbit(@Valid @RequestBody CreateRabbitRequest request, Authentication auth) {
 
         Rabbit rabbit = new Rabbit(
                 UUID.randomUUID(),
                 request.getName(),
-                placeholderUserId,
+                UUID.fromString(auth.getName()),
                 true,
                 Instant.now()
         );
@@ -95,9 +93,10 @@ public class RabbitController {
     @PutMapping("/{id}")
     public ResponseEntity<RabbitResponse> updateRabbit(
             @PathVariable UUID id,
-            @Valid @RequestBody CreateRabbitRequest request
+            @Valid @RequestBody CreateRabbitRequest request,
+            Authentication auth
     ) {
-        RabbitEntity entity = rabbitRepository.findById(id)
+        RabbitEntity entity = rabbitRepository.findByIdAndUserIdAndActiveTrue(id, UUID.fromString(auth.getName()))
                 .orElseThrow(() -> new ResourceNotFoundException("Rabbit", id.toString()));
         entity.setName(request.getName());
         RabbitEntity saved = rabbitRepository.save(entity);
