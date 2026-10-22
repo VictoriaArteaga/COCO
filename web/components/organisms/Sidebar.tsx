@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { LogoutButton } from '@/components/auth/LogoutButton'
 import { cn } from '@/lib/utils/cn'
 
 interface NavItem {
@@ -86,6 +87,7 @@ export function Sidebar() {
           COCO no diagnostica enfermedades.
         </p>
       </div>
+      <div className="mt-auto pt-4"><LogoutButton /></div>
     </nav>
   )
 }
