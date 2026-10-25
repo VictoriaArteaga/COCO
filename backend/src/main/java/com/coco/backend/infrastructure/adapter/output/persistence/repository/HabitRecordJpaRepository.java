@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
 
 /**
  * Repositorio JPA para registros de hábitos.
@@ -60,3 +61,6 @@ public interface HabitRecordJpaRepository extends JpaRepository<HabitRecordEntit
             Instant end
     );
 }
+
+    List<HabitRecordEntity> findTop200ByRabbitIdOrderByRecordedAtDesc(UUID rabbitId);
+

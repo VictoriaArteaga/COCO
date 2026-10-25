@@ -25,12 +25,12 @@ public class RabbitAnalysisService {
     private static final int MIN_RECORDS = 10;
     private static final int MIN_DAYS = 3;
     private final RabbitJpaRepository rabbits;
-    private final RabbitAnalysisRecordRepository records;
+    private final HabitRecordJpaRepository records;
     private final AnalysisResultJpaRepository results;
     private final AiAnalysisPort ai;
     private final ObjectMapper mapper;
 
-    public RabbitAnalysisService(RabbitJpaRepository rabbits, RabbitAnalysisRecordRepository records,
+    public RabbitAnalysisService(RabbitJpaRepository rabbits, HabitRecordJpaRepository records,
             AnalysisResultJpaRepository results, AiAnalysisPort ai, ObjectMapper mapper) {
         this.rabbits = rabbits; this.records = records; this.results = results; this.ai = ai; this.mapper = mapper;
     }
@@ -97,3 +97,4 @@ public class RabbitAnalysisService {
         return value.length() > 2000 ? value.substring(0, 2000) : value;
     }
 }
+
