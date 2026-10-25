@@ -26,6 +26,8 @@ class GeminiAnalysisAdapterTest {
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         server.expect(requestTo(uri)).andExpect(method(HttpMethod.POST)).andExpect(header("x-goog-api-key", "test-only-key"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string(org.hamcrest.Matchers.allOf(org.hamcrest.Matchers.containsString("responseSchema"),
+                        org.hamcrest.Matchers.containsString("does not diagnose"), org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("test-only-key")))))
                 .andRespond(withSuccess(wrap(valid), MediaType.APPLICATION_JSON));
         var outcome = new GeminiAnalysisAdapter(mapper, "test-only-key", "test-model", builder).analyze(Map.of("rabbit", "Nube"));
         assertThat(outcome.status()).isEqualTo("NORMAL");
@@ -88,4 +90,5 @@ class GeminiAnalysisAdapterTest {
         return mapper.writeValueAsString(Map.of("candidates", List.of(Map.of("content", Map.of("parts", List.of(Map.of("text", generated)))))));
     }
 }
+
 
