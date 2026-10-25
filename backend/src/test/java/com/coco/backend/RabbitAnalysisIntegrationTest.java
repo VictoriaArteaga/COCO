@@ -41,6 +41,12 @@ class RabbitAnalysisIntegrationTest {
     }
 
     @Test
+    @Test
+    void malformedRabbitIdReturnsBadRequest() throws Exception {
+        mvc.perform(post("/api/analysis/rabbit/not-a-uuid").header("Authorization", "Bearer " + token(UUID.randomUUID())))
+                .andExpect(status().isBadRequest());
+    }
+
     void insufficientHistoryReturnsLearningAndPersistsIt() throws Exception {
         UUID owner = createUser("analysis");
         UUID rabbitId = createRabbit(owner);
@@ -80,4 +86,5 @@ class RabbitAnalysisIntegrationTest {
                 JwtClaimsSet.builder().issuer("coco").subject(userId.toString()).issuedAt(now).expiresAt(now.plusSeconds(600)).build())).getTokenValue();
     }
 }
+
 
