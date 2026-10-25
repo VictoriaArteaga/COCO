@@ -41,7 +41,7 @@ public class RabbitObservationSummaryBuilder {
         return summary;
     }
 
-    private long distinctDays(List<HabitRecordEntity> history) {
+    public long distinctDays(List<HabitRecordEntity> history) {
         return history.stream().map(r -> r.getRecordedAt().truncatedTo(ChronoUnit.DAYS)).distinct().count();
     }
     private double observationsPerRecordedDay(List<HabitRecordEntity> history) {
@@ -50,3 +50,4 @@ public class RabbitObservationSummaryBuilder {
         return countByDay.isEmpty() ? 0.0 : countByDay.values().stream().mapToLong(Long::longValue).average().orElse(0.0);
     }
 }
+

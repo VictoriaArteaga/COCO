@@ -39,7 +39,7 @@ public class RabbitAnalysisService {
         List<HabitRecordEntity> history = records.findTop200ByRabbitIdOrderByRecordedAtDesc(rabbitId);
         Map<String, Object> summary = summaryBuilder.build(rabbit, history, java.time.Instant.now());
         AiAnalysisPort.AnalysisOutcome outcome;
-        if (history.size() < MIN_RECORDS || distinctDays(history) < MIN_DAYS) {
+        if (history.size() < MIN_RECORDS || summaryBuilder.distinctDays(history) < MIN_DAYS) {
             outcome = new AiAnalysisPort.AnalysisOutcome(AnalysisStatus.LEARNING.name(), false,
                     List.of("El historial disponible aún no cubre suficientes registros y días para establecer una línea base individual."),
                     "COCO está aprendiendo la rutina de " + rabbit.getName() + ". La información disponible no permite comparar cambios con suficiente contexto.",
@@ -65,5 +65,6 @@ public class RabbitAnalysisService {
         return value.length() > 2000 ? value.substring(0, 2000) : value;
     }
 }
+
 
 
