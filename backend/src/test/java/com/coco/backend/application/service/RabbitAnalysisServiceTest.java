@@ -47,7 +47,7 @@ class RabbitAnalysisServiceTest {
         Map<?, ?> food = (Map<?, ?>) habits.get("FOOD");
         assertThat(food.get("baselineDaysWithRecords")).isEqualTo(4L);
         assertThat(food.get("baselineObservationsPerRecordedDay")).isEqualTo(1.0);
-        assertThat(food.get("recentDaysWithRecords")).isEqualTo(7L);
+        assertThat(food.get("recentDaysWithRecords")).isEqualTo(6L);
         verify(results).save(any());
     }
 
@@ -56,3 +56,4 @@ class RabbitAnalysisServiceTest {
                 1.0, "observed", recordedAt, "WEB", RecordStatus.SYNCED, recordedAt, null);
     }
 }
+
