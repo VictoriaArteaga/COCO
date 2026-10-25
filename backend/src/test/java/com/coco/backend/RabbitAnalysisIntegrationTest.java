@@ -41,7 +41,6 @@ class RabbitAnalysisIntegrationTest {
     }
 
     @Test
-    @Test
     void malformedRabbitIdReturnsBadRequest() throws Exception {
         mvc.perform(post("/api/analysis/rabbit/not-a-uuid").header("Authorization", "Bearer " + token(UUID.randomUUID())))
                 .andExpect(status().isBadRequest());
