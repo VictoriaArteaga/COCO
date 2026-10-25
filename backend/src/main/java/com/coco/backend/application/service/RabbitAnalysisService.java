@@ -13,7 +13,6 @@ import com.coco.backend.infrastructure.adapter.output.persistence.repository.Rab
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 @Service
@@ -32,7 +31,6 @@ public class RabbitAnalysisService {
         this.rabbits = rabbits; this.records = records; this.results = results; this.ai = ai; this.mapper = mapper; this.summaryBuilder = summaryBuilder;
     }
 
-    @Transactional
     public RabbitAnalysisResponse analyze(UUID rabbitId, UUID authenticatedUserId) {
         RabbitEntity rabbit = rabbits.findByIdAndUserIdAndActiveTrue(rabbitId, authenticatedUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rabbit", rabbitId.toString()));
