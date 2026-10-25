@@ -41,7 +41,7 @@ Cuando el historial tiene menos de 10 registros o cubre menos de 3 días distint
 Estados disponibles: `NORMAL`, `ATTENTION`, `HIGH_ATTENTION` y `LEARNING`. COCO es una herramienta de observación preventiva; no diagnostica ni reemplaza al veterinario. Si la conexión a Gemini falla, el backend devuelve un error controlado. En desarrollo, la web puede mostrar el resultado `MockAnalysisProvider` como respaldo; producción consume Spring Boot directamente. Wear OS mantiene su flujo offline-first y no llama a Gemini.
 
 Para PostgreSQL, ejecuta con `SPRING_PROFILES_ACTIVE=postgres`; Flyway aplicará la migración V2. En H2, Hibernate crea el esquema de demostración sin depender de la API key.
-## Pruebas
+La solicitud no lleva body: el backend obtiene todos los datos registrados y deriva el usuario del JWT. Ejemplo: `POST /api/analysis/rabbit/550e8400-e29b-41d4-a716-446655440000` con `Authorization: Bearer <JWT>` y `Content-Type: application/json`. Para usarlo desde la web, configura `COCO_API_URL`; el navegador pasa por el proxy same-origin de Next.js.\r\n\r\n## Pruebas
 
 ```powershell
 cd backend
@@ -54,4 +54,5 @@ cd ..
 ```
 
 La configuración y ejemplos de autenticación, PostgreSQL y sincronización están en [docs/authentication-security-and-device-setup.md](docs/authentication-security-and-device-setup.md).
+
 
