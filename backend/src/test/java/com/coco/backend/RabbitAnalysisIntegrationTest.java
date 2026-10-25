@@ -46,7 +46,8 @@ class RabbitAnalysisIntegrationTest {
         UUID owner = UUID.randomUUID();
         UUID rabbitId = UUID.randomUUID();
         users.save(new UserEntity(owner, "analysis-" + owner + "@example.com", "Test", "hash", true, Instant.now()));
-        rabbits.save(new RabbitEntity(rabbitId, "Nube", owner, true, Instant.now()));
+        rabbits.saveAndFlush(new RabbitEntity(rabbitId, "Nube", owner, true, Instant.now()));
+        org.assertj.core.api.Assertions.assertThat(rabbits.findByIdAndUserIdAndActiveTrue(rabbitId, owner)).isPresent();
         for (int i = 0; i < 2; i++) {
             records.save(new HabitRecordEntity(null, "analysis-record-" + UUID.randomUUID(), rabbitId, HabitType.FOOD,
                     10.0, null, Instant.now().minusSeconds(i * 86400L), "WEB", RecordStatus.SYNCED, null, null));
@@ -66,7 +67,8 @@ class RabbitAnalysisIntegrationTest {
         UUID rabbitId = UUID.randomUUID();
         users.save(new UserEntity(owner, "owner-" + owner + "@example.com", "Owner", "hash", true, Instant.now()));
         users.save(new UserEntity(other, "other-" + other + "@example.com", "Other", "hash", true, Instant.now()));
-        rabbits.save(new RabbitEntity(rabbitId, "Nube", owner, true, Instant.now()));
+        rabbits.saveAndFlush(new RabbitEntity(rabbitId, "Nube", owner, true, Instant.now()));
+        org.assertj.core.api.Assertions.assertThat(rabbits.findByIdAndUserIdAndActiveTrue(rabbitId, owner)).isPresent();
         mvc.perform(post("/api/analysis/rabbit/" + rabbitId).header("Authorization", "Bearer " + token(other)))
                 .andExpect(status().isNotFound());
     }
@@ -77,4 +79,5 @@ class RabbitAnalysisIntegrationTest {
                 JwtClaimsSet.builder().issuer("coco").subject(userId.toString()).issuedAt(now).expiresAt(now.plusSeconds(600)).build())).getTokenValue();
     }
 }
+
 
