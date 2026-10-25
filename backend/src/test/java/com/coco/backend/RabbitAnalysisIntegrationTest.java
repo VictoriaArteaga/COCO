@@ -47,6 +47,7 @@ class RabbitAnalysisIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
     void insufficientHistoryReturnsLearningAndPersistsIt() throws Exception {
         UUID owner = createUser("analysis");
         UUID rabbitId = createRabbit(owner);
@@ -86,5 +87,6 @@ class RabbitAnalysisIntegrationTest {
                 JwtClaimsSet.builder().issuer("coco").subject(userId.toString()).issuedAt(now).expiresAt(now.plusSeconds(600)).build())).getTokenValue();
     }
 }
+
 
 
