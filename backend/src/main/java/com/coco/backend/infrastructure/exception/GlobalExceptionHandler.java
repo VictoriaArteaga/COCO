@@ -6,8 +6,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -21,6 +24,11 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(AiProviderException.class)
+    public ResponseEntity<Map<String, Object>> handleAiProvider(AiProviderException ex) {
+        return buildError(HttpStatus.BAD_GATEWAY, "El servicio de análisis no está disponible por el momento");
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex) {
         return buildError(HttpStatus.NOT_FOUND, ex.getMessage());
@@ -29,6 +37,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateRecordException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicate(DuplicateRecordException ex) {
         return buildError(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthentication(AuthenticationException ex) {
+        return buildError(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+        return buildError(status, ex.getReason() != null ? ex.getReason() : status.getReasonPhrase());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -45,6 +64,11 @@ public class GlobalExceptionHandler {
         body.put("error", "Datos inválidos");
         body.put("messages", errors);
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return buildError(HttpStatus.BAD_REQUEST, "Parámetros inválidos");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -66,3 +90,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(body);
     }
 }
+
+
+

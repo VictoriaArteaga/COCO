@@ -6,15 +6,16 @@ export class MockAnalysisProvider implements AnalysisProvider {
   async analyze(input: AnalysisInput): Promise<AnalysisResult> {
     const enoughData = input.records >= 5
     return {
-      status: enoughData ? 'change_detected' : 'insufficient_evidence',
+      status: enoughData ? 'NORMAL' : 'LEARNING',
       summary: enoughData
-        ? 'Hay registros recientes de las cinco variables para observar la rutina de Coquito.'
+        ? 'Hay registros recientes para describir la rutina; este resultado de demostración no analiza cambios clínicos.'
         : 'Aún hay pocos registros para describir una tendencia con claridad.',
       factors: enoughData
-        ? [`${input.records} observaciones en ${input.periodDays} días`, `${input.habitTypes.length} variables con seguimiento`, 'La actividad de juego varía entre días; sigue registrando para contextualizar el patrón.']
-        : ['Registra observaciones en varios días', 'Incluye más de una variable para dar contexto'],
-      confidence: enoughData ? 0.76 : 0.32,
-      period: `${input.periodDays} días`,
+        ? [`${input.records} observaciones en ${input.periodDays} días`, `${input.habitTypes.length} variables con seguimiento`]
+        : ['Registra observaciones en varios días', 'La falta de registros no significa que la actividad no ocurrió'],
+      recommendation: 'Continúa registrando observaciones y consulta a un veterinario ante una preocupación.',
+      anomalyDetected: false,
+      requiresVeterinaryAttention: false,
       generatedAt: new Date().toISOString(),
       source: 'mock',
     }

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -44,10 +45,11 @@ public class HistoryController {
             @RequestParam(required = false) HabitType habitType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
-            Pageable pageable
+            Pageable pageable,
+            Authentication auth
     ) {
         Page<HabitRecordResponse> page = getHistoryUseCase
-                .execute(rabbitId, habitType, from, to, pageable)
+                .execute(UUID.fromString(auth.getName()), rabbitId, habitType, from, to, pageable)
                 .map(dtoMapper::toHabitRecordResponse);
         return ResponseEntity.ok(page);
     }

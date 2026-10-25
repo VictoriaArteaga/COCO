@@ -17,4 +17,6 @@ public interface RabbitJpaRepository extends JpaRepository<RabbitEntity, UUID> {
     List<RabbitEntity> findByUserIdAndActiveTrue(UUID userId);
 
     Optional<RabbitEntity> findByIdAndUserId(UUID id, UUID userId);
+
+    Optional<RabbitEntity> findByIdAndUserIdAndActiveTrue(UUID id, UUID userId);
 }

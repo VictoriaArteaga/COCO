@@ -28,11 +28,6 @@ android {
         )
 
         // Placeholder rabbit ID — will be replaced by the authenticated user's rabbit in week 5.
-        buildConfigField(
-            "String",
-            "RABBIT_ID",
-            "\"${System.getenv("RABBIT_ID") ?: "00000000-0000-0000-0000-000000000001"}\""
-        )
     }
 
     // Local backend URLs use HTTP. Allow it only in debug builds; release builds
@@ -84,6 +79,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging)
+    implementation(libs.security.crypto)
     ksp(libs.room.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

@@ -1,12 +1,14 @@
-import type { HabitType, ObservationState } from '@/types'
+import type { HabitType } from '@/types'
 
-export interface AnalysisInput { periodDays: number; records: number; habitTypes: HabitType[] }
+export type AnalysisStatus = 'NORMAL' | 'ATTENTION' | 'HIGH_ATTENTION' | 'LEARNING'
+export interface AnalysisInput { rabbitId: string; periodDays: number; records: number; habitTypes: HabitType[] }
 export interface AnalysisResult {
-  status: ObservationState
+  status: AnalysisStatus
   summary: string
   factors: string[]
-  confidence: number
-  period: string
+  recommendation: string
+  anomalyDetected: boolean
+  requiresVeterinaryAttention: boolean
   generatedAt: string
-  source: 'mock'
+  source: 'backend' | 'mock'
 }

@@ -5,6 +5,9 @@ import com.coco.backend.application.usecase.GetDailySummaryUseCase;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import com.coco.backend.infrastructure.adapter.output.persistence.repository.RabbitJpaRepository;
+import com.coco.backend.domain.exception.ResourceNotFoundException;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -18,9 +21,11 @@ import java.util.UUID;
 public class SummaryController {
 
     private final GetDailySummaryUseCase getDailySummaryUseCase;
+    private final RabbitJpaRepository rabbits;
 
-    public SummaryController(GetDailySummaryUseCase getDailySummaryUseCase) {
+    public SummaryController(GetDailySummaryUseCase getDailySummaryUseCase, RabbitJpaRepository rabbits) {
         this.getDailySummaryUseCase = getDailySummaryUseCase;
+        this.rabbits = rabbits;
     }
 
     /**
@@ -31,8 +36,11 @@ public class SummaryController {
     @GetMapping("/daily")
     public ResponseEntity<DailySummaryResponse> getDailySummary(
             @RequestParam UUID rabbitId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication auth
     ) {
+        if (rabbits.findByIdAndUserId(rabbitId, UUID.fromString(auth.getName())).filter(com.coco.backend.infrastructure.adapter.output.persistence.entity.RabbitEntity::isActive).isEmpty())
+            throw new ResourceNotFoundException("Rabbit", rabbitId.toString());
         LocalDate targetDate = (date != null) ? date : LocalDate.now();
         DailySummaryResponse summary = getDailySummaryUseCase.execute(rabbitId, targetDate);
         return ResponseEntity.ok(summary);

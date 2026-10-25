@@ -6,6 +6,8 @@ import com.coco.backend.application.usecase.SyncRecordsUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import java.util.UUID;
 
 /**
  * Controller REST para sincronización desde el smartwatch Wear OS.
@@ -35,9 +37,9 @@ public class SyncController {
      */
     @PostMapping("/habits")
     public ResponseEntity<SyncResultResponse> syncHabits(
-            @Valid @RequestBody SyncBatchRequest request
+            @Valid @RequestBody SyncBatchRequest request, Authentication auth
     ) {
-        SyncResultResponse result = syncRecordsUseCase.execute(request.getRecords());
+        SyncResultResponse result = syncRecordsUseCase.execute(UUID.fromString(auth.getName()), request.getRecords());
         return ResponseEntity.ok(result);
     }
 }

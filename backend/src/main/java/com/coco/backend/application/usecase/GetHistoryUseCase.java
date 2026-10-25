@@ -31,6 +31,7 @@ public class GetHistoryUseCase {
 
     @Transactional(readOnly = true)
     public Page<HabitRecord> execute(
+            UUID userId,
             UUID rabbitId,
             HabitType habitType,
             Instant from,
@@ -38,7 +39,7 @@ public class GetHistoryUseCase {
             Pageable pageable
     ) {
         return habitRecordRepository
-                .findByFilters(rabbitId, habitType, from, to, pageable)
+                .findByOwnerAndFilters(userId, rabbitId, habitType, from, to, pageable)
                 .map(habitRecordMapper::toDomain);
     }
 }
