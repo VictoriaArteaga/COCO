@@ -80,3 +80,4 @@ class RabbitAnalysisIntegrationTest {
                 JwtClaimsSet.builder().issuer("coco").subject(userId.toString()).issuedAt(now).expiresAt(now.plusSeconds(600)).build())).getTokenValue();
     }
 }
+
