@@ -28,7 +28,7 @@ public class GeminiAnalysisAdapter implements AiAnalysisPort {
     @Autowired
     public GeminiAnalysisAdapter(ObjectMapper mapper,
             @Value("${gemini.api-key:}") String apiKey,
-            @Value("${gemini.model:gemini-2.5-flash}") String model,
+            @Value("${gemini.model:gemini-3.8-flash}") String model,
             @Value("${gemini.timeout-seconds:20}") int timeoutSeconds) {
         this(mapper, apiKey, model, timedBuilder(timeoutSeconds));
     }
@@ -113,5 +113,6 @@ public class GeminiAnalysisAdapter implements AiAnalysisPort {
                 node.path("requiresVeterinaryAttention").asBoolean());
     }
 }
+
 
 
