@@ -60,9 +60,5 @@ public interface HabitRecordJpaRepository extends JpaRepository<HabitRecordEntit
             Instant start,
             Instant end
     );
-}
-
     List<HabitRecordEntity> findTop200ByRabbitIdOrderByRecordedAtDesc(UUID rabbitId);
-
-
-
+}
