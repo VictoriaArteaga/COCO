@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -24,15 +25,23 @@ public class GeminiAnalysisAdapter implements AiAnalysisPort {
     private final String apiKey;
     private final String model;
 
+    @Autowired
     public GeminiAnalysisAdapter(ObjectMapper mapper,
             @Value("${gemini.api-key:}") String apiKey,
             @Value("${gemini.model:gemini-2.5-flash}") String model,
             @Value("${gemini.timeout-seconds:20}") int timeoutSeconds) {
-        this.mapper = mapper; this.apiKey = apiKey; this.model = model;
+        this(mapper, apiKey, model, timedBuilder(timeoutSeconds));
+    }
+
+    GeminiAnalysisAdapter(ObjectMapper mapper, String apiKey, String model, RestClient.Builder builder) {
+        this.mapper = mapper; this.apiKey = apiKey; this.model = model; this.client = builder.build();
+    }
+
+    private static RestClient.Builder timedBuilder(int timeoutSeconds) {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Math.max(1, timeoutSeconds) * 1000);
         factory.setReadTimeout(Math.max(1, timeoutSeconds) * 1000);
-        this.client = RestClient.builder().requestFactory(factory).build();
+        return RestClient.builder().requestFactory(factory);
     }
 
     @Override
@@ -103,3 +112,4 @@ public class GeminiAnalysisAdapter implements AiAnalysisPort {
                 node.path("requiresVeterinaryAttention").asBoolean());
     }
 }
+
