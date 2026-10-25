@@ -66,7 +66,26 @@ class GeminiAnalysisAdapterTest {
         server.verify();
     }
 
+    @Test
+    void rejectsMissingApiKeyWithoutSendingRequest() {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        assertThatThrownBy(() -> new GeminiAnalysisAdapter(mapper, "", "test-model", builder)
+                .analyze(Map.of())).isInstanceOf(AiProviderException.class).hasMessage("Gemini is not configured");
+        server.verify();
+    }
+
+    @Test
+    void rejectsMalformedJsonWithoutReturningItToCaller() throws Exception {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo(uri)).andRespond(withSuccess(wrap("{not-json"), MediaType.APPLICATION_JSON));
+        assertThatThrownBy(() -> new GeminiAnalysisAdapter(mapper, "test-only-key", "test-model", builder)
+                .analyze(Map.of())).isInstanceOf(AiProviderException.class).hasMessage("Gemini returned an invalid analysis");
+        server.verify();
+    }
     private String wrap(String generated) throws Exception {
         return mapper.writeValueAsString(Map.of("candidates", List.of(Map.of("content", Map.of("parts", List.of(Map.of("text", generated)))))));
     }
 }
+
