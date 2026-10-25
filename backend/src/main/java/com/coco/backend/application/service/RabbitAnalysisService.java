@@ -9,7 +9,6 @@ import com.coco.backend.infrastructure.adapter.output.persistence.entity.HabitRe
 import com.coco.backend.infrastructure.adapter.output.persistence.entity.RabbitEntity;
 import com.coco.backend.infrastructure.adapter.output.persistence.repository.AnalysisResultJpaRepository;
 import com.coco.backend.infrastructure.adapter.output.persistence.repository.HabitRecordJpaRepository;
-import com.coco.backend.infrastructure.adapter.output.persistence.repository.RabbitAnalysisRecordRepository;
 import com.coco.backend.infrastructure.adapter.output.persistence.repository.RabbitJpaRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
