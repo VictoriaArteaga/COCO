@@ -13,7 +13,7 @@ PostgreSQL conserva el esquema inicial en `backend/src/main/resources/db/migrati
 ## Inicio rápido
 
 1. Configura `JWT_SECRET` con una cadena Base64 generada con `openssl rand -base64 32` y `JWT_EXPIRATION_SECONDS=3600`.
-2. Define `GEMINI_API_KEY` en el entorno del proceso backend para habilitar análisis reales. En PowerShell, usa `$env:GEMINI_API_KEY="<tu clave>"` en la sesión actual; nunca guardes el valor en el repositorio. El backend puede iniciar sin la variable, pero los análisis con historial suficiente devolverán un error controlado hasta configurarla. Ejecuta desde `backend` con `.\mvnw.cmd spring-boot:run` (PowerShell) o `./mvnw spring-boot:run`.
+2. Define `GEMINI_API_KEY` en el entorno del proceso backend para habilitar análisis reales. En PowerShell, usa `$env:GEMINI_API_KEY='<tu clave>'` en la sesión actual; nunca guardes el valor en el repositorio. El backend puede iniciar sin la variable, pero los análisis con historial suficiente devolverán un error controlado hasta configurarla. Ejecuta desde `backend` con `.\mvnw.cmd spring-boot:run` (PowerShell) o `./mvnw spring-boot:run`.
 3. Copia `web/.env.example` a `web/.env.local`, configura `COCO_API_URL=http://localhost:8080` y ejecuta `npm install` y `npm run dev` desde `web`.
 4. Registra una cuenta en la web, crea un conejo desde el panel y luego inicia sesión en Wear OS con la misma cuenta para asociar el reloj.
 
