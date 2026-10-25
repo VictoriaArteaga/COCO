@@ -23,7 +23,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
+    @ExceptionHandler(AiProviderException.class)`r`n    public ResponseEntity<Map<String, Object>> handleAiProvider(AiProviderException ex) {`r`n        return buildError(HttpStatus.BAD_GATEWAY, "El servicio de análisis no está disponible por el momento");`r`n    }`r`n`r`n    @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex) {
         return buildError(HttpStatus.NOT_FOUND, ex.getMessage());
     }
@@ -79,3 +79,4 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(body);
     }
 }
+
