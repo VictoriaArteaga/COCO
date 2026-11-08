@@ -91,9 +91,9 @@ export interface HabitTypeInfo {
 }
 
 export const HABIT_TYPE_INFO: Record<HabitType, HabitTypeInfo> = {
-  FOOD: { key: 'FOOD', label: 'Alimentación', unit: 'g', color: '#5B8E69' },
-  WATER: { key: 'WATER', label: 'Agua', unit: 'ml', color: '#4387A8' },
-  SLEEP: { key: 'SLEEP', label: 'Sueño', unit: 'min', color: '#70659A' },
-  PLAY: { key: 'PLAY', label: 'Juego', unit: 'min', color: '#C4778C' },
-  BEHAVIOR: { key: 'BEHAVIOR', label: 'Comportamiento', unit: 'nota', color: '#C87945' },
+  FOOD: { key: 'FOOD', label: 'Alimentación', unit: 'g', color: '#0B8A72' },
+  WATER: { key: 'WATER', label: 'Agua', unit: 'ml', color: '#2A78AE' },
+  SLEEP: { key: 'SLEEP', label: 'Sueño', unit: 'min', color: '#6B4C9A' },
+  PLAY: { key: 'PLAY', label: 'Juego', unit: 'min', color: '#D0406A' },
+  BEHAVIOR: { key: 'BEHAVIOR', label: 'Comportamiento', unit: 'nota', color: '#B85F0E' },
 }

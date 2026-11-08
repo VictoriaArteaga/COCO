@@ -4,24 +4,25 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import { cn } from '@/lib/utils/cn'
+import { IconTile, TILE, type IconName } from '@/components/atoms/Icon'
+import { usePrefs } from '@/lib/i18n/PreferencesProvider'
+import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 interface NavItem {
   href: string
-  label: string
-  /** Unicode emoji used as icon — always paired with an aria-hidden attribute */
-  icon: string
-  ariaLabel: string
+  key: keyof Dictionary['nav']
+  icon: IconName
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard',       label: 'Inicio',         icon: '🏠', ariaLabel: 'Inicio' },
-  { href: '/history',         label: 'Historial',      icon: '📋', ariaLabel: 'Historial' },
-  { href: '/trends',          label: 'Tendencias',     icon: '📈', ariaLabel: 'Tendencias' },
-  { href: '/analysis',        label: 'Análisis',       icon: '🔍', ariaLabel: 'Análisis' },
-  { href: '/profile',         label: 'Perfil',         icon: '👤', ariaLabel: 'Perfil' },
-  { href: '/reminders',       label: 'Recordatorios',  icon: '🔔', ariaLabel: 'Recordatorios' },
-  { href: '/synchronization', label: 'Sincronización', icon: '🔄', ariaLabel: 'Sincronización' },
-  { href: '/settings',        label: 'Configuración',  icon: '⚙️', ariaLabel: 'Configuración' },
+  { href: '/dashboard',       key: 'home',     icon: 'home' },
+  { href: '/history',         key: 'history',  icon: 'list' },
+  { href: '/trends',          key: 'trends',   icon: 'trending' },
+  { href: '/analysis',        key: 'analysis', icon: 'search' },
+  { href: '/profile',         key: 'profile',  icon: 'user' },
+  { href: '/reminders',       key: 'reminders', icon: 'bell' },
+  { href: '/synchronization', key: 'sync',     icon: 'refresh' },
+  { href: '/settings',        key: 'settings', icon: 'settings' },
 ]
 
 /**
@@ -35,20 +36,24 @@ const NAV_ITEMS: NavItem[] = [
  */
 export function Sidebar() {
   const pathname = usePathname()
+  const { t } = usePrefs()
 
   return (
     <nav
-      aria-label="Navegación principal"
+      aria-label={t.nav.label}
       className="
         flex flex-col w-full md:w-60 flex-shrink-0
-        bg-white border-r border-green-light
+        bg-card border-r border-line
         md:h-full py-4 md:py-6 px-3
       "
     >
       {/* Brand */}
-      <div className="px-3 mb-8">
-        <span className="text-2xl font-bold text-green-dark block leading-none">COCO</span>
-        <span className="text-xs text-text-secondary mt-0.5 block">Observa. Registra. Cuida.</span>
+      <div className="px-3 mb-8 flex items-center gap-3">
+        <IconTile name="rabbit" size={40} />
+        <div>
+          <span className="text-2xl font-bold text-green-dark block leading-none">COCO</span>
+          <span className="text-xs text-text-secondary mt-1 block">{t.brand.tagline}</span>
+        </div>
       </div>
 
       {/* Navigation links */}
@@ -60,21 +65,25 @@ export function Sidebar() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                aria-label={item.ariaLabel}
+                aria-label={t.nav[item.key]}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'flex items-center gap-2 rounded-coco px-3 py-2 text-sm font-medium transition-colors',
-                  'hover:bg-green-light hover:text-green-dark',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green',
+                  'group relative flex items-center gap-3 rounded-coco border px-2 py-1.5 text-sm font-medium',
+                  'transition-[background-color,border-color,transform] duration-200',
+                  'hover:translate-x-0.5 hover:bg-green-light/60 hover:text-green-dark',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink',
                   isActive
-                    ? 'bg-green-light text-green-dark'
-                    : 'text-text-secondary',
+                    ? 'border-ink bg-green-light text-green-dark'
+                    : 'border-transparent text-text-secondary',
                 )}
               >
-                <span aria-hidden="true" className="text-base w-5 text-center flex-shrink-0">
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
+                <IconTile
+                  name={item.icon}
+                  size={32}
+                  color={isActive ? TILE.teal : TILE.muted}
+                  border={isActive ? 'ink' : 'gray'}
+                />
+                <span>{t.nav[item.key]}</span>
               </Link>
             </li>
           )
@@ -82,9 +91,9 @@ export function Sidebar() {
       </ul>
 
       {/* Footer */}
-      <div className="px-3 pt-4 border-t border-green-light">
+      <div className="px-3 pt-4 border-t border-line">
         <p className="text-xs text-text-secondary text-center">
-          COCO no diagnostica enfermedades.
+          {t.brand.short}
         </p>
       </div>
       <div className="mt-auto pt-4"><LogoutButton /></div>

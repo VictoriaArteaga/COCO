@@ -1,6 +1,7 @@
 import type { SyncStatusType } from '@/types'
 import { StatusIndicator } from '@/components/atoms/StatusIndicator'
 import { cn } from '@/lib/utils/cn'
+import { getServerPrefs } from '@/lib/i18n/server'
 
 const LABEL_STYLES: Record<SyncStatusType, string> = {
   idle:    'text-state-normal',
@@ -9,15 +10,6 @@ const LABEL_STYLES: Record<SyncStatusType, string> = {
   partial: 'text-state-attention',
   failed:  'text-state-alert',
   offline: 'text-state-offline',
-}
-
-const DEFAULT_LABELS: Record<SyncStatusType, string> = {
-  idle:    'Sin cambios pendientes',
-  syncing: 'Sincronizando…',
-  synced:  'Sincronizado',
-  partial: 'Sincronización parcial',
-  failed:  'No se pudo sincronizar',
-  offline: 'Sin conexión',
 }
 
 interface SyncStatusProps {
@@ -30,8 +22,9 @@ interface SyncStatusProps {
  * Molecule: status indicator dot + descriptive text.
  * Accessible: text never depends on colour alone.
  */
-export function SyncStatus({ status, label, className }: SyncStatusProps) {
-  const displayLabel = label ?? DEFAULT_LABELS[status]
+export async function SyncStatus({ status, label, className }: SyncStatusProps) {
+  const { t } = await getServerPrefs()
+  const displayLabel = label ?? t.syncState[status]
 
   return (
     <div

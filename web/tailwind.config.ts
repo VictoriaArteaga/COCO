@@ -1,5 +1,8 @@
 import type { Config } from 'tailwindcss'
 
+/** Color tomado de una variable CSS (tripleta RGB) para que el tema claro/oscuro cambie todas las utilidades. */
+const v = (name: string) => `rgb(var(--c-${name}) / <alpha-value>)`
+
 const config: Config = {
   content: [
     './app/**/*.{ts,tsx}',
@@ -8,45 +11,68 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      // ─── COCO Design Tokens ──────────────────────────────────────────────────
+      // ─── COCO Design Tokens (valores en app/globals.css, claro y oscuro) ──────
       colors: {
-        // Brand greens
+        // Turquesa de marca (superficies grandes e iconos) y menta
         green: {
-          DEFAULT: '#356B55',
-          dark: '#244C3C',
-          light: '#DCEBE2',
+          DEFAULT: v('green'),
+          dark: v('green-dark'),
+          light: v('green-light'),
+          bright: v('green-bright'),
         },
-        // Neutral backgrounds
-        surface: '#F7F5EF',
-        cream: '#F7F5EF',
+        // Verde azulado profundo (antes morado): botones principales y títulos
+        purple: {
+          DEFAULT: v('purple'),
+          dark: v('purple-dark'),
+          light: v('purple-light'),
+        },
+        // Coral: acción destacada y alertas
+        coral: {
+          DEFAULT: v('coral'),
+          light: v('coral-light'),
+        },
+        // Fondos
+        surface: v('surface'),
+        cream: v('surface'),
+        card: v('card'),
         white: '#FFFFFF',
+        // Texto fijo sobre superficies turquesa (igual en ambos temas)
+        deep: '#0B2E2A',
+        // Título de marca (verde profundo en claro, menta en oscuro)
+        title: v('title'),
+        // Bordes de iconos y controles: tinta casi negra y grises (claros en oscuro)
+        ink: v('ink'),
+        line: v('line'),
+        mute: v('mute'),
         // Text
         text: {
-          DEFAULT: '#26332D',
-          secondary: '#65716B',
+          DEFAULT: v('text'),
+          secondary: v('text-secondary'),
         },
         // Semantic states
         state: {
-          normal: '#2E7D5B',
-          attention: '#B7791F',
-          alert: '#B5483A',
-          info: '#3B6EA5',
-          offline: '#7A8580',
+          normal: v('state-normal'),
+          attention: v('state-attention'),
+          alert: v('state-alert'),
+          info: v('state-info'),
+          offline: v('state-offline'),
         },
         // Habit type variables
         habit: {
-          food: '#5B8E69',
-          water: '#4387A8',
-          sleep: '#70659A',
-          play: '#C4778C',
-          behavior: '#C87945',
+          food: '#0B8A72',
+          water: '#2A78AE',
+          sleep: '#3B5BA9',
+          play: '#D0406A',
+          behavior: '#B85F0E',
         },
       },
       fontFamily: {
-        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'var(--font-sans)', 'ui-rounded', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-sans)', 'ui-rounded', '"Segoe UI"', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
-        coco: '12px',
+        coco: '18px',
+        sheet: '28px',
       },
     },
   },

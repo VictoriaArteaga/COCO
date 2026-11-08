@@ -16,7 +16,7 @@ interface BackendAnalysis {
 
 export class BackendAnalysisProvider implements AnalysisProvider {
   async analyze(input: AnalysisInput): Promise<AnalysisResult> {
-    const result = await apiClient.post<BackendAnalysis>(`/api/analysis/rabbit/${encodeURIComponent(input.rabbitId)}`)
+    const result = await apiClient.post<BackendAnalysis>(`/api/analysis/rabbit/${encodeURIComponent(input.rabbitId)}?lang=${input.lang ?? 'es'}`)
     return {
       status: result.status,
       summary: result.explanation,

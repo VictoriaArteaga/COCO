@@ -4,32 +4,179 @@
 
 /* ─── COCO Design Tokens as CSS Custom Properties ────────────────────────── */
 :root {
-  /* Brand */
-  --color-green: #356B55;
-  --color-green-dark: #244C3C;
-  --color-green-light: #DCEBE2;
+  /* Tripletas RGB: Tailwind las usa con transparencia (rgb(var(--c-x) / alpha)) */
+  --c-green: 15 166 138;
+  --c-green-dark: 10 107 90;
+  --c-green-light: 214 247 234;
+  --c-green-bright: 127 240 204;
+  --c-purple: 10 107 90;
+  --c-purple-dark: 6 74 63;
+  --c-purple-light: 214 247 234;
+  --c-coral: 214 51 79;
+  --c-coral-light: 255 227 232;
+  --c-surface: 233 251 244;
+  --c-card: 255 255 255;
+  --c-title: 10 107 90;
+  --c-ink: 11 46 42;
+  --c-line: 197 216 209;
+  --c-mute: 142 152 166;
+  --c-text: 11 46 42;
+  --c-text-secondary: 74 104 98;
+  --c-state-normal: 10 122 103;
+  --c-state-attention: 183 121 31;
+  --c-state-alert: 214 51 79;
+  --c-state-info: 59 110 165;
+  --c-state-offline: 122 133 128;
 
-  /* Backgrounds */
-  --color-surface: #F7F5EF;
-  --color-white: #FFFFFF;
+  /* Alias usados por el CSS de este archivo */
+  --color-green: rgb(var(--c-green));
+  --color-green-light: rgb(var(--c-green-light));
+  --color-ink: rgb(var(--c-ink));
+  --color-line: rgb(var(--c-line));
+  --color-coral: rgb(var(--c-coral));
 
-  /* Text */
-  --color-text: #26332D;
-  --color-text-secondary: #65716B;
+  --input-bg: #F1FDF8;
+  --dots: rgb(15 166 138 / 0.14);
+  --shimmer-a: #d9f3e8;
+  --shimmer-b: #effcf6;
 
-  /* Semantic states */
-  --color-normal: #2E7D5B;
-  --color-attention: #B7791F;
-  --color-alert: #B5483A;
-  --color-info: #3B6EA5;
-  --color-offline: #7A8580;
+  /* Movimiento: sobrio, rápido y con salida suave */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --shadow-soft: 0 14px 30px -18px rgb(15 166 138 / 0.55);
+  --shadow-lift: 0 16px 30px -16px rgb(11 46 42 / 0.45);
 
-  /* Habit type variables */
-  --color-food: #5B8E69;
-  --color-water: #4387A8;
-  --color-sleep: #70659A;
-  --color-play: #C4778C;
-  --color-behavior: #C87945;
+  /* Autenticación: turquesa de marca en claro */
+  --auth-bg: linear-gradient(145deg, rgb(70 208 180) 0%, rgb(34 186 156) 48%, rgb(24 174 146) 100%);
+  --auth-dots: rgb(255 255 255 / 0.7);
+  --auth-dots-opacity: 0.28;
+  --auth-orb-a: rgb(175 255 226 / 0.5);
+  --auth-orb-b: rgb(10 107 90 / 0.4);
+  --auth-panel: linear-gradient(135deg, #0FA68A 0%, #0A6B5A 100%);
+  --auth-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='24' cy='26' r='7'/%3E%3Cpath d='M104 22v14M97 29h14'/%3E%3Ccircle cx='132' cy='84' r='3.5' fill='white' stroke='none'/%3E%3Ccircle cx='78' cy='118' r='9'/%3E%3Cpath d='M30 98c0-5 4-8 8-8s8 3 8 8-4 9-8 9-8-4-8-9z'/%3E%3Ccircle cx='28' cy='84' r='2.6' fill='white' stroke='none'/%3E%3Ccircle cx='38' cy='80' r='2.6' fill='white' stroke='none'/%3E%3Ccircle cx='48' cy='84' r='2.6' fill='white' stroke='none'/%3E%3Cpath d='M126 136l6-6 6 6-6 6z'/%3E%3Ccircle cx='60' cy='60' r='2' fill='white' stroke='none'/%3E%3C/svg%3E");
+  --auth-card: #ffffff;
+  --auth-card-border: rgb(197 216 209);
+  --auth-card-shadow: 0 30px 60px -30px rgb(11 46 42 / 0.55);
+  --auth-badge-bg: rgb(214 247 234);
+  --auth-badge-fg: rgb(10 107 90);
+  --auth-badge-border: rgb(11 46 42);
+  --auth-disc: #ffffff;
+  --auth-disc-border: rgb(11 46 42);
+  --auth-btn-border: rgb(11 46 42);
+  --auth-input-border: rgb(197 216 209);
+  --auth-placeholder: rgb(98 87 122 / 0.7);
+  --auth-orb-c: transparent;
+  --auth-error-bg: #FFE3E8;
+  --auth-error-fg: #B3203F;
+  --auth-input-bg: #F1FDF8;
+  --auth-btn-bg: rgb(214 51 79);
+  --auth-btn-glow: none;
+}
+
+/* Tema oscuro: se activa con data-theme="dark" en <html> (el claro es el predeterminado) */
+:root[data-theme='dark'] {
+  --c-green-dark: 95 224 194;
+  --c-green-light: 27 58 51;
+  --c-purple: 15 166 138;
+  --c-purple-dark: 10 130 108;
+  --c-purple-light: 27 58 51;
+  --c-coral-light: 58 26 34;
+  --c-surface: 14 24 21;
+  --c-card: 22 36 31;
+  --c-title: 190 245 228;
+  --c-ink: 183 212 203;
+  --c-line: 46 74 66;
+  --c-mute: 127 154 146;
+  --c-text: 231 243 239;
+  --c-text-secondary: 165 183 177;
+  --c-state-normal: 95 224 194;
+  --c-state-attention: 240 179 90;
+  --c-state-alert: 255 122 142;
+  --c-state-info: 125 180 240;
+  --c-state-offline: 154 165 160;
+
+  --input-bg: #0F1C18;
+  --dots: rgb(127 240 204 / 0.07);
+  --shimmer-a: #1b2e28;
+  --shimmer-b: #24403a;
+  --shadow-soft: 0 14px 30px -18px rgb(0 0 0 / 0.75);
+  --shadow-lift: 0 16px 30px -16px rgb(0 0 0 / 0.8);
+
+  /* Autenticación (oscuro): misma paleta de marca. El turquesa de fondo se mantiene idéntico al modo claro
+     (color de identidad) y la tarjeta usa los tokens oscuros del proyecto, que contrastan con él. */
+  --auth-bg: linear-gradient(145deg, rgb(70 208 180) 0%, rgb(34 186 156) 48%, rgb(24 174 146) 100%);
+  --auth-dots: rgb(255 255 255 / 0.7);
+  --auth-dots-opacity: 0.28;
+  --auth-orb-a: rgb(175 255 226 / 0.5);
+  --auth-orb-b: rgb(10 107 90 / 0.4);
+  --auth-orb-c: transparent;
+  --auth-panel: linear-gradient(135deg, rgb(15 166 138) 0%, rgb(10 107 90) 100%);
+  --auth-card: rgb(var(--c-card));
+  --auth-card-border: rgb(127 240 204 / 0.35);
+  --auth-card-shadow: 0 30px 60px -24px rgb(11 46 42 / 0.75);
+  --auth-badge-bg: rgb(var(--c-green-light));
+  --auth-badge-fg: rgb(var(--c-green-dark));
+  --auth-badge-border: rgb(127 240 204 / 0.7);
+  --auth-disc: #ffffff;
+  --auth-disc-border: rgb(11 46 42);
+  --auth-btn-border: rgb(11 46 42);
+  --auth-input-bg: var(--input-bg);
+  --auth-input-border: rgb(var(--c-line));
+  --auth-placeholder: rgb(165 183 177 / 0.6);
+  --auth-btn-bg: rgb(214 51 79);
+  --auth-btn-glow: none;
+  --auth-error-bg: #3A1A22;
+  --auth-error-fg: #FF9AAB;
+  color-scheme: dark;
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes ring {
+  0%   { box-shadow: 0 0 0 0 rgb(10 122 103 / 0.45); }
+  70%  { box-shadow: 0 0 0 7px rgb(10 122 103 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(10 122 103 / 0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+@keyframes sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
+}
+@keyframes blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  96%           { transform: scaleY(0.1); }
+}
+@keyframes drift {
+  from { background-position: 0 0; }
+  to   { background-position: 52px 52px; }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes sheen {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to   { transform: translateX(260%) skewX(-18deg); }
 }
 
 /* ─── Base Styles ────────────────────────────────────────────────────────── */
@@ -42,45 +189,274 @@
     @apply bg-surface text-text font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Trama de puntos turquesa muy tenue que se desplaza lentamente */
+    background-image: radial-gradient(var(--dots) 1.2px, transparent 1.2px);
+    background-size: 26px 26px;
+    animation: drift 90s linear infinite;
   }
 
   /* Accessible focus ring */
   *:focus-visible {
-    outline: 2px solid var(--color-green);
+    outline: 2px solid var(--color-ink);
     outline-offset: 2px;
   }
 
-  /* Headings */
+  /* Headings: peso alto, como los títulos del diseño de referencia */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold text-text;
+    @apply font-display font-semibold text-text;
+  }
+  h1 { letter-spacing: -0.01em; }
+
+  /* Entrada de página: cada hijo directo del contenido aparece en cascada */
+  #main-content > * {
+    animation: fade-up 0.5s var(--ease-out) backwards;
+  }
+
+  /* Subrayado de título que se dibuja al entrar */
+  #main-content h1::after {
+    content: '';
+    display: block;
+    width: 3rem;
+    height: 4px;
+    margin-top: 0.5rem;
+    border-radius: 999px;
+    background: var(--color-green);
+    transform-origin: left;
+    animation: grow-x 0.7s 0.2s var(--ease-out) both;
+  }
+
+  /* Controles nativos */
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: var(--color-green);
+  }
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    border-radius: 14px;
+    background-color: var(--input-bg);
+    color: rgb(var(--c-text));
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+  }
+  input:not([type='checkbox']):not([type='radio']):focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--color-ink);
+    box-shadow: 0 0 0 4px rgb(15 166 138 / 0.22);
+    outline: none;
+  }
+
+  table tbody tr {
+    transition: background-color 0.15s;
   }
 }
 
 /* ─── Component Utilities ─────────────────────────────────────────────────── */
 @layer components {
-  /* Card base */
+  /* ── Autenticación (login / registro) ── */
+  .auth-card {
+    background: var(--auth-card);
+    border: 1px solid var(--auth-card-border);
+    box-shadow: var(--auth-card-shadow);
+  }
+  .auth-badge {
+    background: var(--auth-badge-bg);
+    color: var(--auth-badge-fg);
+    border: 1.5px solid var(--auth-badge-border);
+  }
+  .auth-disc {
+    background: var(--auth-disc);
+    border: 1.5px solid var(--auth-disc-border);
+  }
+  .auth-input {
+    background-color: var(--auth-input-bg);
+    border: 1px solid var(--auth-input-border);
+  }
+  .auth-input::placeholder { color: var(--auth-placeholder); }
+  .auth-input:focus {
+    border-color: rgb(var(--c-green));
+    box-shadow: 0 0 0 4px rgb(15 166 138 / 0.32);
+  }
+  .auth-input[aria-invalid='true'],
+  .auth-input[aria-invalid='true']:focus {
+    border-color: rgb(var(--c-coral));
+  }
+  .auth-input[aria-invalid='true']:focus { box-shadow: 0 0 0 4px rgb(214 51 79 / 0.22); }
+  .auth-error { color: var(--auth-error-fg); }
+  .auth-link { color: rgb(var(--c-green-dark)); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+  .auth-link:hover { text-decoration-thickness: 2px; }
+  .auth-submit { background: var(--auth-btn-bg); border-color: var(--auth-btn-border); box-shadow: var(--auth-btn-glow); }
+  .auth-submit:hover:not(:disabled) { box-shadow: 0 4px 0 var(--auth-btn-border), var(--auth-btn-glow); }
+  .auth-submit:focus-visible,
+  .auth-eye:focus-visible { outline: 3px solid rgb(127 240 204); outline-offset: 2px; }
+
+  /* Card base: blanca, muy redondeada, sombra turquesa suave */
   .card {
-    @apply bg-white rounded-coco border border-green-light p-5 shadow-sm;
+    @apply bg-card rounded-sheet border p-5;
+    border-color: var(--color-line);
+    box-shadow: var(--shadow-soft);
+    animation: fade-up 0.5s var(--ease-out) backwards;
+    transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), border-color 0.2s;
   }
 
-  /* Primary button */
+  /* Tarjeta con elevación al pasar el cursor */
+  .card-interactive:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-ink);
+    box-shadow: var(--shadow-lift);
+  }
+
+  /* Cascada de hijos: cada uno entra con un pequeño retraso */
+  .stagger > * { animation: fade-up 0.55s var(--ease-out) backwards; }
+  .stagger > *:nth-child(1)  { animation-delay: 40ms; }
+  .stagger > *:nth-child(2)  { animation-delay: 110ms; }
+  .stagger > *:nth-child(3)  { animation-delay: 180ms; }
+  .stagger > *:nth-child(4)  { animation-delay: 250ms; }
+  .stagger > *:nth-child(5)  { animation-delay: 320ms; }
+  .stagger > *:nth-child(6)  { animation-delay: 390ms; }
+  .stagger > *:nth-child(7)  { animation-delay: 460ms; }
+  .stagger > *:nth-child(8)  { animation-delay: 530ms; }
+
+  /* Campo de texto: pastilla menta, como la barra de búsqueda de la referencia */
+  .input {
+    @apply border px-4 py-2.5 text-sm;
+    background-color: var(--input-bg);
+    border-color: var(--color-line);
+  }
+
+  /* Primary button: morado profundo, como el botón principal de la referencia */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2
-           bg-green text-white font-medium rounded-coco px-4 py-2
-           hover:bg-green-dark focus-visible:ring-2 focus-visible:ring-green
-           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden
+           bg-purple text-white font-bold rounded-coco px-5 py-2.5
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    border: 1.5px solid var(--color-ink);
+    transition: transform 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out), background-color 0.15s;
+  }
+  .btn-primary:hover:not(:disabled) {
+    @apply bg-purple-dark;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 var(--color-ink);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: none;
+  }
+  /* Destello que cruza el botón al pasar el cursor */
+  .btn-primary::after,
+  .btn-accent::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.28), transparent);
+    transform: translateX(-120%) skewX(-18deg);
+    pointer-events: none;
+  }
+  .btn-primary:hover:not(:disabled)::after,
+  .btn-accent:hover:not(:disabled)::after {
+    animation: sheen 0.7s var(--ease-out);
+  }
+
+  /* Accent button: coral, para la acción destacada (como "Send now") */
+  .btn-accent {
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden
+           bg-coral text-white font-bold rounded-coco px-5 py-2.5
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    border: 1.5px solid var(--color-ink);
+    transition: transform 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out), filter 0.15s;
+  }
+  .btn-accent:hover:not(:disabled) {
+    filter: brightness(0.94);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 var(--color-ink);
+  }
+  .btn-accent:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: none;
   }
 
   /* Secondary (outline) button */
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2
-           border border-green text-green font-medium rounded-coco px-4 py-2
-           hover:bg-green-light focus-visible:ring-2 focus-visible:ring-green
-           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+           bg-card font-bold rounded-coco px-5 py-2.5
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    color: var(--color-ink);
+    border: 1.5px solid var(--color-ink);
+    transition: transform 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out), background-color 0.15s;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    @apply bg-green-light;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 var(--color-ink);
+  }
+  .btn-secondary:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: none;
   }
 
   /* Badge */
   .badge {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    border: 1px solid rgb(var(--c-ink) / 0.5);
   }
+
+  /* Mosaico de icono: fondo de la paleta, icono blanco, borde oscuro o gris */
+  .icon-tile {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition: transform 0.25s var(--ease-out);
+  }
+  .group:hover .icon-tile {
+    transform: translateY(-2px) rotate(-4deg) scale(1.06);
+  }
+
+  /* Panel de detalles de tres columnas, como "DETAILS" en la referencia */
+  .detail-bar {
+    @apply grid grid-cols-3 rounded-[22px] bg-card text-text;
+    border: 1.5px solid var(--color-ink);
+  }
+  .detail-bar > * + * {
+    border-left: 1.5px solid var(--color-line);
+  }
+
+  /* Indicador de estado con anillo que se expande */
+  .pulse-ring {
+    animation: ring 2s ease-out infinite;
+  }
+
+  /* Cargador del botón */
+  .spinner {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid rgb(255 255 255 / 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  /* Esqueleto de carga */
+  .skeleton {
+    background: linear-gradient(90deg, var(--shimmer-a) 25%, var(--shimmer-b) 50%, var(--shimmer-a) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+  }
+
+  .float-slow { animation: float 5s ease-in-out infinite; }
+  .sway { transform-origin: top center; animation: sway 4s ease-in-out infinite; }
+  .blink { transform-box: fill-box; transform-origin: center; animation: blink 5s infinite; }
+}
+
+/* ─── Accesibilidad: sin movimiento si el usuario lo pide ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  body { animation: none; }
 }

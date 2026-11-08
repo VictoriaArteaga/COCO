@@ -4,10 +4,15 @@ import { HabitOverview } from '@/components/organisms/HabitOverview'
 import { RecentRecords } from '@/components/organisms/RecentRecords'
 import { SyncStatus } from '@/components/molecules/SyncStatus'
 import { getDashboardData } from '@/lib/api/server'
+import { getServerPrefs } from '@/lib/i18n/server'
 import { TrendChart } from '@/components/organisms/TrendChart'
 import { CreateRabbitForm } from '@/components/organisms/CreateRabbitForm'
+import { HeroPanel } from '@/components/organisms/HeroPanel'
 
-export const metadata: Metadata = { title: 'Inicio' }
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerPrefs()
+  return { title: t.dashboard.metaTitle }
+}
 
 /**
  * Dashboard page — home screen for the web platform.
@@ -15,24 +20,26 @@ export const metadata: Metadata = { title: 'Inicio' }
  * Dashboard data is loaded from the authenticated backend session.
  */
 export default async function DashboardPage() {
+  const { t } = await getServerPrefs()
   const { rabbit, rabbits, records } = await getDashboardData()
   return (
-    <div className="flex flex-col gap-6 p-6 lg:p-8">
+    <div className="stagger flex flex-col gap-6 p-6 lg:p-8">
       {/* Header: rabbit selector + date */}
       <DashboardHeader rabbit={rabbit} rabbits={rabbits} />
       {!rabbit && <CreateRabbitForm />}
+      <HeroPanel rabbit={rabbit} records={records} />
 
       {/* Sync status indicator */}
       <SyncStatus
         status="synced"
-        label="Datos cargados desde tu cuenta"
+        label={t.dashboard.syncLabel}
         className="self-start"
       />
 
       {/* Habit variable cards — one per FOOD, WATER, SLEEP, PLAY, BEHAVIOR */}
       <section aria-labelledby="habits-heading">
         <h2 id="habits-heading" className="sr-only">
-          Resumen de hábitos
+          {t.dashboard.habitsHeading}
         </h2>
         <HabitOverview records={records} />
       </section>
@@ -40,7 +47,7 @@ export default async function DashboardPage() {
       {/* Recent records table / list */}
       <section aria-labelledby="recent-heading">
         <h2 id="recent-heading" className="text-lg font-semibold text-text mb-3">
-          Registros recientes
+          {t.dashboard.recent}
         </h2>
         <RecentRecords records={records} />
       </section>
@@ -49,7 +56,7 @@ export default async function DashboardPage() {
         aria-labelledby="charts-heading"
         className="card"
       >
-        <div className="mb-4"><h2 id="charts-heading" className="text-lg font-semibold">Actividad de los últimos 7 días</h2><p className="text-sm text-text-secondary">Observaciones registradas por variable.</p></div>
+        <div className="mb-4"><h2 id="charts-heading" className="text-lg font-semibold">{t.dashboard.chartTitle}</h2><p className="text-sm text-text-secondary">{t.dashboard.chartSub}</p></div>
         <TrendChart records={records} />
       </section>
     </div>

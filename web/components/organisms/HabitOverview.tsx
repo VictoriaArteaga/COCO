@@ -1,5 +1,6 @@
 import type { HabitRecord, HabitType } from '@/types'
 import { HabitCard } from '@/components/molecules/HabitCard'
+import { getServerPrefs } from '@/lib/i18n/server'
 
 const HABIT_TYPES: HabitType[] = ['FOOD', 'WATER', 'SLEEP', 'PLAY', 'BEHAVIOR']
 
@@ -11,7 +12,8 @@ interface HabitOverviewProps {
  * Organism: grid of HabitCards — one per habit type.
  * Shows the most recent record for each type today.
  */
-export function HabitOverview({ records }: HabitOverviewProps) {
+export async function HabitOverview({ records }: HabitOverviewProps) {
+  const { t } = await getServerPrefs()
   const today = new Date().toISOString().split('T')[0]
 
   const todayRecords = records.filter(
@@ -20,8 +22,8 @@ export function HabitOverview({ records }: HabitOverviewProps) {
 
   return (
     <div
-      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
-      aria-label="Resumen de hábitos de hoy"
+      className="stagger grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
+      aria-label={t.dashboard.todayHabits}
     >
       {HABIT_TYPES.map((type) => {
         const latest = todayRecords

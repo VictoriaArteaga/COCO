@@ -9,7 +9,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const VARIANT_STYLES: Record<NonNullable<ButtonProps['variant']>, string> = {
   primary:   'btn-primary',
   secondary: 'btn-secondary',
-  ghost:     'text-green hover:bg-green-light rounded-coco px-3 py-1.5 transition-colors',
+  ghost:     'text-green-dark hover:bg-green-light rounded-coco px-3 py-1.5 transition-colors',
 }
 
 const SIZE_STYLES: Record<NonNullable<ButtonProps['size']>, string> = {
@@ -41,7 +41,7 @@ export function Button({
       {isLoading ? (
         <>
           <span className="sr-only">Cargando…</span>
-          <span aria-hidden="true">●●●</span>
+          <span aria-hidden="true" className="spinner" />
         </>
       ) : (
         children

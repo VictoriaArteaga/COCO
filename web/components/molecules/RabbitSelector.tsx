@@ -1,4 +1,6 @@
 import type { Rabbit } from '@/types'
+import { IconTile } from '@/components/atoms/Icon'
+import { getServerPrefs } from '@/lib/i18n/server'
 
 interface RabbitSelectorProps {
   rabbits?: Rabbit[]
@@ -10,11 +12,13 @@ interface RabbitSelectorProps {
  * Molecule: dropdown/display for selecting the active rabbit.
  * In week 4 there is only one rabbit; multi-rabbit support is prepared for week 5.
  */
-export function RabbitSelector({ rabbits = [], selected, onSelect }: RabbitSelectorProps) {
+export async function RabbitSelector({ rabbits = [], selected, onSelect }: RabbitSelectorProps) {
+  const { t } = await getServerPrefs()
+
   if (!selected && rabbits.length === 0) {
     return (
       <div className="text-sm text-text-secondary" aria-live="polite">
-        Cargando…
+        {t.common.loading}
       </div>
     )
   }
@@ -27,8 +31,7 @@ export function RabbitSelector({ rabbits = [], selected, onSelect }: RabbitSelec
   if (rabbits.length <= 1) {
     return (
       <div className="flex items-center gap-2">
-        {/* Rabbit icon */}
-        <span aria-hidden="true" className="text-xl">🐇</span>
+        <IconTile name="rabbit" size={36} />
         <span className="font-semibold text-text">{current.name}</span>
       </div>
     )
@@ -38,7 +41,7 @@ export function RabbitSelector({ rabbits = [], selected, onSelect }: RabbitSelec
   return (
     <div>
       <label htmlFor="rabbit-select" className="sr-only">
-        Seleccionar conejo
+        {t.dashboard.rabbitSelect}
       </label>
       <select
         id="rabbit-select"
@@ -51,7 +54,7 @@ export function RabbitSelector({ rabbits = [], selected, onSelect }: RabbitSelec
       >
         {rabbits.map((r) => (
           <option key={r.id} value={r.id}>
-            🐇 {r.name}
+            {r.name}
           </option>
         ))}
       </select>
