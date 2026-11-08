@@ -95,5 +95,5 @@ export const HABIT_TYPE_INFO: Record<HabitType, HabitTypeInfo> = {
   WATER: { key: 'WATER', label: 'Agua', unit: 'ml', color: '#1B7FB5' },
   SLEEP: { key: 'SLEEP', label: 'Sueño', unit: 'min', color: '#4B55B5' },
   PLAY: { key: 'PLAY', label: 'Juego', unit: 'min', color: '#D6334F' },
-  BEHAVIOR: { key: 'BEHAVIOR', label: 'Comportamiento', unit: 'nota', color: '#0A8570' },
+  BEHAVIOR: { key: 'BEHAVIOR', label: 'Comportamiento', unit: 'nota', color: '#2E7D50' },
 }

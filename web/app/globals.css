@@ -5,31 +5,34 @@
 /* ─── COCO Design Tokens as CSS Custom Properties ────────────────────────── */
 :root {
   /* Tripletas RGB: Tailwind las usa con transparencia (rgb(var(--c-x) / alpha)) */
-  --c-green: 15 166 138;
-  --c-green-dark: 10 107 90;
-  --c-green-light: 214 247 234;
-  --c-green-bright: 127 240 204;
-  --c-purple: 10 107 90;
-  --c-purple-dark: 6 74 63;
-  --c-purple-light: 214 247 234;
+  --c-green: 138 90 59;
+  --c-green-dark: 90 56 37;
+  --c-green-light: 243 230 216;
+  --c-green-bright: 217 168 119;
+  --c-purple: 90 56 37;
+  --c-purple-dark: 61 38 25;
+  --c-purple-light: 243 230 216;
   --c-coral: 214 51 79;
-  --shell-bg: #0A6B5A;
+  --shell-bg: #4A2E1D;
+  --app-bg: linear-gradient(160deg, #F1E3D1 0%, #E6D0B6 55%, #DBBF9F 100%);
+  --app-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160' fill='none' stroke='%238A5A3B' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='24' cy='26' r='7'/%3E%3Cpath d='M104 22v14M97 29h14'/%3E%3Ccircle cx='132' cy='84' r='3.5' fill='%238A5A3B' stroke='none'/%3E%3Ccircle cx='78' cy='118' r='9'/%3E%3Cpath d='M30 98c0-5 4-8 8-8s8 3 8 8-4 9-8 9-8-4-8-9z'/%3E%3Ccircle cx='28' cy='84' r='2.6' fill='%238A5A3B' stroke='none'/%3E%3Ccircle cx='38' cy='80' r='2.6' fill='%238A5A3B' stroke='none'/%3E%3Ccircle cx='48' cy='84' r='2.6' fill='%238A5A3B' stroke='none'/%3E%3Cpath d='M126 136l6-6 6 6-6 6z'/%3E%3Ccircle cx='60' cy='60' r='2' fill='%238A5A3B' stroke='none'/%3E%3C/svg%3E");
+  --app-pattern-opacity: 0.22;
   --c-yellow: 255 200 61;
   --c-yellow-dark: 242 168 29;
   --c-coral-light: 255 227 232;
-  --c-surface: 233 251 244;
+  --c-surface: 251 243 234;
   --c-card: 255 255 255;
-  --c-title: 10 107 90;
-  --c-ink: 11 46 42;
-  --c-line: 197 216 209;
+  --c-title: 90 56 37;
+  --c-ink: 43 27 18;
+  --c-line: 224 206 190;
   --c-mute: 142 152 166;
-  --c-text: 11 46 42;
-  --c-text-secondary: 74 104 98;
-  --c-state-normal: 10 122 103;
+  --c-text: 43 27 18;
+  --c-text-secondary: 109 85 69;
+  --c-state-normal: 46 125 80;
   --c-state-attention: 183 121 31;
   --c-state-alert: 214 51 79;
   --c-state-info: 59 110 165;
-  --c-state-offline: 122 133 128;
+  --c-state-offline: 140 125 112;
 
   /* Alias usados por el CSS de este archivo */
   --color-green: rgb(var(--c-green));
@@ -38,96 +41,98 @@
   --color-line: rgb(var(--c-line));
   --color-coral: rgb(var(--c-coral));
 
-  --input-bg: #F1FDF8;
-  --dots: rgb(15 166 138 / 0.14);
-  --shimmer-a: #d9f3e8;
-  --shimmer-b: #effcf6;
+  --input-bg: #FBF5EE;
+  --dots: rgb(138 90 59 / 0.14);
+  --shimmer-a: #EFE2D4;
+  --shimmer-b: #F8EFE6;
 
   /* Movimiento: sobrio, rápido y con salida suave */
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --shadow-soft: 0 14px 30px -18px rgb(15 166 138 / 0.55);
-  --shadow-lift: 0 16px 30px -16px rgb(11 46 42 / 0.45);
+  --shadow-soft: 0 14px 30px -18px rgb(138 90 59 / 0.55);
+  --shadow-lift: 0 16px 30px -16px rgb(43 27 18 / 0.45);
 
   /* Autenticación: turquesa de marca en claro */
-  --auth-bg: linear-gradient(145deg, rgb(70 208 180) 0%, rgb(34 186 156) 48%, rgb(24 174 146) 100%);
+  --auth-bg: linear-gradient(145deg, rgb(179 130 90) 0%, rgb(148 100 63) 48%, rgb(126 82 51) 100%);
   --auth-dots: rgb(255 255 255 / 0.7);
   --auth-dots-opacity: 0.28;
-  --auth-orb-a: rgb(175 255 226 / 0.5);
-  --auth-orb-b: rgb(10 107 90 / 0.4);
-  --auth-panel: linear-gradient(135deg, #0FA68A 0%, #0A6B5A 100%);
+  --auth-orb-a: rgb(233 205 170 / 0.5);
+  --auth-orb-b: rgb(90 56 37 / 0.4);
+  --auth-panel: linear-gradient(135deg, #8A5A3B 0%, #5A3825 100%);
   --auth-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='24' cy='26' r='7'/%3E%3Cpath d='M104 22v14M97 29h14'/%3E%3Ccircle cx='132' cy='84' r='3.5' fill='white' stroke='none'/%3E%3Ccircle cx='78' cy='118' r='9'/%3E%3Cpath d='M30 98c0-5 4-8 8-8s8 3 8 8-4 9-8 9-8-4-8-9z'/%3E%3Ccircle cx='28' cy='84' r='2.6' fill='white' stroke='none'/%3E%3Ccircle cx='38' cy='80' r='2.6' fill='white' stroke='none'/%3E%3Ccircle cx='48' cy='84' r='2.6' fill='white' stroke='none'/%3E%3Cpath d='M126 136l6-6 6 6-6 6z'/%3E%3Ccircle cx='60' cy='60' r='2' fill='white' stroke='none'/%3E%3C/svg%3E");
   --auth-card: #ffffff;
-  --auth-card-border: rgb(197 216 209);
-  --auth-card-shadow: 0 30px 60px -30px rgb(11 46 42 / 0.55);
-  --auth-badge-bg: rgb(214 247 234);
-  --auth-badge-fg: rgb(10 107 90);
-  --auth-badge-border: rgb(11 46 42);
+  --auth-card-border: rgb(224 206 190);
+  --auth-card-shadow: 0 30px 60px -30px rgb(43 27 18 / 0.55);
+  --auth-badge-bg: rgb(243 230 216);
+  --auth-badge-fg: rgb(90 56 37);
+  --auth-badge-border: rgb(43 27 18);
   --auth-disc: #ffffff;
-  --auth-disc-border: rgb(11 46 42);
-  --auth-btn-border: rgb(11 46 42);
-  --auth-input-border: rgb(197 216 209);
+  --auth-disc-border: rgb(43 27 18);
+  --auth-btn-border: rgb(43 27 18);
+  --auth-input-border: rgb(224 206 190);
   --auth-placeholder: rgb(98 87 122 / 0.7);
   --auth-orb-c: transparent;
   --auth-error-bg: #FFE3E8;
   --auth-error-fg: #B3203F;
-  --auth-input-bg: #F1FDF8;
+  --auth-input-bg: #FBF5EE;
   --auth-btn-bg: rgb(255 200 61);
   --auth-btn-glow: none;
 }
 
 /* Tema oscuro: se activa con data-theme="dark" en <html> (el claro es el predeterminado) */
 :root[data-theme='dark'] {
-  --c-green-dark: 95 224 194;
-  --c-green-light: 27 58 51;
-  --c-purple: 15 166 138;
+  --c-green-dark: 232 195 160;
+  --c-green-light: 58 42 31;
+  --c-purple: 138 90 59;
   --c-purple-dark: 10 130 108;
-  --c-purple-light: 27 58 51;
+  --c-purple-light: 58 42 31;
   --c-coral-light: 58 26 34;
-  --c-surface: 14 24 21;
-  --c-card: 22 36 31;
-  --c-title: 190 245 228;
-  --c-ink: 183 212 203;
-  --c-line: 46 74 66;
-  --c-mute: 127 154 146;
-  --c-text: 231 243 239;
-  --c-text-secondary: 165 183 177;
-  --c-state-normal: 95 224 194;
+  --c-surface: 24 17 12;
+  --c-card: 36 26 19;
+  --c-title: 240 214 185;
+  --c-ink: 222 205 190;
+  --c-line: 74 56 44;
+  --c-mute: 170 148 130;
+  --c-text: 245 236 227;
+  --c-text-secondary: 196 178 163;
+  --c-state-normal: 232 195 160;
   --c-state-attention: 240 179 90;
   --c-state-alert: 255 122 142;
   --c-state-info: 125 180 240;
-  --c-state-offline: 154 165 160;
+  --c-state-offline: 170 155 140;
 
-  --input-bg: #0F1C18;
-  --dots: rgb(127 240 204 / 0.07);
-  --shimmer-a: #1b2e28;
-  --shimmer-b: #24403a;
+  --input-bg: #1A120D;
+  --dots: rgb(217 168 119 / 0.07);
+  --shimmer-a: #2E2118;
+  --shimmer-b: #3D2D20;
   --shadow-soft: 0 14px 30px -18px rgb(0 0 0 / 0.75);
   --shadow-lift: 0 16px 30px -16px rgb(0 0 0 / 0.8);
 
   /* Autenticación (oscuro): misma paleta de marca. El turquesa de fondo se mantiene idéntico al modo claro
      (color de identidad) y la tarjeta usa los tokens oscuros del proyecto, que contrastan con él. */
-  --auth-bg: linear-gradient(145deg, rgb(70 208 180) 0%, rgb(34 186 156) 48%, rgb(24 174 146) 100%);
+  --auth-bg: linear-gradient(145deg, rgb(179 130 90) 0%, rgb(148 100 63) 48%, rgb(126 82 51) 100%);
   --auth-dots: rgb(255 255 255 / 0.7);
   --auth-dots-opacity: 0.28;
-  --auth-orb-a: rgb(175 255 226 / 0.5);
-  --auth-orb-b: rgb(10 107 90 / 0.4);
+  --auth-orb-a: rgb(233 205 170 / 0.5);
+  --auth-orb-b: rgb(90 56 37 / 0.4);
   --auth-orb-c: transparent;
-  --auth-panel: linear-gradient(135deg, rgb(15 166 138) 0%, rgb(10 107 90) 100%);
+  --auth-panel: linear-gradient(135deg, rgb(138 90 59) 0%, rgb(90 56 37) 100%);
   --auth-card: rgb(var(--c-card));
-  --auth-card-border: rgb(127 240 204 / 0.35);
-  --auth-card-shadow: 0 30px 60px -24px rgb(11 46 42 / 0.75);
+  --auth-card-border: rgb(217 168 119 / 0.35);
+  --auth-card-shadow: 0 30px 60px -24px rgb(43 27 18 / 0.75);
   --auth-badge-bg: rgb(var(--c-green-light));
   --auth-badge-fg: rgb(var(--c-green-dark));
-  --auth-badge-border: rgb(127 240 204 / 0.7);
+  --auth-badge-border: rgb(217 168 119 / 0.7);
   --auth-disc: #ffffff;
-  --auth-disc-border: rgb(11 46 42);
-  --auth-btn-border: rgb(11 46 42);
+  --auth-disc-border: rgb(43 27 18);
+  --auth-btn-border: rgb(43 27 18);
   --auth-input-bg: var(--input-bg);
   --auth-input-border: rgb(var(--c-line));
-  --auth-placeholder: rgb(165 183 177 / 0.6);
+  --auth-placeholder: rgb(196 178 163 / 0.6);
   --auth-btn-bg: rgb(255 200 61);
   --auth-btn-glow: none;
-  --shell-bg: #083A31;
+  --shell-bg: #2A1A10;
+  --app-bg: linear-gradient(160deg, #241A13 0%, #1D1510 55%, #17100C 100%);
+  --app-pattern-opacity: 0.1;
   --auth-error-bg: #3A1A22;
   --auth-error-fg: #FF9AAB;
   color-scheme: dark;
@@ -144,16 +149,16 @@
 /* Fondo de la app autenticada: igual que el inicio de sesión (turquesa claro + patrón + luces) */
 .app-bg {
   position: relative;
-  background: var(--auth-bg);
+  background: var(--app-bg);
 }
 .app-bg::before {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: var(--auth-pattern);
+  background-image: var(--app-pattern);
   background-size: 160px 160px;
-  opacity: 0.2;
+  opacity: var(--app-pattern-opacity);
 }
 .app-bg::after {
   content: '';
@@ -183,9 +188,9 @@
   to   { transform: scaleX(1); }
 }
 @keyframes ring {
-  0%   { box-shadow: 0 0 0 0 rgb(10 122 103 / 0.45); }
-  70%  { box-shadow: 0 0 0 7px rgb(10 122 103 / 0); }
-  100% { box-shadow: 0 0 0 0 rgb(10 122 103 / 0); }
+  0%   { box-shadow: 0 0 0 0 rgb(46 125 80 / 0.45); }
+  70%  { box-shadow: 0 0 0 7px rgb(46 125 80 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(46 125 80 / 0); }
 }
 @keyframes float {
   0%, 100% { transform: translateY(0); }
@@ -281,7 +286,7 @@
   select:focus,
   textarea:focus {
     border-color: rgb(var(--c-green));
-    box-shadow: 0 0 0 4px rgb(15 166 138 / 0.28);
+    box-shadow: 0 0 0 4px rgb(138 90 59 / 0.28);
     outline: none;
   }
 
@@ -314,7 +319,7 @@
   .auth-input::placeholder { color: var(--auth-placeholder); }
   .auth-input:focus {
     border-color: rgb(var(--c-green));
-    box-shadow: 0 0 0 4px rgb(15 166 138 / 0.32);
+    box-shadow: 0 0 0 4px rgb(138 90 59 / 0.32);
   }
   .auth-input[aria-invalid='true'],
   .auth-input[aria-invalid='true']:focus {
@@ -324,10 +329,10 @@
   .auth-error { color: var(--auth-error-fg); }
   .auth-link { color: rgb(var(--c-green-dark)); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   .auth-link:hover { text-decoration-thickness: 2px; }
-  .auth-submit { color: #0B2E2A; background: var(--auth-btn-bg); border-color: var(--auth-btn-border); box-shadow: var(--auth-btn-glow); }
+  .auth-submit { color: #2B1B12; background: var(--auth-btn-bg); border-color: var(--auth-btn-border); box-shadow: var(--auth-btn-glow); }
   .auth-submit:hover:not(:disabled) { box-shadow: 0 4px 0 var(--auth-btn-border), var(--auth-btn-glow); }
   .auth-submit:focus-visible,
-  .auth-eye:focus-visible { outline: 3px solid rgb(127 240 204); outline-offset: 2px; }
+  .auth-eye:focus-visible { outline: 3px solid rgb(217 168 119); outline-offset: 2px; }
 
   /* Card base: blanca, muy redondeada, sombra turquesa suave */
   .card {
@@ -401,7 +406,7 @@
     @apply relative inline-flex items-center justify-center gap-2 overflow-hidden
            bg-yellow font-bold rounded-xl px-5 py-2.5 min-h-[44px]
            disabled:opacity-50 disabled:cursor-not-allowed;
-    color: #0B2E2A;
+    color: #2B1B12;
     border: 1.5px solid var(--color-ink);
     transition: transform 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out), filter 0.15s;
   }

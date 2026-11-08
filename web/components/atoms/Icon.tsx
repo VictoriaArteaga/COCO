@@ -3,13 +3,13 @@ import { cn } from '@/lib/utils/cn'
 
 /** Colores de los mosaicos de iconos (misma paleta que tailwind.config.ts). */
 export const TILE = {
-  teal: '#0FA68A',
-  muted: '#4A6862',
+  teal: '#8A5A3B',
+  muted: '#6D5545',
   ink: 'rgb(var(--c-ink))',
   gray: 'rgb(var(--c-mute))',
   coral: '#D6334F',
   yellow: '#FFC83D',
-  dark: '#0B2E2A',
+  dark: '#2B1B12',
 } as const
 
 export type IconName =

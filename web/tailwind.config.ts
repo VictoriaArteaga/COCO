@@ -42,7 +42,7 @@ const config: Config = {
         card: v('card'),
         white: '#FFFFFF',
         // Texto fijo sobre superficies turquesa (igual en ambos temas)
-        deep: '#0B2E2A',
+        deep: '#2B1B12',
         // Título de marca (verde profundo en claro, menta en oscuro)
         title: v('title'),
         // Bordes de iconos y controles: tinta casi negra y grises (claros en oscuro)
@@ -68,7 +68,7 @@ const config: Config = {
           water: '#1B7FB5',
           sleep: '#4B55B5',
           play: '#D6334F',
-          behavior: '#0A8570',
+          behavior: '#2E7D50',
         },
       },
       fontFamily: {
