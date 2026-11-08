@@ -24,7 +24,7 @@ export async function AuthShell({ mode, children }: { mode: 'login' | 'register'
 
       {mode === 'login' ? (
         <div className="auth-card relative w-full max-w-md rounded-sheet overflow-hidden p-6 sm:max-w-lg sm:p-10 lg:max-w-xl lg:p-14 xl:max-w-2xl xl:p-16" style={cardAnim}>
-          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-green via-green-bright to-coral opacity-90" />
+          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-green via-green-bright to-yellow opacity-90" />
           <header className="text-center">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full auth-badge lg:h-24 lg:w-24 xl:h-28 xl:w-28">
               <Icon name="login" size={34} className="lg:scale-125 xl:scale-150" />

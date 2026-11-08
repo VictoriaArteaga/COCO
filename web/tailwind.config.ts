@@ -31,6 +31,11 @@ const config: Config = {
           DEFAULT: v('coral'),
           light: v('coral-light'),
         },
+        // Amarillo: acento cálido de marca (botón principal, detalles)
+        yellow: {
+          DEFAULT: v('yellow'),
+          dark: v('yellow-dark'),
+        },
         // Fondos
         surface: v('surface'),
         cream: v('surface'),
@@ -59,11 +64,11 @@ const config: Config = {
         },
         // Habit type variables
         habit: {
-          food: '#0B8A72',
-          water: '#2A78AE',
-          sleep: '#3B5BA9',
-          play: '#D0406A',
-          behavior: '#B85F0E',
+          food: '#C4600F',
+          water: '#1B7FB5',
+          sleep: '#4B55B5',
+          play: '#D6334F',
+          behavior: '#0A8570',
         },
       },
       fontFamily: {
@@ -71,8 +76,14 @@ const config: Config = {
         sans: ['var(--font-sans)', 'ui-rounded', '"Segoe UI"', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
-        coco: '18px',
-        sheet: '28px',
+        // Esquinas suaves pero más rectas: se redefine la escala de Tailwind y las medidas del proyecto
+        md: '6px',
+        lg: '8px',
+        xl: '10px',
+        '2xl': '12px',
+        '3xl': '14px',
+        coco: '10px',
+        sheet: '14px',
       },
     },
   },
