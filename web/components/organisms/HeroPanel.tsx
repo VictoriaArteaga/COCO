@@ -27,27 +27,27 @@ export async function HeroPanel({ rabbit, records }: { rabbit: Rabbit | null; re
   return (
     <section
       aria-label={t.hero.summary}
-      className="relative overflow-hidden rounded-sheet border-[1.5px] border-ink bg-green p-6 pb-24 text-white sm:p-8 sm:pb-24"
-      style={{ boxShadow: 'var(--shadow-soft)' }}
+      className="relative overflow-hidden rounded-sheet p-6 pb-28 text-[#0B2E2A] sm:p-8 sm:pb-28 lg:p-10 lg:pb-32"
+      style={{ background: 'linear-gradient(135deg, rgb(255 214 98) 0%, rgb(255 200 61) 50%, rgb(242 168 29) 100%)', boxShadow: 'var(--auth-card-shadow)' }}
     >
       {/* Trama y círculos decorativos */}
       <div aria-hidden="true" className="absolute inset-0 opacity-25" style={{ backgroundImage: 'radial-gradient(rgb(255 255 255 / 0.6) 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
-      <div aria-hidden="true" className="absolute -right-10 -top-16 h-56 w-56 rounded-full bg-green-bright/40" />
+      <div aria-hidden="true" className="absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/15" />
 
       <div className="relative flex items-center justify-between gap-6">
         <div>
-          <p className="text-4xl font-extrabold uppercase tracking-wide text-white sm:text-5xl" style={{ animation: 'fade-up 0.6s 0.1s var(--ease-out) backwards' }}>
+          <p className="font-display text-4xl font-semibold uppercase tracking-wide text-[#0B2E2A] sm:text-5xl lg:text-6xl" style={{ animation: 'fade-up 0.6s 0.1s var(--ease-out) backwards' }}>
             {t.hero.hello}
           </p>
-          <p className="mt-2 text-lg font-bold text-deep" style={{ animation: 'fade-up 0.6s 0.2s var(--ease-out) backwards' }}>
+          <p className="mt-2 text-lg font-bold text-[#0B2E2A]" style={{ animation: 'fade-up 0.6s 0.2s var(--ease-out) backwards' }}>
             {rabbit ? t.hero.rabbitLine(rabbit.name) : t.hero.noRabbit}
           </p>
-          <p className="mt-1 max-w-md text-sm font-medium text-deep" style={{ animation: 'fade-up 0.6s 0.3s var(--ease-out) backwards' }}>
+          <p className="mt-1 max-w-md text-sm font-medium text-[#0B2E2A]/85" style={{ animation: 'fade-up 0.6s 0.3s var(--ease-out) backwards' }}>
             {t.hero.sub}
           </p>
         </div>
-        <div className="float-slow hidden h-40 w-40 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink bg-white sm:flex" style={{ animation: 'scale-in 0.7s 0.15s var(--ease-out) backwards, float 5s 1s ease-in-out infinite' }}>
-          <RabbitIllustration className="h-36 w-36" />
+        <div className="float-slow hidden h-40 w-40 flex-shrink-0 items-center justify-center rounded-full auth-disc sm:flex lg:h-52 lg:w-52" style={{ animation: 'scale-in 0.7s 0.15s var(--ease-out) backwards, float 5s 1s ease-in-out infinite' }}>
+          <RabbitIllustration className="h-36 w-36 lg:h-48 lg:w-48" />
         </div>
       </div>
 

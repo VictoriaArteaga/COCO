@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { DashboardHeader } from '@/components/organisms/DashboardHeader'
 import { HabitOverview } from '@/components/organisms/HabitOverview'
 import { RecentRecords } from '@/components/organisms/RecentRecords'
-import { SyncStatus } from '@/components/molecules/SyncStatus'
 import { getDashboardData } from '@/lib/api/server'
 import { getServerPrefs } from '@/lib/i18n/server'
 import { TrendChart } from '@/components/organisms/TrendChart'
@@ -23,18 +22,12 @@ export default async function DashboardPage() {
   const { t } = await getServerPrefs()
   const { rabbit, rabbits, records } = await getDashboardData()
   return (
-    <div className="stagger flex flex-col gap-6 p-6 lg:p-8">
+    <div className="stagger flex flex-col gap-5 p-4 sm:p-6 lg:gap-6 lg:p-8">
       {/* Header: rabbit selector + date */}
       <DashboardHeader rabbit={rabbit} rabbits={rabbits} />
       {!rabbit && <CreateRabbitForm />}
       <HeroPanel rabbit={rabbit} records={records} />
 
-      {/* Sync status indicator */}
-      <SyncStatus
-        status="synced"
-        label={t.dashboard.syncLabel}
-        className="self-start"
-      />
 
       {/* Habit variable cards — one per FOOD, WATER, SLEEP, PLAY, BEHAVIOR */}
       <section aria-labelledby="habits-heading">
@@ -45,8 +38,8 @@ export default async function DashboardPage() {
       </section>
 
       {/* Recent records table / list */}
-      <section aria-labelledby="recent-heading">
-        <h2 id="recent-heading" className="text-lg font-semibold text-text mb-3">
+      <section aria-labelledby="recent-heading" className="auth-card rounded-sheet p-4 sm:p-6">
+        <h2 id="recent-heading" className="mb-4 font-display text-xl font-semibold text-green-dark">
           {t.dashboard.recent}
         </h2>
         <RecentRecords records={records} />
@@ -56,7 +49,7 @@ export default async function DashboardPage() {
         aria-labelledby="charts-heading"
         className="card"
       >
-        <div className="mb-4"><h2 id="charts-heading" className="text-lg font-semibold">{t.dashboard.chartTitle}</h2><p className="text-sm text-text-secondary">{t.dashboard.chartSub}</p></div>
+        <div className="mb-4"><h2 id="charts-heading" className="font-display text-xl font-semibold text-green-dark">{t.dashboard.chartTitle}</h2><p className="text-sm text-text-secondary">{t.dashboard.chartSub}</p></div>
         <TrendChart records={records} />
       </section>
     </div>

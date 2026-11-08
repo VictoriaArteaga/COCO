@@ -20,8 +20,8 @@ export async function RecentRecords({ records, limit = 10 }: RecentRecordsProps)
 
   if (displayed.length === 0) {
     return (
-      <div className="card">
-        <p className="text-text-secondary text-sm text-center py-6">
+      <div>
+        <p className="py-6 text-center text-sm text-text-secondary">
           {t.records.empty}
         </p>
       </div>
@@ -29,10 +29,10 @@ export async function RecentRecords({ records, limit = 10 }: RecentRecordsProps)
   }
 
   return (
-    <div className="card overflow-x-auto">
-      <table className="w-full text-sm" aria-label={t.records.table}>
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[34rem] text-sm" aria-label={t.records.table}>
         <thead>
-          <tr className="border-b border-line text-left">
+          <tr className="border-b-2 border-line text-left">
             <th scope="col" className="pb-3 pr-4 font-semibold text-text">{t.records.variable}</th>
             <th scope="col" className="pb-3 pr-4 font-semibold text-text">{t.records.value}</th>
             <th scope="col" className="pb-3 pr-4 font-semibold text-text">{t.records.note}</th>

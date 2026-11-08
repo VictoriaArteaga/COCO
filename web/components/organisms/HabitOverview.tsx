@@ -22,7 +22,7 @@ export async function HabitOverview({ records }: HabitOverviewProps) {
 
   return (
     <div
-      className="stagger grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
+      className="stagger grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 lg:gap-4"
       aria-label={t.dashboard.todayHabits}
     >
       {HABIT_TYPES.map((type) => {

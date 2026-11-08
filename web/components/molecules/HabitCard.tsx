@@ -33,7 +33,7 @@ export async function HabitCard({ habitType, latestRecord, className }: HabitCar
     >
       <div className="flex items-center gap-3">
         <IconTile name={HABIT_ICON[habitType]} color={info.color} size={40} />
-        <h3 className="text-sm font-semibold text-text">{label}</h3>
+        <h3 className="font-display text-base font-semibold text-text">{label}</h3>
       </div>
       <p className="text-xl font-bold text-text" aria-live="polite">
         {valueText}
