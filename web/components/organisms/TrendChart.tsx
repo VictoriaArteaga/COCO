@@ -1,22 +1,24 @@
 'use client'
 
 import { useMemo } from 'react'
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { HabitRecord, HabitType } from '@/types'
 import { HABIT_TYPE_INFO } from '@/types'
 import { usePrefs } from '@/lib/i18n/PreferencesProvider'
 
 const types: HabitType[] = ['FOOD', 'WATER', 'SLEEP', 'PLAY', 'BEHAVIOR']
 
-/** Versiones más claras de los colores de hábito para que las líneas se vean sobre fondo oscuro. */
+/** Versiones más claras de los colores de hábito para que las curvas se vean sobre fondo oscuro. */
 const DARK_HABIT_COLORS: Record<HabitType, string> = {
-  FOOD: '#2FD1AE', WATER: '#5AB0EA', SLEEP: '#8FA8F0', PLAY: '#F27A9C', BEHAVIOR: '#F0A24A',
+  FOOD: '#F5A25D', WATER: '#5CC3F0', SLEEP: '#8F9BF0', PLAY: '#FF7A94', BEHAVIOR: '#2FD1AE',
 }
 
 const CHART_THEME = {
-  light: { grid: '#C5D8D1', axis: '#8E98A6', tick: '#4A6862', ink: '#0B2E2A', tooltipBg: '#FFFFFF', tooltipText: '#0B2E2A' },
-  dark: { grid: '#2E4A42', axis: '#7F9A92', tick: '#A5B7B1', ink: '#B7D4CB', tooltipBg: '#16241F', tooltipText: '#E7F3EF' },
+  light: { grid: '#DCEBE5', tick: '#4A6862', ink: '#0B2E2A', cardBg: '#FFFFFF', ring: '#FFFFFF', ref: '#7FA89E' },
+  dark: { grid: '#2A4A42', tick: '#A5B7B1', ink: '#E7F3EF', cardBg: '#16241F', ring: '#16241F', ref: '#5F8076' },
 } as const
+
+interface TooltipRow { dataKey?: string | number; value?: number | string; color?: string; name?: string }
 
 export function TrendChart({ records, selected = types, days = 7, endDate }: { records: HabitRecord[]; selected?: HabitType[]; days?: number; endDate?: string }) {
   const { t, theme, locale } = usePrefs()
@@ -30,32 +32,77 @@ export function TrendChart({ records, selected = types, days = 7, endDate }: { r
       return date.toISOString().slice(0, 10)
     })
     return dates.map((date) => {
-      const row: Record<string, string | number> = { date: new Date(`${date}T12:00:00`).toLocaleDateString(locale, { weekday: 'short', day: 'numeric' }) }
+      const day = new Date(`${date}T12:00:00`)
+      const row: Record<string, string | number> = {
+        date: day.toLocaleDateString(locale, { weekday: 'short', day: 'numeric' }),
+        full: day.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }),
+      }
       selected.forEach((type) => {
         row[type] = records.filter((record) => record.habitType === type && record.recordedAt.slice(0, 10) === date).length
-        row[`${type}_usual`] = 1
       })
       return row
     })
   }, [records, selected, days, endDate, locale])
 
+  /** Tarjeta flotante con los valores del día: puntos de color, nombre y cifra. */
+  function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: Record<string, string | number> }[] & TooltipRow[] }) {
+    if (!active || !payload?.length) return null
+    const row = (payload[0] as { payload: Record<string, string | number> }).payload
+    return (
+      <div className="min-w-[10rem] rounded-2xl border p-3 text-sm shadow-xl" style={{ background: c.cardBg, color: c.ink, borderColor: theme === 'dark' ? '#2A4A42' : '#CFE6DD' }}>
+        <p className="mb-2 font-display text-base font-semibold capitalize">{String(row.full)}</p>
+        <ul className="space-y-1.5">
+          {selected.map((type) => (
+            <li key={type} className="flex items-center justify-between gap-4">
+              <span className="flex items-center gap-2 font-medium"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-full" style={{ background: colorOf(type) }} />{t.habits[type]}</span>
+              <span className="font-bold tabular-nums">{row[type]}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
   return (
-    <div className="h-72 w-full" role="img" aria-label={t.trends.chartAria}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={c.grid} />
-          <XAxis dataKey="date" tick={{ fontSize: 12, fill: c.tick }} axisLine={{ stroke: c.axis }} tickLine={{ stroke: c.axis }} />
-          <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: c.tick }} axisLine={{ stroke: c.axis }} tickLine={{ stroke: c.axis }} />
-          <Tooltip
-            cursor={{ stroke: c.ink, strokeDasharray: '4 4' }}
-            contentStyle={{ border: `1px solid ${c.ink}`, borderRadius: 12, background: c.tooltipBg, color: c.tooltipText, boxShadow: '0 8px 20px -12px rgb(0 0 0 / 0.5)' }}
-            labelStyle={{ color: c.tooltipText }}
-          />
-          <Legend iconType="plainline" />
-          {selected.map((type) => <Line key={type} type="monotone" dataKey={type} name={t.habits[type]} stroke={colorOf(type)} strokeWidth={2.5} dot={{ r: 3, stroke: c.ink, strokeWidth: 1, fill: colorOf(type) }} activeDot={{ r: 6, stroke: c.ink, strokeWidth: 1.5 }} animationDuration={1100} animationEasing="ease-out" />)}
-          {selected.map((type) => <Line key={`${type}-usual`} type="monotone" dataKey={`${type}_usual`} name={`${t.habits[type]} · ${t.trends.pattern}`} stroke={colorOf(type)} strokeWidth={1} strokeDasharray="5 5" dot={false} activeDot={false} />)}
-        </LineChart>
-      </ResponsiveContainer>
+    <div>
+      {/* Leyenda en píldoras, con el color de cada variable */}
+      <ul className="mb-4 flex flex-wrap gap-2" aria-hidden="true">
+        {selected.map((type) => (
+          <li key={type} className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-bold text-text">
+            <span className="h-3 w-3 rounded-full" style={{ background: colorOf(type) }} />
+            {t.habits[type]}
+          </li>
+        ))}
+      </ul>
+
+      <div className="h-64 w-full sm:h-80 lg:h-96" role="img" aria-label={t.trends.chartAria}>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 12, right: 12, left: -18, bottom: 0 }}>
+            <CartesianGrid vertical={false} stroke={c.grid} strokeWidth={1} />
+            <XAxis dataKey="date" tick={{ fontSize: 12, fill: c.tick, fontWeight: 600 }} axisLine={false} tickLine={false} tickMargin={10} />
+            <YAxis allowDecimals={false} domain={[0, (max: number) => Math.max(2, max + 1)]} tick={{ fontSize: 12, fill: c.tick, fontWeight: 600 }} axisLine={false} tickLine={false} tickMargin={6} />
+            <Tooltip content={<ChartTooltip />} cursor={{ stroke: c.ref, strokeWidth: 1.5, strokeDasharray: '4 6' }} />
+            <ReferenceLine y={1} stroke={c.ref} strokeDasharray="5 6" strokeWidth={1.5} label={{ value: t.trends.pattern, position: 'insideTopRight', fontSize: 11, fill: c.tick, fontWeight: 600 }} />
+            {selected.map((type) => (
+              <Area
+                key={type}
+                type="linear"
+                dataKey={type}
+                name={t.habits[type]}
+                stroke={colorOf(type)}
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="miter"
+                fill="none"
+                dot={false}
+                activeDot={{ r: 6, fill: colorOf(type), stroke: c.ring, strokeWidth: 3 }}
+                animationDuration={1000}
+                animationEasing="ease-out"
+              />
+            ))}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   )
 }
