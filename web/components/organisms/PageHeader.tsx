@@ -8,7 +8,7 @@ export function PageHeader({ title, sub, icon, children }: { title: string; sub?
   return (
     <header className="shell-surface fixed inset-x-0 top-[4.25rem] z-30 flex h-[4.5rem] animate-none items-center justify-between gap-3 border-b px-4 sm:px-6 md:left-[5.5rem] md:top-0 md:h-20 lg:px-8 xl:left-64">
       <div className="flex min-w-0 items-center gap-3 lg:gap-4">
-        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-yellow text-[#0B2E2A]">
+        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-yellow text-[#2B1B12]">
           <Icon name={icon} size={22} />
         </div>
         <div className="min-w-0">

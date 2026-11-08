@@ -30,7 +30,7 @@ function OptionCards<T extends string>({ name, label, value, options, onChange }
             )}
           >
             <input type="radio" name={name} value={option.value} checked={active} onChange={() => onChange(option.value)} className="sr-only" />
-            {option.icon && <IconTile name={option.icon} color={active ? '#0FA68A' : '#4A6862'} size={40} />}
+            {option.icon && <IconTile name={option.icon} color={active ? '#8A5A3B' : '#6D5545'} size={40} />}
             <span className="min-w-0 flex-1">
               <span className="block font-display text-lg font-semibold text-text">{option.label}</span>
               {option.hint && <span className="block text-xs font-medium text-text-secondary">{option.hint}</span>}

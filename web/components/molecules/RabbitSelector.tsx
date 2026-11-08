@@ -50,7 +50,7 @@ export async function RabbitSelector({ rabbits = [], selected, onSelect }: Rabbi
           const rabbit = rabbits.find((r) => r.id === e.target.value)
           if (rabbit && onSelect) onSelect(rabbit)
         }}
-        className="text-sm font-semibold text-inherit bg-transparent border-none focus:ring-2 focus:ring-white rounded [&>option]:text-[#0B2E2A]"
+        className="text-sm font-semibold text-inherit bg-transparent border-none focus:ring-2 focus:ring-white rounded [&>option]:text-[#2B1B12]"
       >
         {rabbits.map((r) => (
           <option key={r.id} value={r.id}>

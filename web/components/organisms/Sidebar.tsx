@@ -83,11 +83,11 @@ export function Sidebar() {
                     'transition-[background-color,color,transform] duration-200',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white',
                     isActive
-                      ? 'bg-white text-[#0A6B5A] shadow-[inset_4px_0_0_#FFC83D]'
+                      ? 'bg-white text-[#5A3825] shadow-[inset_4px_0_0_#FFC83D]'
                       : 'text-white/90 hover:bg-white/10 hover:text-white',
                   )}
                 >
-                  <IconTile name={item.icon} size={34} color={isActive ? TILE.teal : TILE.yellow} fg={isActive ? undefined : TILE.dark} border="ink" />
+                  <IconTile name={item.icon} size={34} color={isActive ? TILE.yellow : 'rgb(255 255 255 / 0.16)'} fg={isActive ? TILE.dark : '#FFF4E8'} border={isActive ? 'ink' : 'light'} />
                   <span className="md:hidden xl:inline">{t.nav[item.key]}</span>
                 </Link>
               </li>

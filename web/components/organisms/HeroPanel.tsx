@@ -27,8 +27,8 @@ export async function HeroPanel({ rabbit, records }: { rabbit: Rabbit | null; re
   return (
     <section
       aria-label={t.hero.summary}
-      className="relative overflow-hidden rounded-sheet p-6 pb-28 text-[#0B2E2A] sm:p-8 sm:pb-28 lg:p-10 lg:pb-32"
-      style={{ background: 'linear-gradient(135deg, rgb(255 214 98) 0%, rgb(255 200 61) 50%, rgb(242 168 29) 100%)', boxShadow: 'var(--auth-card-shadow)' }}
+      className="relative overflow-hidden rounded-sheet p-6 pb-28 text-white sm:p-8 sm:pb-28 lg:p-10 lg:pb-32"
+      style={{ background: 'linear-gradient(135deg, rgb(138 90 59) 0%, rgb(90 56 37) 55%, rgb(74 46 29) 100%)', boxShadow: 'var(--auth-card-shadow)' }}
     >
       {/* Trama y círculos decorativos */}
       <div aria-hidden="true" className="absolute inset-0 opacity-25" style={{ backgroundImage: 'radial-gradient(rgb(255 255 255 / 0.6) 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
@@ -36,13 +36,13 @@ export async function HeroPanel({ rabbit, records }: { rabbit: Rabbit | null; re
 
       <div className="relative flex items-center justify-between gap-6">
         <div>
-          <p className="font-display text-4xl font-semibold uppercase tracking-wide text-[#0B2E2A] sm:text-5xl lg:text-6xl" style={{ animation: 'fade-up 0.6s 0.1s var(--ease-out) backwards' }}>
+          <p className="font-display text-4xl font-semibold uppercase tracking-wide text-yellow sm:text-5xl lg:text-6xl" style={{ animation: 'fade-up 0.6s 0.1s var(--ease-out) backwards' }}>
             {t.hero.hello}
           </p>
-          <p className="mt-2 text-lg font-bold text-[#0B2E2A]" style={{ animation: 'fade-up 0.6s 0.2s var(--ease-out) backwards' }}>
+          <p className="mt-2 text-lg font-bold text-white" style={{ animation: 'fade-up 0.6s 0.2s var(--ease-out) backwards' }}>
             {rabbit ? t.hero.rabbitLine(rabbit.name) : t.hero.noRabbit}
           </p>
-          <p className="mt-1 max-w-md text-sm font-medium text-[#0B2E2A]/85" style={{ animation: 'fade-up 0.6s 0.3s var(--ease-out) backwards' }}>
+          <p className="mt-1 max-w-md text-sm font-medium text-white/85" style={{ animation: 'fade-up 0.6s 0.3s var(--ease-out) backwards' }}>
             {t.hero.sub}
           </p>
         </div>

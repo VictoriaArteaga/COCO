@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils/cn'
 const TYPES: HabitType[] = ['FOOD', 'WATER', 'SLEEP', 'PLAY', 'BEHAVIOR']
 const STORAGE_KEY = 'coco-reminders'
 const REMINDER_ICON: Record<string, IconName> = { food: 'food', water: 'water', evening: 'list' }
-const REMINDER_COLOR: Record<string, string> = { food: HABIT_TYPE_INFO.FOOD.color, water: HABIT_TYPE_INFO.WATER.color, evening: '#0FA68A' }
+const REMINDER_COLOR: Record<string, string> = { food: HABIT_TYPE_INFO.FOOD.color, water: HABIT_TYPE_INFO.WATER.color, evening: '#8A5A3B' }
 
 /** Interruptor accesible (role="switch"). */
 function Switch({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) {
@@ -131,7 +131,7 @@ export default function RemindersPage() {
           const text = r.items[item.id] ?? { title: item.title, detail: item.detail }
           return (
             <li key={item.id} className={cn('flex flex-wrap items-center gap-4 rounded-xl border p-4 transition-colors', item.enabled ? 'border-green bg-green-light/40' : 'border-line bg-surface')}>
-              <IconTile name={REMINDER_ICON[item.id] ?? 'bell'} color={item.enabled ? (REMINDER_COLOR[item.id] ?? '#0FA68A') : '#4A6862'} size={48} />
+              <IconTile name={REMINDER_ICON[item.id] ?? 'bell'} color={item.enabled ? (REMINDER_COLOR[item.id] ?? '#8A5A3B') : '#6D5545'} size={48} />
               <div className="min-w-0 flex-1 basis-48">
                 <h3 className="font-display text-lg font-semibold text-text">{text.title}</h3>
                 <p className="text-sm text-text-secondary">{text.detail}</p>

@@ -82,7 +82,7 @@ export default function AnalysisPage() {
       <div className="space-y-5" role="status" aria-label={a.preparing}>
         <div className="card skeleton h-40" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[0, 1, 2, 3].map((i) => <div key={i} className="card skeleton h-28" />)}</div>
-        <p className="text-center text-sm font-bold text-white">{a.preparing}</p>
+        <p className="text-center text-sm font-bold text-text-secondary">{a.preparing}</p>
       </div>
     ) : !result || !status ? (
       <div className="card flex items-center gap-4" role="alert"><IconTile name="alert" color="#D6334F" size={44} /><p className="font-medium">{a.error}</p></div>
@@ -180,7 +180,7 @@ export default function AnalysisPage() {
 
       {/* Recomendación */}
       <section className="card flex flex-col gap-4 sm:flex-row sm:items-start" aria-labelledby="recommendation">
-        <IconTile name="bulb" color="#0FA68A" size={52} />
+        <IconTile name="bulb" color="#8A5A3B" size={52} />
         <div>
           <h2 id="recommendation" className="font-display text-xl font-semibold text-green-dark">{a.recommendation}</h2>
           <p className="mt-2 text-text-secondary">{result.recommendation}</p>

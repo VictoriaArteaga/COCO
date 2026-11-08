@@ -10,12 +10,12 @@ const types: HabitType[] = ['FOOD', 'WATER', 'SLEEP', 'PLAY', 'BEHAVIOR']
 
 /** Versiones más claras de los colores de hábito para que las curvas se vean sobre fondo oscuro. */
 const DARK_HABIT_COLORS: Record<HabitType, string> = {
-  FOOD: '#F5A25D', WATER: '#5CC3F0', SLEEP: '#8F9BF0', PLAY: '#FF7A94', BEHAVIOR: '#2FD1AE',
+  FOOD: '#F5A25D', WATER: '#5CC3F0', SLEEP: '#8F9BF0', PLAY: '#FF7A94', BEHAVIOR: '#6FCF97',
 }
 
 const CHART_THEME = {
-  light: { grid: '#DCEBE5', tick: '#4A6862', ink: '#0B2E2A', cardBg: '#FFFFFF', ring: '#FFFFFF', ref: '#7FA89E' },
-  dark: { grid: '#2A4A42', tick: '#A5B7B1', ink: '#E7F3EF', cardBg: '#16241F', ring: '#16241F', ref: '#5F8076' },
+  light: { grid: '#EADBCB', tick: '#6D5545', ink: '#2B1B12', cardBg: '#FFFFFF', ring: '#FFFFFF', ref: '#BFA58E' },
+  dark: { grid: '#4A3828', tick: '#A5B7B1', ink: '#E7F3EF', cardBg: '#241A13', ring: '#241A13', ref: '#5F8076' },
 } as const
 
 interface TooltipRow { dataKey?: string | number; value?: number | string; color?: string; name?: string }
@@ -49,7 +49,7 @@ export function TrendChart({ records, selected = types, days = 7, endDate }: { r
     if (!active || !payload?.length) return null
     const row = (payload[0] as { payload: Record<string, string | number> }).payload
     return (
-      <div className="min-w-[10rem] rounded-2xl border p-3 text-sm shadow-xl" style={{ background: c.cardBg, color: c.ink, borderColor: theme === 'dark' ? '#2A4A42' : '#CFE6DD' }}>
+      <div className="min-w-[10rem] rounded-2xl border p-3 text-sm shadow-xl" style={{ background: c.cardBg, color: c.ink, borderColor: theme === 'dark' ? '#4A3828' : '#E2D0BE' }}>
         <p className="mb-2 font-display text-base font-semibold capitalize">{String(row.full)}</p>
         <ul className="space-y-1.5">
           {selected.map((type) => (
