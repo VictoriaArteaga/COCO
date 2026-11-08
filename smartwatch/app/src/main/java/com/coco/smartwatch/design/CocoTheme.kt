@@ -1,16 +1,58 @@
 package com.coco.smartwatch.design
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.coco.smartwatch.R
 
+/** Paleta COCO (la misma que la plataforma web): turquesa de marca, amarillo de acento y tinta verde oscura. */
 object CocoColors {
-    val Green = Color(0xFF356B55); val GreenDark = Color(0xFF244C3C); val GreenLight = Color(0xFFDCEBE2)
-    val Background = Color(0xFFF7F5EF); val Surface = Color.White; val Text = Color(0xFF26332D); val Secondary = Color(0xFF65716B)
-    val Normal = Color(0xFF2E7D5B); val Attention = Color(0xFF8A5700); val HighAttention = Color(0xFFB5483A); val Info = Color(0xFF3B6EA5); val Offline = Color(0xFF59645F)
+    val Turquoise = Color(0xFF18AE92); val TurquoiseLight = Color(0xFF46D0B4)
+    val Green = Color(0xFF0FA68A); val GreenDark = Color(0xFF0A6B5A); val GreenLight = Color(0xFFD6F7EA)
+    val Yellow = Color(0xFFFFC83D); val Ink = Color(0xFF0B2E2A)
+    val Background = Color(0xFF18AE92); val Surface = Color.White; val Mint = Color(0xFFE9FBF4)
+    val Text = Color(0xFF0B2E2A); val Secondary = Color(0xFF4A6862); val Line = Color(0xFFC5D8D1)
+    val Coral = Color(0xFFD6334F)
+    val Normal = Color(0xFF0A7A67); val Attention = Color(0xFFB7791F); val HighAttention = Color(0xFFD6334F)
+    val Info = Color(0xFF3B6EA5); val Offline = Color(0xFF7A8580)
+}
+
+/** Fredoka para títulos y Nunito para el texto: las mismas tipografías de la web. */
+object CocoFonts {
+    val Display = FontFamily(Font(R.font.fredoka_semibold, FontWeight.SemiBold), Font(R.font.fredoka_semibold, FontWeight.Bold))
+    val Body = FontFamily(Font(R.font.nunito_regular, FontWeight.Normal), Font(R.font.nunito_bold, FontWeight.Bold), Font(R.font.nunito_bold, FontWeight.SemiBold))
+}
+
+private fun cocoTypography(): Typography {
+    val base = Typography()
+    fun TextStyle.body() = copy(fontFamily = CocoFonts.Body)
+    fun TextStyle.display() = copy(fontFamily = CocoFonts.Display)
+    return base.copy(
+        displayLarge = base.displayLarge.display(), displayMedium = base.displayMedium.display(), displaySmall = base.displaySmall.display(),
+        headlineLarge = base.headlineLarge.display(), headlineMedium = base.headlineMedium.display(), headlineSmall = base.headlineSmall.display(),
+        titleLarge = base.titleLarge.display().copy(fontSize = 20.sp), titleMedium = base.titleMedium.display().copy(fontSize = 16.sp), titleSmall = base.titleSmall.display(),
+        bodyLarge = base.bodyLarge.body(), bodyMedium = base.bodyMedium.body(), bodySmall = base.bodySmall.body(),
+        labelLarge = base.labelLarge.body(), labelMedium = base.labelMedium.body(), labelSmall = base.labelSmall.body(),
+    )
 }
 
 @Composable fun CocoTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = lightColorScheme(primary = CocoColors.Green, onPrimary = Color.White, secondary = CocoColors.GreenLight, background = CocoColors.Background, surface = CocoColors.Surface, onSurface = CocoColors.Text, onBackground = CocoColors.Text), content = content)
+    MaterialTheme(
+        colorScheme = lightColorScheme(
+            primary = CocoColors.Yellow, onPrimary = CocoColors.Ink,
+            secondary = CocoColors.GreenLight, onSecondary = CocoColors.GreenDark,
+            background = CocoColors.Background, surface = CocoColors.Surface,
+            onSurface = CocoColors.Text, onBackground = CocoColors.Text,
+            outline = CocoColors.Line, error = CocoColors.Coral,
+        ),
+        typography = cocoTypography(),
+        content = content,
+    )
 }
