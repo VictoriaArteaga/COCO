@@ -91,7 +91,7 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
     }
 }
 
-/** Navegación inferior: 6 mosaicos en dos filas de tres. El activo es blanco; los demás, amarillos. */
+/** Navegación inferior: 6 mosaicos en dos filas de tres. El activo es amarillo; los demás, translúcidos. */
 @Composable private fun SectionBar(current: Section, onSelect: (Section) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Section.entries.chunked(3).forEach { row ->
@@ -100,10 +100,10 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
                     val active = item == current
                     Column(Modifier.width(52.dp).clickable { onSelect(item) }, horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
-                            Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(if (active) Color.White else CocoColors.Yellow)
-                                .border(1.5.dp, CocoColors.Ink, RoundedCornerShape(12.dp)),
+                            Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(if (active) CocoColors.Yellow else Color.White.copy(alpha = 0.16f))
+                                .border(1.5.dp, if (active) CocoColors.Ink else Color.White.copy(alpha = 0.45f), RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center,
-                        ) { Icon(painterResource(item.icon), contentDescription = item.title, tint = if (active) CocoColors.Green else CocoColors.Ink, modifier = Modifier.size(24.dp)) }
+                        ) { Icon(painterResource(item.icon), contentDescription = item.title, tint = if (active) CocoColors.Ink else Color(0xFFFFF4E8), modifier = Modifier.size(24.dp)) }
                         Text(item.title, fontSize = 9.sp, color = Color.White, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal, textAlign = TextAlign.Center, maxLines = 1)
                     }
                 }

@@ -41,9 +41,9 @@ import com.coco.smartwatch.domain.model.HabitType
 val CardShape = RoundedCornerShape(14.dp)
 val ControlShape = RoundedCornerShape(12.dp)
 
-/** Fondo turquesa de marca (degradado vertical, como el inicio de sesión de la web). Deja margen para pantallas redondas. */
+/** Fondo café de marca (degradado vertical, como el inicio de sesión de la web). Deja margen para pantallas redondas. */
 @Composable fun CocoScreen(content: @Composable ColumnScope.() -> Unit) {
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(CocoColors.TurquoiseLight, CocoColors.Turquoise)))) {
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(CocoColors.BrownLight, CocoColors.Brown)))) {
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 18.dp, end = 18.dp, top = 28.dp, bottom = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
