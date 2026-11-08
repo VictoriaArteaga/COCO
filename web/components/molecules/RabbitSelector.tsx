@@ -17,7 +17,7 @@ export async function RabbitSelector({ rabbits = [], selected, onSelect }: Rabbi
 
   if (!selected && rabbits.length === 0) {
     return (
-      <div className="text-sm text-text-secondary" aria-live="polite">
+      <div className="text-sm text-white/80" aria-live="polite">
         {t.common.loading}
       </div>
     )
@@ -32,7 +32,7 @@ export async function RabbitSelector({ rabbits = [], selected, onSelect }: Rabbi
     return (
       <div className="flex items-center gap-2">
         <IconTile name="rabbit" size={36} />
-        <span className="font-semibold text-text">{current.name}</span>
+        <span className="font-semibold">{current.name}</span>
       </div>
     )
   }
@@ -50,7 +50,7 @@ export async function RabbitSelector({ rabbits = [], selected, onSelect }: Rabbi
           const rabbit = rabbits.find((r) => r.id === e.target.value)
           if (rabbit && onSelect) onSelect(rabbit)
         }}
-        className="text-sm font-semibold text-text bg-transparent border-none focus:ring-2 focus:ring-green rounded"
+        className="text-sm font-semibold text-inherit bg-transparent border-none focus:ring-2 focus:ring-white rounded [&>option]:text-[#0B2E2A]"
       >
         {rabbits.map((r) => (
           <option key={r.id} value={r.id}>

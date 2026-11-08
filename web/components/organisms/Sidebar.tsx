@@ -1,10 +1,11 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import { cn } from '@/lib/utils/cn'
-import { IconTile, TILE, type IconName } from '@/components/atoms/Icon'
+import { Icon, IconTile, TILE, type IconName } from '@/components/atoms/Icon'
 import { usePrefs } from '@/lib/i18n/PreferencesProvider'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
@@ -26,77 +27,79 @@ const NAV_ITEMS: NavItem[] = [
 ]
 
 /**
- * Organism: persistent lateral navigation sidebar.
- *
- * Accessibility:
- *   - <nav> landmark with aria-label
- *   - Current page indicated via aria-current="page"
- *   - Focus ring visible on all interactive elements
- *   - Skip-to-main link available in layout
+ * Organism: navegación lateral.
+ * - Móvil: barra superior con menú desplegable (hamburguesa).
+ * - Tablet (md): riel flotante solo con iconos.
+ * - Escritorio (xl): panel flotante con iconos y etiquetas.
+ * Accesibilidad: <nav> con aria-label, aria-current en la página activa, aria-expanded en el menú.
  */
 export function Sidebar() {
   const pathname = usePathname()
   const { t } = usePrefs()
+  const [open, setOpen] = useState(false)
+
+  // Cierra el menú móvil al navegar.
+  useEffect(() => { setOpen(false) }, [pathname])
 
   return (
     <nav
       aria-label={t.nav.label}
-      className="
-        flex flex-col w-full md:w-60 flex-shrink-0
-        bg-card border-r border-line
-        md:h-full py-4 md:py-6 px-3
-      "
+      className="shell-surface sticky top-0 z-40 flex flex-shrink-0 flex-col border-b md:fixed md:inset-y-0 md:left-0 md:h-screen md:w-[5.5rem] md:border-b-0 md:border-r md:shadow-none xl:w-64"
     >
-      {/* Brand */}
-      <div className="px-3 mb-8 flex items-center gap-3">
-        <IconTile name="rabbit" size={40} />
-        <div>
-          <span className="text-2xl font-bold text-green-dark block leading-none">COCO</span>
-          <span className="text-xs text-text-secondary mt-1 block">{t.brand.tagline}</span>
+      {/* Marca + botón de menú (móvil) */}
+      <div className="flex items-center justify-between gap-3 px-4 py-3 md:mb-2 md:justify-center md:px-3 md:pt-6 xl:justify-start xl:px-5">
+        <div className="flex items-center gap-3">
+          <IconTile name="rabbit" size={40} />
+          <div className="md:hidden xl:block">
+            <span className="block font-display text-2xl font-semibold leading-none text-white">COCO</span>
+            <span className="mt-1 block text-xs text-white/75">{t.brand.tagline}</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-controls="sidebar-menu"
+          aria-label={t.nav.label}
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/40 bg-white/15 text-white md:hidden"
+        >
+          <Icon name={open ? 'close' : 'list'} size={20} />
+        </button>
+      </div>
+
+      <div id="sidebar-menu" className={cn('max-h-[calc(100vh-5rem)] flex-1 flex-col overflow-y-auto px-3 pb-4 md:max-h-none md:flex md:pb-5', open ? 'flex' : 'hidden')}>
+        <ul className="flex flex-col gap-1.5 md:flex-1" role="list">
+          {NAV_ITEMS.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  title={t.nav[item.key]}
+                  aria-label={t.nav[item.key]}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={cn(
+                    'group relative flex min-h-[48px] items-center gap-3 rounded-2xl px-3 py-2 text-[15px] font-bold md:justify-center xl:justify-start',
+                    'transition-[background-color,color,transform] duration-200',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white',
+                    isActive
+                      ? 'bg-white text-[#0A6B5A] shadow-[inset_4px_0_0_#FFC83D]'
+                      : 'text-white/90 hover:bg-white/10 hover:text-white',
+                  )}
+                >
+                  <IconTile name={item.icon} size={34} color={isActive ? TILE.teal : TILE.yellow} fg={isActive ? undefined : TILE.dark} border="ink" />
+                  <span className="md:hidden xl:inline">{t.nav[item.key]}</span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+
+        <div className="mt-4 border-t border-white/15 pt-3">
+          <LogoutButton />
+          <p className="mt-3 text-center text-xs text-white/70 md:hidden xl:block">{t.brand.short}</p>
         </div>
       </div>
-
-      {/* Navigation links */}
-      <ul className="flex flex-row flex-wrap gap-1 md:flex-col md:flex-nowrap md:flex-1" role="list">
-        {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-label={t.nav[item.key]}
-                aria-current={isActive ? 'page' : undefined}
-                className={cn(
-                  'group relative flex items-center gap-3 rounded-coco border px-2 py-1.5 text-sm font-medium',
-                  'transition-[background-color,border-color,transform] duration-200',
-                  'hover:translate-x-0.5 hover:bg-green-light/60 hover:text-green-dark',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink',
-                  isActive
-                    ? 'border-ink bg-green-light text-green-dark'
-                    : 'border-transparent text-text-secondary',
-                )}
-              >
-                <IconTile
-                  name={item.icon}
-                  size={32}
-                  color={isActive ? TILE.teal : TILE.muted}
-                  border={isActive ? 'ink' : 'gray'}
-                />
-                <span>{t.nav[item.key]}</span>
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
-
-      {/* Footer */}
-      <div className="px-3 pt-4 border-t border-line">
-        <p className="text-xs text-text-secondary text-center">
-          {t.brand.short}
-        </p>
-      </div>
-      <div className="mt-auto pt-4"><LogoutButton /></div>
     </nav>
   )
 }

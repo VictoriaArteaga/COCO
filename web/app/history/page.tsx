@@ -6,6 +6,7 @@ import { HABIT_TYPE_INFO } from '@/types'
 import { habitRepository } from '@/services/repositories'
 import { Icon } from '@/components/atoms/Icon'
 import { usePrefs } from '@/lib/i18n/PreferencesProvider'
+import { PageHeader } from '@/components/organisms/PageHeader'
 
 const types: HabitType[] = ['FOOD', 'WATER', 'SLEEP', 'PLAY', 'BEHAVIOR']
 
@@ -39,17 +40,17 @@ export default function HistoryPage() {
   const pages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const visible = filtered.slice(page * pageSize, (page + 1) * pageSize)
 
-  return <div className="p-6 lg:p-8 space-y-6">
-    <div><h1 className="text-2xl font-bold">{h.title}</h1><p className="mt-1 text-text-secondary">{h.sub}</p></div>
+  return <div className="space-y-5 p-4 sm:p-6 lg:space-y-6 lg:p-8">
+    <PageHeader title={h.title} sub={h.sub} icon="list" />
     <section className="card space-y-4" aria-label={h.filters}>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <label className="text-sm font-medium">{h.variable}<select className="mt-1 w-full rounded border border-line p-2" value={type} onChange={(e) => { setType(e.target.value); setPage(0) }}><option value="ALL">{t.common.all}</option>{types.map((key) => <option key={key} value={key}>{t.habits[key]}</option>)}</select></label>
-        <label className="text-sm font-medium">{h.period}<select className="mt-1 w-full rounded border border-line p-2" value={period} onChange={(e) => { setPeriod(e.target.value); setPage(0) }}><option value="1">{t.common.today}</option><option value="7">{h.last7}</option><option value="30">{h.last30}</option><option value="ALL">{h.allHistory}</option><option value="CUSTOM">{h.custom}</option></select></label>
-        <label className="text-sm font-medium">{h.recordType}<select className="mt-1 w-full rounded border border-line p-2" value={source} onChange={(e) => setSource(e.target.value)}><option value="ALL">{h.all}</option><option value="WATCH">{h.watch}</option><option value="WEB">{h.web}</option></select></label>
-        <label className="text-sm font-medium">{h.from}<input type="date" className="mt-1 w-full rounded border border-line p-2" value={from} onChange={(e) => { setFrom(e.target.value); setPeriod('CUSTOM') }} /></label>
-        <label className="text-sm font-medium">{h.to}<input type="date" className="mt-1 w-full rounded border border-line p-2" value={to} onChange={(e) => { setTo(e.target.value); setPeriod('CUSTOM') }} /></label>
+        <label className="text-sm font-medium">{h.variable}<select className="mt-1 w-full input rounded-xl" value={type} onChange={(e) => { setType(e.target.value); setPage(0) }}><option value="ALL">{t.common.all}</option>{types.map((key) => <option key={key} value={key}>{t.habits[key]}</option>)}</select></label>
+        <label className="text-sm font-medium">{h.period}<select className="mt-1 w-full input rounded-xl" value={period} onChange={(e) => { setPeriod(e.target.value); setPage(0) }}><option value="1">{t.common.today}</option><option value="7">{h.last7}</option><option value="30">{h.last30}</option><option value="ALL">{h.allHistory}</option><option value="CUSTOM">{h.custom}</option></select></label>
+        <label className="text-sm font-medium">{h.recordType}<select className="mt-1 w-full input rounded-xl" value={source} onChange={(e) => setSource(e.target.value)}><option value="ALL">{h.all}</option><option value="WATCH">{h.watch}</option><option value="WEB">{h.web}</option></select></label>
+        <label className="text-sm font-medium">{h.from}<input type="date" className="mt-1 w-full input rounded-xl" value={from} onChange={(e) => { setFrom(e.target.value); setPeriod('CUSTOM') }} /></label>
+        <label className="text-sm font-medium">{h.to}<input type="date" className="mt-1 w-full input rounded-xl" value={to} onChange={(e) => { setTo(e.target.value); setPeriod('CUSTOM') }} /></label>
       </div>
-      <label className="block text-sm font-medium">{h.search}<input value={query} onChange={(e) => { setQuery(e.target.value); setPage(0) }} placeholder={h.searchPlaceholder} className="mt-1 w-full rounded border border-line p-2 sm:max-w-md" /></label>
+      <label className="block text-sm font-medium">{h.search}<input value={query} onChange={(e) => { setQuery(e.target.value); setPage(0) }} placeholder={h.searchPlaceholder} className="mt-1 w-full input rounded-xl sm:max-w-md" /></label>
     </section>
     <section className="card overflow-hidden p-0" aria-live="polite">
       <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-green-light/50 text-text-secondary"><tr><th className="p-4">{h.date}</th><th className="p-4">{h.variable}</th><th className="p-4">{h.valueNote}</th><th className="p-4">{h.origin}</th><th className="p-4">{t.recordStatusLabel}</th><th className="p-4"><span className="sr-only">{h.detail}</span></th></tr></thead>
