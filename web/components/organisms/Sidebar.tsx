@@ -16,15 +16,22 @@ interface NavItem {
   icon: IconName
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard',       key: 'home',     icon: 'home' },
-  { href: '/history',         key: 'history',  icon: 'list' },
-  { href: '/trends',          key: 'trends',   icon: 'trending' },
-  { href: '/analysis',        key: 'analysis', icon: 'search' },
-  { href: '/profile',         key: 'profile',  icon: 'user' },
-  { href: '/reminders',       key: 'reminders', icon: 'bell' },
-  { href: '/synchronization', key: 'sync',     icon: 'refresh' },
-  { href: '/settings',        key: 'settings', icon: 'settings' },
+/** Navegación agrupada por tarea: observar los datos, cuidar la rutina y la cuenta. */
+const NAV_GROUPS: { key: keyof Dictionary['nav']; items: NavItem[] }[] = [
+  { key: 'groupObserve', items: [
+    { href: '/dashboard',       key: 'home',     icon: 'home' },
+    { href: '/history',         key: 'history',  icon: 'list' },
+    { href: '/trends',          key: 'trends',   icon: 'trending' },
+    { href: '/analysis',        key: 'analysis', icon: 'search' },
+  ] },
+  { key: 'groupCare', items: [
+    { href: '/reminders',       key: 'reminders', icon: 'bell' },
+    { href: '/synchronization', key: 'sync',     icon: 'refresh' },
+  ] },
+  { key: 'groupAccount', items: [
+    { href: '/profile',         key: 'profile',  icon: 'user' },
+    { href: '/settings',        key: 'settings', icon: 'settings' },
+  ] },
 ]
 
 /**
@@ -69,32 +76,39 @@ export function Sidebar() {
       </div>
 
       <div id="sidebar-menu" className={cn('max-h-[calc(100vh-5rem)] flex-1 flex-col overflow-y-auto px-3 pb-4 md:max-h-none md:flex md:pb-5', open ? 'flex' : 'hidden')}>
-        <ul className="flex flex-col gap-1.5 md:flex-1" role="list">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  title={t.nav[item.key]}
-                  aria-label={t.nav[item.key]}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={cn(
-                    'group relative flex min-h-[48px] items-center gap-3 rounded-2xl px-3 py-2 text-[15px] font-bold md:justify-center xl:justify-start',
-                    'transition-[background-color,color,transform] duration-200',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white',
-                    isActive
-                      ? 'bg-white text-[#5A3825] shadow-[inset_4px_0_0_#FFC83D]'
-                      : 'text-white/90 hover:bg-white/10 hover:text-white',
-                  )}
-                >
-                  <IconTile name={item.icon} size={34} color={isActive ? TILE.yellow : 'rgb(255 255 255 / 0.16)'} fg={isActive ? TILE.dark : '#FFF4E8'} border={isActive ? 'ink' : 'light'} />
-                  <span className="md:hidden xl:inline">{t.nav[item.key]}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+        <div className="flex flex-col gap-1 md:flex-1">
+          {NAV_GROUPS.map((group, index) => (
+            <div key={group.key} className={cn(index > 0 && 'md:mt-2 md:border-t md:border-white/15 md:pt-2')}>
+              <p className="px-3 pb-1 pt-3 text-xs font-bold uppercase tracking-wider text-white/75 md:hidden xl:block">{t.nav[group.key]}</p>
+              <ul className="flex flex-col gap-1.5" role="list" aria-label={t.nav[group.key]}>
+                {group.items.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        title={t.nav[item.key]}
+                        aria-label={t.nav[item.key]}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={cn(
+                          'group relative flex min-h-[48px] items-center gap-3 rounded-2xl px-3 py-2 text-[15px] font-bold md:justify-center xl:justify-start',
+                          'transition-[background-color,color,transform] duration-200',
+                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white',
+                          isActive
+                            ? 'bg-white text-[#5A3825] shadow-[inset_4px_0_0_#FFC83D]'
+                            : 'text-white/90 hover:bg-white/10 hover:text-white',
+                        )}
+                      >
+                        <IconTile name={item.icon} size={34} color={isActive ? TILE.yellow : 'rgb(255 255 255 / 0.16)'} fg={isActive ? TILE.dark : '#FFF4E8'} border={isActive ? 'ink' : 'light'} />
+                        <span className="md:hidden xl:inline">{t.nav[item.key]}</span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
 
         <div className="mt-4 border-t border-white/15 pt-3">
           <LogoutButton />
