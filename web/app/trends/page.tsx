@@ -34,8 +34,25 @@ export default function TrendsPage() {
           {t.habits[type]}
         </label>
       })}</div></fieldset>
-      <div className="flex flex-wrap items-end gap-3"><label className="text-sm font-semibold">{tr.period}<select className="mt-1 block input rounded-xl font-normal" value={period} onChange={(e) => setPeriod(e.target.value)}><option value="1">{t.common.today}</option><option value="7">{tr.days7}</option><option value="30">{tr.days30}</option><option value="custom">{tr.custom}</option></select></label>{period === 'custom' && <><label className="text-sm">{tr.from}<input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className="mt-1 block input rounded-xl" /></label><label className="text-sm">{tr.to}<input type="date" value={to} min={from} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setTo(e.target.value)} className="mt-1 block input rounded-xl" /></label></>}</div></div>
-      {selected.length ? <TrendChart records={records} selected={selected} days={period === 'custom' ? customDays : Number(period)} endDate={period === 'custom' ? to : undefined} /> : <p className="rounded bg-surface p-8 text-center text-text-secondary">{tr.pickOne}</p>}
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <span id="trend-period" className="mb-2 block text-sm font-semibold">{tr.period}</span>
+          <div role="group" aria-labelledby="trend-period" className="inline-flex flex-wrap gap-0.5 rounded-2xl border border-line bg-surface p-1">
+            {([['1', t.common.today], ['7', tr.days7], ['30', tr.days30], ['custom', tr.custom]] as const).map(([value, label]) => (
+              <button key={value} type="button" aria-pressed={period === value} onClick={() => setPeriod(value)}
+                className={cn('min-h-[40px] rounded-xl px-3.5 text-sm font-bold transition-colors', period === value ? 'bg-green-dark text-white' : 'text-green-dark hover:bg-green-light')}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {period === 'custom' && <><label className="text-sm">{tr.from}<input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className="mt-1 block input rounded-xl" /></label><label className="text-sm">{tr.to}<input type="date" value={to} min={from} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setTo(e.target.value)} className="mt-1 block input rounded-xl" /></label></>}
+      </div></div>
+      <div className="border-t border-line pt-5">
+        <h2 className="font-display text-xl font-semibold text-green-dark">{tr.chartTitle}</h2>
+        <p className="mb-4 max-w-3xl text-sm text-text-secondary">{tr.chartSub}</p>
+        {selected.length ? <TrendChart records={records} selected={selected} days={period === 'custom' ? customDays : Number(period)} endDate={period === 'custom' ? to : undefined} /> : <p className="rounded bg-surface p-8 text-center text-text-secondary">{tr.pickOne}</p>}
+      </div>
     </section>
     <div className="grid gap-5 md:grid-cols-3 lg:gap-6">
       {([['search', '#3B6EA5', tr.q1, tr.a1], ['trending', '#B7791F', tr.q2, tr.a2], ['info', '#7D4D31', tr.q3, tr.a3]] as const).map(([icon, color, question, answer]) => (

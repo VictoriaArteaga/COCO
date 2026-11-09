@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { HabitRecord, HabitType } from '@/types'
 import { HABIT_TYPE_INFO } from '@/types'
 import { usePrefs } from '@/lib/i18n/PreferencesProvider'
@@ -89,24 +89,14 @@ export function TrendChart({ records, selected = types, days = 7, endDate }: { r
 
   return (
     <div>
-      {/* Leyenda en píldoras, con el color de cada variable */}
-      <ul className="mb-4 flex flex-wrap gap-2" aria-hidden="true">
-        {selected.map((type) => (
-          <li key={type} className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-1.5 text-sm font-bold text-text">
-            <svg width="14" height="14" viewBox="-8 -8 16 16"><Marker type={type} color={colorOf(type)} ring={c.ring} /></svg>
-            {t.habits[type]}
-          </li>
-        ))}
-      </ul>
-
-      <div className="h-64 w-full sm:h-80 lg:h-96" role="img" aria-label={t.trends.chartAria}>
+      {/* Sin leyenda aparte: cada línea lleva su nombre al final y su propio símbolo */}
+      <div className="h-64 w-full sm:h-72 lg:h-80" role="img" aria-label={t.trends.chartAria}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 12, right: 112, left: -18, bottom: 0 }}>
             <CartesianGrid vertical={false} stroke={c.grid} strokeWidth={1} />
             <XAxis dataKey="date" tick={{ fontSize: 12, fill: c.tick, fontWeight: 600 }} axisLine={false} tickLine={false} tickMargin={10} />
             <YAxis allowDecimals={false} domain={[0, (max: number) => Math.max(2, max + 1)]} tick={{ fontSize: 12, fill: c.tick, fontWeight: 600 }} axisLine={false} tickLine={false} tickMargin={6} />
             <Tooltip content={<ChartTooltip />} cursor={{ stroke: c.ref, strokeWidth: 1.5, strokeDasharray: '4 6' }} />
-            <ReferenceLine y={1} stroke={c.ref} strokeDasharray="5 6" strokeWidth={1.5} label={{ value: t.trends.pattern, position: 'insideTopRight', fontSize: 11, fill: c.tick, fontWeight: 600 }} />
             {selected.map((type) => (
               <Line
                 key={type}
