@@ -3,7 +3,7 @@
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePrefs } from '@/lib/i18n/PreferencesProvider'
-import { Icon } from '@/components/atoms/Icon'
+import { friendlyError } from '@/lib/api/friendlyError'
 
 /** Cambia el nombre del conejo (PUT /rabbits/{id}). Muestra un botón y, al pulsarlo, un campo con guardar/cancelar. */
 export function RenameRabbitForm({ id, name }: { id: string; name: string }) {
@@ -21,7 +21,7 @@ export function RenameRabbitForm({ id, name }: { id: string; name: string }) {
     setBusy(true); setError('')
     try {
       const response = await fetch(`/api/backend/rabbits/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: next }) })
-      if (!response.ok) { const body = await response.json().catch(() => ({})); setError(body.message ?? p.renameError); return }
+      if (!response.ok) { setError(friendlyError(response.status, t, p.renameError)); return }
       setEditing(false); router.refresh()
     } catch { setError(t.auth.connectError) }
     finally { setBusy(false) }
@@ -29,8 +29,8 @@ export function RenameRabbitForm({ id, name }: { id: string; name: string }) {
 
   if (!editing) {
     return (
-      <button type="button" onClick={() => setEditing(true)} className="btn-secondary !min-h-[40px] !px-3 !py-1.5 text-sm">
-        <Icon name="settings" size={16} />{p.rename}
+      <button type="button" onClick={() => setEditing(true)} className="btn-secondary font-display">
+        {p.rename}
       </button>
     )
   }
@@ -42,7 +42,7 @@ export function RenameRabbitForm({ id, name }: { id: string; name: string }) {
           aria-invalid={error ? true : undefined} className="input w-full" />
         {error && <p role="alert" className="auth-error mt-1 text-xs font-semibold">{error}</p>}
       </div>
-      <button className="btn-primary !min-h-[44px]" disabled={busy}>{busy ? p.saving : p.save}</button>
+      <button className="btn-accent font-display" disabled={busy}>{busy ? p.saving : p.save}</button>
       <button type="button" className="btn-secondary" onClick={() => { setEditing(false); setError('') }}>{p.cancel}</button>
     </form>
   )
