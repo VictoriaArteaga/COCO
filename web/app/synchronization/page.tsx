@@ -124,18 +124,8 @@ export default async function SynchronizationPage() {
         </ul>
       </section>
 
-      {/* Cola local del reloj */}
-      <section className="card flex items-start gap-4" aria-labelledby="queue">
-        <IconTile name="clock" size={48} />
-        <div>
-          <h2 id="queue" className="font-display text-xl font-semibold text-green-dark">{s.queue}</h2>
-          <p className="mt-2 text-text-secondary">{s.queueText}</p>
-        </div>
-      </section>
-    </div>
-
-    {/* Actividad reciente */}
-    <section className="card" aria-labelledby="recent-sync">
+      {/* Actividad reciente */}
+      <section className="card" aria-labelledby="recent-sync">
       <h2 id="recent-sync" className="font-display text-xl font-semibold text-green-dark">{s.recentTitle}</h2>
       <p className="mb-4 text-sm text-text-secondary">{s.recentSub}</p>
       {records.length === 0 ? <p className="rounded-xl bg-surface p-6 text-center text-sm text-text-secondary">{t.records.empty}</p> : (
@@ -152,6 +142,7 @@ export default async function SynchronizationPage() {
           ))}
         </ul>
       )}
-    </section>
+      </section>
+    </div>
   </div>
 }
