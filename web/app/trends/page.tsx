@@ -7,7 +7,7 @@ import { habitRepository } from '@/services/repositories'
 import { TrendChart } from '@/components/organisms/TrendChart'
 import { usePrefs } from '@/lib/i18n/PreferencesProvider'
 import { PageHeader } from '@/components/organisms/PageHeader'
-import { Icon } from '@/components/atoms/Icon'
+import { Icon, IconTile } from '@/components/atoms/Icon'
 import { cn } from '@/lib/utils/cn'
 
 const types: HabitType[] = ['FOOD', 'WATER', 'SLEEP', 'PLAY', 'BEHAVIOR']
@@ -36,8 +36,21 @@ export default function TrendsPage() {
       })}</div></fieldset>
       <div className="flex flex-wrap items-end gap-3"><label className="text-sm font-semibold">{tr.period}<select className="mt-1 block input rounded-xl font-normal" value={period} onChange={(e) => setPeriod(e.target.value)}><option value="1">{t.common.today}</option><option value="7">{tr.days7}</option><option value="30">{tr.days30}</option><option value="custom">{tr.custom}</option></select></label>{period === 'custom' && <><label className="text-sm">{tr.from}<input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className="mt-1 block input rounded-xl" /></label><label className="text-sm">{tr.to}<input type="date" value={to} min={from} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setTo(e.target.value)} className="mt-1 block input rounded-xl" /></label></>}</div></div>
       {selected.length ? <TrendChart records={records} selected={selected} days={period === 'custom' ? customDays : Number(period)} endDate={period === 'custom' ? to : undefined} /> : <p className="rounded bg-surface p-8 text-center text-text-secondary">{tr.pickOne}</p>}
-      <div className="grid gap-3 border-t border-line pt-4 md:grid-cols-3"><div><h2 className="text-sm font-semibold">{tr.q1}</h2><p className="mt-1 text-sm text-text-secondary">{tr.a1}</p></div><div><h2 className="text-sm font-semibold">{tr.q2}</h2><p className="mt-1 text-sm text-text-secondary">{tr.a2}</p></div><div><h2 className="text-sm font-semibold">{tr.q3}</h2><p className="mt-1 text-sm text-text-secondary">{tr.a3}</p></div></div>
-      <div className="flex flex-wrap gap-4 text-xs text-text-secondary"><span>{tr.legend1}</span><span>{tr.legend2}</span><span>{tr.legend3}</span></div>
     </section>
+    <div className="grid gap-5 md:grid-cols-3 lg:gap-6">
+      {([['search', '#3B6EA5', tr.q1, tr.a1], ['trending', '#B7791F', tr.q2, tr.a2], ['info', '#7D4D31', tr.q3, tr.a3]] as const).map(([icon, color, question, answer]) => (
+        <section key={question} className="card flex items-start gap-4">
+          <IconTile name={icon} color={color} size={44} />
+          <div>
+            <h2 className="font-display text-lg font-semibold text-green-dark">{question}</h2>
+            <p className="mt-1.5 text-text-secondary">{answer}</p>
+          </div>
+        </section>
+      ))}
+    </div>
+    <div role="note" className="card flex items-start gap-3 !border-green-dark !p-4">
+      <Icon name="shield" size={22} className="mt-0.5 flex-shrink-0 text-green-dark" />
+      <p className="text-sm font-semibold text-text">{t.analysis.disclaimer}</p>
+    </div>
   </div>
 }

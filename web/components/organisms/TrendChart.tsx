@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { HabitRecord, HabitType } from '@/types'
 import { HABIT_TYPE_INFO } from '@/types'
 import { usePrefs } from '@/lib/i18n/PreferencesProvider'
@@ -17,6 +17,17 @@ const CHART_THEME = {
   light: { grid: '#EADBCB', tick: '#6D5545', ink: '#2B1B12', cardBg: '#FFFFFF', ring: '#FFFFFF', ref: '#BFA58E' },
   dark: { grid: '#4A3828', tick: '#A5B7B1', ink: '#E7F3EF', cardBg: '#241A13', ring: '#241A13', ref: '#5F8076' },
 } as const
+
+/** Símbolo de cada variable, centrado en (0,0): círculo, cuadrado, triángulo, rombo y cruz. */
+function Marker({ type, color, ring }: { type: HabitType; color: string; ring: string }) {
+  switch (type) {
+    case 'FOOD': return <circle r={5} fill={ring} stroke={color} strokeWidth={2.5} />
+    case 'WATER': return <rect x={-5} y={-5} width={10} height={10} fill={ring} stroke={color} strokeWidth={2.5} />
+    case 'SLEEP': return <path d="M0 -6L6 5L-6 5Z" fill={ring} stroke={color} strokeWidth={2.5} strokeLinejoin="round" />
+    case 'PLAY': return <path d="M0 -6L6 0L0 6L-6 0Z" fill={ring} stroke={color} strokeWidth={2.5} strokeLinejoin="round" />
+    default: return <path d="M-5 -5L5 5M5 -5L-5 5" stroke={color} strokeWidth={3} strokeLinecap="round" />
+  }
+}
 
 interface TooltipRow { dataKey?: string | number; value?: number | string; color?: string; name?: string }
 
@@ -44,6 +55,19 @@ export function TrendChart({ records, selected = types, days = 7, endDate }: { r
     })
   }, [records, selected, days, endDate, locale])
 
+  // Desplazamiento vertical de las etiquetas finales cuando varias variables terminan en el mismo valor.
+  const endShift = useMemo(() => {
+    const last = data[data.length - 1] ?? {}
+    const seen: Record<string, number> = {}
+    const shift: Record<string, number> = {}
+    selected.forEach((type) => {
+      const key = String(last[type] ?? 0)
+      shift[type] = (seen[key] ?? 0) * 16
+      seen[key] = (seen[key] ?? 0) + 1
+    })
+    return shift
+  }, [data, selected])
+
   /** Tarjeta flotante con los valores del día: puntos de color, nombre y cifra. */
   function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: Record<string, string | number> }[] & TooltipRow[] }) {
     if (!active || !payload?.length) return null
@@ -68,8 +92,8 @@ export function TrendChart({ records, selected = types, days = 7, endDate }: { r
       {/* Leyenda en píldoras, con el color de cada variable */}
       <ul className="mb-4 flex flex-wrap gap-2" aria-hidden="true">
         {selected.map((type) => (
-          <li key={type} className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-bold text-text">
-            <span className="h-3 w-3 rounded-full" style={{ background: colorOf(type) }} />
+          <li key={type} className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-1.5 text-sm font-bold text-text">
+            <svg width="14" height="14" viewBox="-8 -8 16 16"><Marker type={type} color={colorOf(type)} ring={c.ring} /></svg>
             {t.habits[type]}
           </li>
         ))}
@@ -77,30 +101,36 @@ export function TrendChart({ records, selected = types, days = 7, endDate }: { r
 
       <div className="h-64 w-full sm:h-80 lg:h-96" role="img" aria-label={t.trends.chartAria}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 12, right: 12, left: -18, bottom: 0 }}>
+          <LineChart data={data} margin={{ top: 12, right: 112, left: -18, bottom: 0 }}>
             <CartesianGrid vertical={false} stroke={c.grid} strokeWidth={1} />
             <XAxis dataKey="date" tick={{ fontSize: 12, fill: c.tick, fontWeight: 600 }} axisLine={false} tickLine={false} tickMargin={10} />
             <YAxis allowDecimals={false} domain={[0, (max: number) => Math.max(2, max + 1)]} tick={{ fontSize: 12, fill: c.tick, fontWeight: 600 }} axisLine={false} tickLine={false} tickMargin={6} />
             <Tooltip content={<ChartTooltip />} cursor={{ stroke: c.ref, strokeWidth: 1.5, strokeDasharray: '4 6' }} />
             <ReferenceLine y={1} stroke={c.ref} strokeDasharray="5 6" strokeWidth={1.5} label={{ value: t.trends.pattern, position: 'insideTopRight', fontSize: 11, fill: c.tick, fontWeight: 600 }} />
             {selected.map((type) => (
-              <Area
+              <Line
                 key={type}
                 type="linear"
                 dataKey={type}
                 name={t.habits[type]}
                 stroke={colorOf(type)}
-                strokeWidth={3}
+                strokeWidth={2.5}
                 strokeLinecap="round"
-                strokeLinejoin="miter"
-                fill="none"
-                dot={false}
+                strokeLinejoin="round"
+                // Un símbolo distinto por variable: se reconocen sin depender solo del color
+                dot={(p: { cx?: number; cy?: number; index?: number }) => (
+                  <g key={`${type}-${p.index}`} transform={`translate(${p.cx ?? 0} ${p.cy ?? 0})`}><Marker type={type} color={colorOf(type)} ring={c.ring} /></g>
+                )}
                 activeDot={{ r: 6, fill: colorOf(type), stroke: c.ring, strokeWidth: 3 }}
+                // Etiqueta directa al final de cada línea, separada si dos terminan en el mismo valor
+                label={(p: { x?: number; y?: number; index?: number }) => p.index === data.length - 1
+                  ? <text key={`${type}-end`} x={(p.x ?? 0) + 14} y={(p.y ?? 0) + 5 + (endShift[type] ?? 0)} fontSize={13} fontWeight={800} fill={c.ink}>{t.habits[type]}</text>
+                  : <g key={`${type}-${p.index}-l`} />}
                 animationDuration={1000}
                 animationEasing="ease-out"
               />
             ))}
-          </AreaChart>
+          </LineChart>
         </ResponsiveContainer>
       </div>
     </div>
