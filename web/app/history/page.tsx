@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { HabitRecord, HabitType } from '@/types'
 import { HABIT_TYPE_INFO } from '@/types'
 import { habitRepository } from '@/services/repositories'
-import { Icon } from '@/components/atoms/Icon'
+import { HABIT_ICON, Icon, IconTile } from '@/components/atoms/Icon'
 import { cn } from '@/lib/utils/cn'
 import { usePrefs } from '@/lib/i18n/PreferencesProvider'
 import { PageHeader } from '@/components/organisms/PageHeader'
@@ -74,9 +74,11 @@ export default function HistoryPage() {
             return (
               <button key={key} type="button" aria-pressed={on} onClick={() => { setType(key); setPage(0) }}
                 className={cn('flex min-h-[40px] items-center gap-2 rounded-xl border-2 px-3.5 text-sm font-bold transition-colors', on ? 'border-ink bg-card' : 'border-line bg-surface hover:border-mute')}>
-                {key !== 'ALL' && <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: HABIT_TYPE_INFO[key as HabitType].color }} />}
+                <span aria-hidden="true" className="flex h-[18px] w-[18px] items-center justify-center rounded-md text-white"
+                  style={on ? { backgroundColor: key === 'ALL' ? '#5A3825' : HABIT_TYPE_INFO[key as HabitType].color } : { border: '1.5px solid rgb(var(--c-line))', background: 'rgb(var(--c-card))' }}>
+                  {on && <Icon name="check" size={12} />}
+                </span>
                 {key === 'ALL' ? t.common.all : t.habits[key as HabitType]}
-                {on && <Icon name="check" size={14} />}
               </button>
             )
           })}
@@ -89,13 +91,13 @@ export default function HistoryPage() {
         </div>
       )}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4 text-sm">
-        <span className="text-text-secondary" role="status">{h.showing(filtered.length)}</span>
+        <span className="text-[15px] text-text-secondary" role="status">{h.showingLabel} <b className="text-text">{h.countOf(filtered.length)}</b> {h.periodOf[period]}</span>
         <button type="button" onClick={clearFilters} className="min-h-[44px] px-2 font-bold text-green-dark underline underline-offset-4">{h.clear}</button>
       </div>
     </section>
     <section className="card overflow-hidden p-0" aria-live="polite">
-      <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-green-light/50 text-text-secondary"><tr><th className="p-4">{h.date}</th><th className="p-4">{h.variable}</th><th className="p-4">{h.valueNote}</th><th className="p-4">{h.origin}</th><th className="p-4">{t.recordStatusLabel}</th><th className="p-4"><span className="sr-only">{h.detail}</span></th></tr></thead>
-      <tbody>{visible.map((record) => <tr key={record.id} className="border-t border-line"><td className="whitespace-nowrap p-4">{dateText(record.recordedAt)}</td><td className="p-4"><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: HABIT_TYPE_INFO[record.habitType].color }} />{t.habits[record.habitType]}</td><td className="max-w-sm truncate p-4">{record.note || `${record.value} ${t.units[HABIT_TYPE_INFO[record.habitType].unit] ?? HABIT_TYPE_INFO[record.habitType].unit}`}</td><td className="p-4">{record.source === 'WATCH' ? h.watch : h.webShort}</td><td className="p-4"><span className={cn('badge', record.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-light text-green-dark')}><Icon name={record.status === 'PENDING' ? 'clock' : 'check'} size={13} />{record.status === 'PENDING' ? t.recordStatus.PENDING : t.recordStatus.SYNCED}</span></td><td className="p-2"><button className="min-h-[44px] rounded-lg px-3 font-bold text-green-dark underline underline-offset-4" onClick={() => setDetail(record)}>{t.common.view}</button></td></tr>)}</tbody></table></div>
+      <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-green-light text-green-dark"><tr><th scope="col" className="p-4 font-extrabold">{h.date}</th><th scope="col" className="p-4 font-extrabold">{h.variable}</th><th scope="col" className="p-4 font-extrabold">{h.valueNote}</th><th scope="col" className="p-4 font-extrabold">{h.origin}</th><th scope="col" className="p-4 font-extrabold">{t.recordStatusLabel}</th><th scope="col" className="p-4"><span className="sr-only">{h.detail}</span></th></tr></thead>
+      <tbody>{visible.map((record) => <tr key={record.id} className="border-t border-line"><td className="whitespace-nowrap p-4">{dateText(record.recordedAt)}</td><td className="p-4"><span className="inline-flex items-center gap-2.5 font-bold"><IconTile name={HABIT_ICON[record.habitType]} color={HABIT_TYPE_INFO[record.habitType].color} size={30} />{t.habits[record.habitType]}</span></td><td className="max-w-sm truncate p-4">{record.note || `${record.value} ${t.units[HABIT_TYPE_INFO[record.habitType].unit] ?? HABIT_TYPE_INFO[record.habitType].unit}`}</td><td className="p-4"><span className="inline-flex items-center gap-2 font-semibold text-text-secondary"><Icon name={record.source === 'WATCH' ? 'watch' : 'globe'} size={18} />{record.source === 'WATCH' ? h.watch : h.webShort}</span></td><td className="p-4"><span className={cn('badge', record.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-light text-green-dark')}><Icon name={record.status === 'PENDING' ? 'clock' : 'check'} size={13} />{record.status === 'PENDING' ? t.recordStatus.PENDING : t.recordStatus.SYNCED}</span></td><td className="p-2"><button className="min-h-[44px] whitespace-nowrap rounded-[10px] border-[1.5px] border-green-dark bg-card px-3.5 text-sm font-extrabold text-green-dark hover:bg-green-light" onClick={() => setDetail(record)}>{h.viewDetail}</button></td></tr>)}</tbody></table></div>
       {loading ? <p className="p-10 text-center text-text-secondary" role="status">{h.loading}</p> : visible.length === 0 && <p className="p-10 text-center text-text-secondary">{h.empty}</p>}
       <div className="flex items-center justify-between border-t border-line p-4 text-sm"><span>{h.summary(filtered.length, page + 1, pages)}</span><div className="flex gap-2"><button className="btn-secondary" disabled={page === 0} onClick={() => setPage(page - 1)}>{t.common.previous}</button><button className="btn-secondary" disabled={page + 1 >= pages} onClick={() => setPage(page + 1)}>{t.common.next}</button></div></div>
     </section>
