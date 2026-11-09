@@ -18,6 +18,7 @@ const es = {
   nav: {
     label: 'Navegación principal', home: 'Inicio', history: 'Historial', trends: 'Tendencias', analysis: 'Análisis',
     profile: 'Perfil', reminders: 'Recordatorios', sync: 'Sincronización', settings: 'Configuración', logout: 'Cerrar sesión',
+    groupObserve: 'Observar', groupCare: 'Cuidar', groupAccount: 'Cuenta',
   },
   habits: { FOOD: 'Alimentación', WATER: 'Agua', SLEEP: 'Sueño', PLAY: 'Juego', BEHAVIOR: 'Comportamiento' },
   units: { g: 'g', ml: 'ml', min: 'min', nota: 'nota' } as Record<string, string>,
@@ -35,6 +36,7 @@ const es = {
     title: 'Panel de inicio', metaTitle: 'Inicio', todayHabits: 'Resumen de hábitos de hoy', habitsHeading: 'Resumen de hábitos',
     recent: 'Registros recientes', chartTitle: 'Actividad de los últimos 7 días', chartSub: 'Observaciones registradas por variable.',
     syncLabel: 'Datos cargados desde tu cuenta', noRecordsToday: 'Sin registros hoy', rabbitSelect: 'Seleccionar conejo',
+    routineTitle: 'Rutina de hoy', routineMissing: (names: string) => `Faltan ${names} para completar el día.`, routineDone: '¡Rutina completa por hoy!',
   },
   hero: {
     hello: 'Hola', rabbitLine: (name: string) => `Así va la rutina de ${name}`, noRabbit: 'Registra a tu conejo para empezar',
@@ -75,6 +77,7 @@ const es = {
     loading: 'Cargando historial…', empty: 'No hay registros que coincidan con estos filtros.',
     summary: (n: number, p: number, total: number) => `${n} registros · página ${p} de ${total}`,
     detailTitle: 'Detalle del registro', closeDetail: 'Cerrar detalle', sync: 'Sincronización', value: 'Valor',
+    clear: 'Limpiar filtros', showing: (n: number) => `Mostrando ${n} ${n === 1 ? 'registro' : 'registros'}`,
   },
   trends: {
     title: 'Tendencias', sub: 'Compara las observaciones registradas en el tiempo.', variables: 'Variables', period: 'Periodo',
@@ -99,6 +102,9 @@ const es = {
     daily: 'Actividad diaria', dailySub: 'Registros por día en la última semana.', noVariableData: 'Sin registros esta semana',
     statusHint: { NORMAL: 'La rutina registrada se ve estable.', ATTENTION: 'Hay detalles que conviene revisar.', HIGH_ATTENTION: 'Conviene revisar pronto las observaciones.', LEARNING: 'Aún se necesitan más registros.' },
     factorsSub: 'Datos en los que se basa esta lectura.', summaryLabel: 'Lectura general',
+    progressRecords: 'Observaciones', progressDays: 'Días distintos',
+    progressHint: 'Para generar la lectura con IA hacen falta al menos 10 observaciones en 3 días distintos.',
+    aiPending: 'Lectura con IA Gemini: aún no generada', aiReady: 'Lectura generada con IA Gemini',
     status: { NORMAL: 'Observación normal', ATTENTION: 'Revisar observaciones', HIGH_ATTENTION: 'Requiere atención', LEARNING: 'Aprendiendo la rutina' },
     mock: {
       enough: 'Hay registros recientes para describir la rutina; este resultado de demostración no analiza cambios clínicos.',
@@ -187,6 +193,7 @@ const en: Dictionary = {
   nav: {
     label: 'Main navigation', home: 'Home', history: 'History', trends: 'Trends', analysis: 'Analysis',
     profile: 'Profile', reminders: 'Reminders', sync: 'Synchronization', settings: 'Settings', logout: 'Log out',
+    groupObserve: 'Observe', groupCare: 'Care', groupAccount: 'Account',
   },
   habits: { FOOD: 'Feeding', WATER: 'Water', SLEEP: 'Sleep', PLAY: 'Play', BEHAVIOR: 'Behavior' },
   units: { g: 'g', ml: 'ml', min: 'min', nota: 'note' },
@@ -204,6 +211,7 @@ const en: Dictionary = {
     title: 'Home panel', metaTitle: 'Home', todayHabits: "Today's habit summary", habitsHeading: 'Habit summary',
     recent: 'Recent records', chartTitle: 'Activity over the last 7 days', chartSub: 'Observations recorded per variable.',
     syncLabel: 'Data loaded from your account', noRecordsToday: 'No records today', rabbitSelect: 'Select rabbit',
+    routineTitle: "Today's routine", routineMissing: (names: string) => `${names} still missing to complete the day.`, routineDone: 'Routine complete for today!',
   },
   hero: {
     hello: 'Hello', rabbitLine: (name: string) => `This is how ${name}'s routine is going`, noRabbit: 'Add your rabbit to get started',
@@ -244,6 +252,7 @@ const en: Dictionary = {
     loading: 'Loading history…', empty: 'No records match these filters.',
     summary: (n: number, p: number, total: number) => `${n} records · page ${p} of ${total}`,
     detailTitle: 'Record details', closeDetail: 'Close details', sync: 'Sync', value: 'Value',
+    clear: 'Clear filters', showing: (n: number) => `Showing ${n} ${n === 1 ? 'record' : 'records'}`,
   },
   trends: {
     title: 'Trends', sub: 'Compare the observations recorded over time.', variables: 'Variables', period: 'Period',
@@ -268,6 +277,9 @@ const en: Dictionary = {
     daily: 'Daily activity', dailySub: 'Records per day over the last week.', noVariableData: 'No records this week',
     statusHint: { NORMAL: 'The recorded routine looks steady.', ATTENTION: 'Some details are worth reviewing.', HIGH_ATTENTION: 'The observations should be reviewed soon.', LEARNING: 'More records are still needed.' },
     factorsSub: 'The data this reading is based on.', summaryLabel: 'Overview',
+    progressRecords: 'Observations', progressDays: 'Different days',
+    progressHint: 'To generate the AI reading you need at least 10 observations over 3 different days.',
+    aiPending: 'Gemini AI reading: not generated yet', aiReady: 'Reading generated by Gemini AI',
     status: { NORMAL: 'Normal observation', ATTENTION: 'Review observations', HIGH_ATTENTION: 'Needs attention', LEARNING: 'Learning the routine' },
     mock: {
       enough: 'There are recent records to describe the routine; this demo result does not analyze clinical changes.',
