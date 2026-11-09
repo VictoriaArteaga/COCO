@@ -5,7 +5,6 @@ import com.coco.backend.application.dto.response.SyncResultResponse;
 import com.coco.backend.domain.exception.DuplicateRecordException;
 import com.coco.backend.domain.model.HabitRecord;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +31,6 @@ public class SyncRecordsUseCase {
         this.rabbits = rabbits;
     }
 
-    @Transactional
     public SyncResultResponse execute(UUID userId, List<SyncHabitRequest> requests) {
         List<String> synced = new ArrayList<>();
         List<String> duplicates = new ArrayList<>();
