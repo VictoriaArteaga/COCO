@@ -6,6 +6,7 @@ import { HABIT_ICON, Icon, IconTile, type IconName } from '@/components/atoms/Ic
 import { HABIT_TYPE_INFO } from '@/types'
 import { PageHeader } from '@/components/organisms/PageHeader'
 import { RecordStatusBadge } from '@/components/atoms/Badge'
+import { RefreshButton } from '@/components/atoms/RefreshButton'
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerPrefs()
@@ -60,12 +61,11 @@ export default async function SynchronizationPage() {
   ]
 
   return <div className="space-y-5 p-4 sm:p-6 lg:space-y-6 lg:p-8">
-    <PageHeader title={s.title} sub={s.sub} icon="refresh" />
+    <PageHeader title={s.title} sub={s.sub} icon="refresh"><RefreshButton /></PageHeader>
 
     {/* Estado general */}
-    <section className="card relative overflow-hidden" aria-label={s.title}>
-      <div aria-hidden="true" className="absolute inset-y-0 left-0 w-2" style={{ background: hero.color }} />
-      <div className="flex flex-col gap-4 pl-3 sm:flex-row sm:items-center">
+    <section className="card" aria-label={s.title}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <span className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full text-white" style={{ background: hero.color }}>
           <Icon name={hero.icon} size={32} />
         </span>
@@ -97,7 +97,7 @@ export default async function SynchronizationPage() {
           <li key={step.title} className="relative flex items-start gap-3 rounded-xl border border-line bg-surface p-4">
             <IconTile name={step.icon} size={44} />
             <div className="min-w-0">
-              <p className="text-xs font-bold text-text-secondary">{index + 1}</p>
+              <p className="text-sm font-bold text-text-secondary">{s.stepLabel(index + 1)}</p>
               <h3 className="font-display text-base font-semibold text-text">{step.title}</h3>
               <p className="mt-1 text-sm text-text-secondary">{step.text}</p>
             </div>
@@ -111,7 +111,7 @@ export default async function SynchronizationPage() {
       <section className="card" aria-labelledby="breakdown">
         <h2 id="breakdown" className="font-display text-xl font-semibold text-green-dark">{s.breakdownTitle}</h2>
         <p className="mb-5 text-sm text-text-secondary">{s.breakdownSub}</p>
-        <div className="flex h-5 overflow-hidden rounded-lg bg-surface" aria-hidden="true">
+        <div className="flex h-[22px] overflow-hidden rounded-xl border-[1.5px] border-ink bg-surface" aria-hidden="true">
           {breakdown.filter((b) => b.n > 0).map((b) => <div key={b.status} style={{ width: `${(b.n / total) * 100}%`, background: b.color }} />)}
         </div>
         <ul className="mt-5 grid grid-cols-2 gap-3">
