@@ -5,14 +5,14 @@ const backendUrl = process.env.COCO_API_URL?.replace(/\/+$/, '')
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const token = (await cookies()).get('coco_session')?.value
-  if (!token) return NextResponse.json({ message: 'Sesión no disponible.' }, { status: 401 })
-  if (!backendUrl) return NextResponse.json({ message: 'La API no está configurada.' }, { status: 503 })
+  if (!token) return NextResponse.json({ message: 'Tu sesión terminó. Vuelve a iniciar sesión para seguir.' }, { status: 401 })
+  if (!backendUrl) return NextResponse.json({ message: 'COCO no está disponible por ahora. Inténtalo de nuevo en unos minutos.' }, { status: 503 })
   if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && request.headers.get('origin') !== new URL(request.url).origin) {
-    return NextResponse.json({ message: 'Origen no permitido.' }, { status: 403 })
+    return NextResponse.json({ message: 'No pudimos completar la acción. Recarga la página e inténtalo de nuevo.' }, { status: 403 })
   }
   const { path } = await context.params
   if (!path.length || path.some((segment) => !/^[a-zA-Z0-9_-]+$/.test(segment))) {
-    return NextResponse.json({ message: 'Ruta inválida.' }, { status: 400 })
+    return NextResponse.json({ message: 'No pudimos completar la acción. Recarga la página e inténtalo de nuevo.' }, { status: 400 })
   }
   try {
     const upstream = await fetch(`${backendUrl}/api/${path.map(encodeURIComponent).join('/')}${request.nextUrl.search}`, {
@@ -22,7 +22,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     })
     return new Response(await upstream.text(), { status: upstream.status, headers: { 'Content-Type': upstream.headers.get('content-type') ?? 'application/json' } })
   } catch {
-    return NextResponse.json({ message: 'No fue posible conectar con COCO.' }, { status: 502 })
+    return NextResponse.json({ message: 'No pudimos conectar con COCO. Revisa tu internet e inténtalo de nuevo.' }, { status: 502 })
   }
 }
 

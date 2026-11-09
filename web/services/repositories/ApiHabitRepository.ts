@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/api/client'
 export class ApiHabitRepository implements HabitRepository {
   async getRabbit(): Promise<Rabbit> {
     const rabbits = await apiClient.get<Rabbit[]>('/api/rabbits')
-    if (!rabbits.length) throw new Error('Aún no tienes un conejo registrado.')
+    if (!rabbits.length) throw new Error('Aún no tienes un conejo. Agrega uno en tu perfil para empezar.')
     return rabbits[0]
   }
   async listRecords(): Promise<HabitRecord[]> {
