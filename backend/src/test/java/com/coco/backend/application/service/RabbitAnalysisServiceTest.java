@@ -30,7 +30,7 @@ class RabbitAnalysisServiceTest {
         List<HabitRecordEntity> history = new ArrayList<>();
         for (int i = 10; i >= 7; i--) history.add(record(rabbitId, now.minusSeconds(i * 86400L)));
         for (int i = 0; i < 6; i++) history.add(record(rabbitId, now.minusSeconds(i * 86400L)));
-        when(records.findTop200ByRabbitIdOrderByRecordedAtDesc(rabbitId)).thenReturn(history);
+        when(records.findByRabbitIdAndRecordedAtBetweenOrderByRecordedAtDesc(eq(rabbitId), any(), any())).thenReturn(history);
         when(ai.analyze(anyMap())).thenReturn(new AiAnalysisPort.AnalysisOutcome("ATTENTION", true,
                 List.of("Recent observations differ from earlier recorded days."), "Some recorded patterns changed.",
                 "Continue observing and seek veterinary advice if concerned.", false));

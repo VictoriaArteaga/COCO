@@ -18,10 +18,12 @@ public class AnalysisController {
     public AnalysisController(RabbitAnalysisService service) { this.service = service; }
 
     @PostMapping("/rabbit/{rabbitId}")
-    public RabbitAnalysisResponse analyze(@PathVariable UUID rabbitId, @AuthenticationPrincipal Jwt jwt) {
+    public RabbitAnalysisResponse analyze(@PathVariable UUID rabbitId, @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.Instant asOf,
+            @RequestParam(defaultValue = "es") String lang) {
         UUID userId;
         try { userId = UUID.fromString(jwt.getSubject()); }
         catch (RuntimeException ex) { throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sesión no válida"); }
-        return service.analyze(rabbitId, userId);
+        return service.analyze(rabbitId, userId, asOf, lang);
     }
 }

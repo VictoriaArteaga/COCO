@@ -13,12 +13,15 @@ import com.coco.backend.infrastructure.adapter.output.persistence.repository.Rab
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
 public class RabbitAnalysisService {
     private static final int MIN_RECORDS = 10;
     private static final int MIN_DAYS = 3;
+    private static final int HISTORY_DAYS = 180;
     private final RabbitJpaRepository rabbits;
     private final HabitRecordJpaRepository records;
     private final AnalysisResultJpaRepository results;
@@ -32,16 +35,38 @@ public class RabbitAnalysisService {
     }
 
     public RabbitAnalysisResponse analyze(UUID rabbitId, UUID authenticatedUserId) {
+        return analyze(rabbitId, authenticatedUserId, null);
+    }
+
+    /**
+     * @param asOf instante de referencia opcional (nunca futuro). Permite analizar el historial tal como estaba
+     *             en una fecha pasada; null equivale a "ahora".
+     */
+    public RabbitAnalysisResponse analyze(UUID rabbitId, UUID authenticatedUserId, Instant asOf) {
+        return analyze(rabbitId, authenticatedUserId, asOf, "es");
+    }
+
+    /** @param lang idioma del texto de respuesta: "en" (inglés); cualquier otro valor, español. */
+    public RabbitAnalysisResponse analyze(UUID rabbitId, UUID authenticatedUserId, Instant asOf, String lang) {
+        boolean english = "en".equalsIgnoreCase(lang);
+        Instant now = Instant.now();
+        Instant reference = asOf == null || asOf.isAfter(now) ? now : asOf;
         RabbitEntity rabbit = rabbits.findByIdAndUserIdAndActiveTrue(rabbitId, authenticatedUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rabbit", rabbitId.toString()));
-        List<HabitRecordEntity> history = records.findTop200ByRabbitIdOrderByRecordedAtDesc(rabbitId);
-        Map<String, Object> summary = summaryBuilder.build(rabbit, history, java.time.Instant.now());
+        // Ventana por fecha (no por cantidad): un tope de N registros recortaría la línea base de historiales largos.
+        List<HabitRecordEntity> history = records.findByRabbitIdAndRecordedAtBetweenOrderByRecordedAtDesc(
+                rabbitId, reference.minus(HISTORY_DAYS, ChronoUnit.DAYS), reference);
+        Map<String, Object> summary = summaryBuilder.build(rabbit, history, reference);
+        summary.put("responseLanguage", english ? "English" : "Spanish");
         AiAnalysisPort.AnalysisOutcome outcome;
         if (history.size() < MIN_RECORDS || summaryBuilder.distinctDays(history) < MIN_DAYS) {
             outcome = new AiAnalysisPort.AnalysisOutcome(AnalysisStatus.LEARNING.name(), false,
-                    List.of("El historial disponible aún no cubre suficientes registros y días para establecer una línea base individual."),
-                    "COCO está aprendiendo la rutina de " + rabbit.getName() + ". La información disponible no permite comparar cambios con suficiente contexto.",
-                    "Continúa registrando observaciones. La ausencia de registros no significa ausencia de actividad.", false);
+                    List.of(english ? "The available history does not yet cover enough records and days to establish an individual baseline."
+                            : "El historial disponible aún no cubre suficientes registros y días para establecer una línea base individual."),
+                    english ? "COCO is learning " + rabbit.getName() + "'s routine. The available information does not allow changes to be compared with enough context."
+                            : "COCO está aprendiendo la rutina de " + rabbit.getName() + ". La información disponible no permite comparar cambios con suficiente contexto.",
+                    english ? "Keep recording observations. Missing records do not mean the activity did not happen."
+                            : "Continúa registrando observaciones. La ausencia de registros no significa ausencia de actividad.", false);
         } else {
             outcome = ai.analyze(summary);
         }
