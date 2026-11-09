@@ -17,10 +17,10 @@ if not exist "%WRAPPER_JAR%" (
     for /f "tokens=1,* delims==" %%a in (%WRAPPER_PROPERTIES%) do (
         if "%%a"=="wrapperUrl" set WRAPPER_URL=%%b
     )
-    echo Downloading Maven Wrapper...
+    echo Downloading Maven Wrapper....\mvnw.cmd -version
     powershell -Command "Invoke-WebRequest -Uri '%WRAPPER_URL%' -OutFile '%WRAPPER_JAR%'"
 )
 
-java "-Dmaven.multiModuleProjectDirectory=%~dp0" "-Duser.home=%~dp0..\.maven-home" -classpath "%WRAPPER_JAR%" org.apache.maven.wrapper.MavenWrapperMain %*
+java "-Dmaven.multiModuleProjectDirectory=%~dp0." "-Duser.home=%~dp0..\.maven-home" -classpath "%WRAPPER_JAR%" org.apache.maven.wrapper.MavenWrapperMain %*
 
 endlocal
