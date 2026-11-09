@@ -40,6 +40,7 @@ export default function AnalysisPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [week, setWeek] = useState<HabitRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [progress, setProgress] = useState({ obs: 0, days: 0 })
 
   // Se vuelve a pedir el análisis al cambiar de idioma para que el texto llegue en el idioma elegido.
   useEffect(() => {
@@ -49,6 +50,7 @@ export default function AnalysisPage() {
         const records = allRecords.filter((record) => record.rabbitId === rabbit.id)
         const since = Date.now() - 7 * DAY
         setWeek(records.filter((record) => new Date(record.recordedAt).getTime() >= since))
+        setProgress({ obs: records.length, days: new Set(records.map((record) => record.recordedAt.slice(0, 10))).size })
         return analysisService.analyze({ rabbitId: rabbit.id, periodDays: 7, records: records.length, habitTypes: [...new Set(records.map((record) => record.habitType))], lang })
       })
       .then(setResult).catch(() => setResult(null)).finally(() => setLoading(false))
@@ -101,6 +103,20 @@ export default function AnalysisPage() {
               <span className="text-sm font-medium text-text-secondary">{a.statusHint[result.status]}</span>
             </div>
             <h2 className="mt-3 font-display text-xl font-semibold leading-snug text-text sm:text-2xl">{result.summary}</h2>
+            {result.status === 'LEARNING' && (
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {([[a.progressRecords, progress.obs, 10], [a.progressDays, progress.days, 3]] as [string, number, number][]).map(([label, value, goal]) => (
+                  <div key={label}>
+                    <div className="mb-1 flex justify-between text-sm font-bold"><span>{label}</span><span className="tabular-nums">{Math.min(value, goal)} / {goal}</span></div>
+                    <div className="h-3 overflow-hidden rounded-full border border-line bg-surface" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={goal} aria-valuenow={Math.min(value, goal)}>
+                      <div className="h-full rounded-full" style={{ width: `${(Math.min(value, goal) / goal) * 100}%`, background: status.color }} />
+                    </div>
+                  </div>
+                ))}
+                <p className="text-sm text-text-secondary sm:col-span-2">{a.progressHint}</p>
+              </div>
+            )}
+            <p className="mt-3 flex items-center gap-2 text-sm font-bold text-green-dark"><Icon name="bulb" size={16} />{result.status === 'LEARNING' ? a.aiPending : a.aiReady}</p>
             <p className="mt-3 text-xs font-medium text-text-secondary">
               {result.source === 'backend' ? a.fromBackend : a.fromMock} · {a.generated} {new Date(result.generatedAt).toLocaleString(locale)}
             </p>
@@ -187,7 +203,11 @@ export default function AnalysisPage() {
         </div>
       </section>
 
-
+      {/* Aviso permanente: visible, no una letra chica */}
+      <div role="note" className="card flex items-start gap-3 !border-green-dark !p-4">
+        <Icon name="shield" size={22} className="mt-0.5 flex-shrink-0 text-green-dark" />
+        <p className="text-sm font-semibold text-text">{a.disclaimer}</p>
+      </div>
     </div>}
   </div>
 }
