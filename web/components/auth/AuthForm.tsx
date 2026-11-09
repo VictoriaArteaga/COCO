@@ -89,7 +89,16 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     finally { setBusy(false) }
   }
 
-  return <form className="space-y-5 lg:space-y-7" onSubmit={submit} noValidate>
+  // Requisitos de la contraseña en vivo (solo en el registro)
+  const [pwd, setPwd] = useState('')
+  const [pwd2, setPwd2] = useState('')
+  function track(event: FormEvent<HTMLFormElement>) {
+    const data = new FormData(event.currentTarget)
+    setPwd(String(data.get('password') ?? ''))
+    setPwd2(String(data.get('confirmPassword') ?? ''))
+  }
+
+  return <form className="space-y-5 lg:space-y-7" onSubmit={submit} onChange={track} noValidate>
     <div className={register ? 'grid gap-5 sm:grid-cols-2 lg:gap-x-7 lg:gap-y-6' : 'space-y-5 lg:space-y-7'}>
       {register && <Field label={t.auth.name} name="displayName" error={errors.displayName} onValue={onValue} icon="user" placeholder={t.auth.namePh} hint={t.auth.nameHint} autoComplete="name" maxLength={100} />}
       <Field label={t.auth.email} name="email" error={errors.email} onValue={onValue} type="email" icon="mail" placeholder={t.auth.emailPh} hint={register ? t.auth.emailHint : undefined} autoComplete="email" maxLength={255} />
@@ -98,6 +107,15 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       {register && <Field label={t.auth.confirm} name="confirmPassword" error={errors.confirmPassword} onValue={onValue} type="password" icon="lock" placeholder={t.auth.passwordPh} hint={t.auth.confirmHint}
         autoComplete="new-password" reveal={reveal} />}
     </div>
+    {register && (
+      <ul className="-mt-1 flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold" aria-live="polite">
+        {[[t.auth.reqLength, pwd.length >= 8], [t.auth.reqMatch, pwd2.length > 0 && pwd === pwd2]].map(([label, ok]) => (
+          <li key={String(label)} className={`flex items-center gap-1.5 ${ok ? 'text-state-normal' : 'text-text-secondary'}`}>
+            <Icon name={ok ? 'check' : 'info'} size={16} />{label}
+          </li>
+        ))}
+      </ul>
+    )}
     {error && <p role="alert" className="rounded-coco border border-coral bg-coral-light p-3 text-sm font-medium text-text">{error}</p>}
     <button className="btn-accent auth-submit w-full rounded-xl py-3 text-base lg:py-4 lg:text-lg" disabled={busy}>{busy ? t.auth.processing : register ? t.auth.register : t.auth.login}</button>
     <p className="text-center text-sm text-text-secondary lg:text-base">{register

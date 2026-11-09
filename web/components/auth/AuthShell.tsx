@@ -1,5 +1,5 @@
 import { Icon } from '@/components/atoms/Icon'
-import { RabbitIllustration } from '@/components/atoms/RabbitIllustration'
+import { Logo } from '@/components/atoms/Logo'
 import { getServerPrefs } from '@/lib/i18n/server'
 
 /**
@@ -26,9 +26,7 @@ export async function AuthShell({ mode, children }: { mode: 'login' | 'register'
         <div className="auth-card relative w-full max-w-md rounded-sheet overflow-hidden p-6 sm:max-w-lg sm:p-10 lg:max-w-xl lg:p-14 xl:max-w-2xl xl:p-16" style={cardAnim}>
           <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-green via-green-bright to-yellow opacity-90" />
           <header className="text-center">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full auth-badge lg:h-24 lg:w-24 xl:h-28 xl:w-28">
-              <Icon name="login" size={34} className="lg:scale-125 xl:scale-150" />
-            </div>
+            <Logo size={72} className="mx-auto" />
             <h1 className="mt-5 font-display text-4xl font-semibold text-green-dark lg:mt-7 lg:text-5xl xl:text-6xl">{t.auth.welcome}</h1>
             <p className="mt-2 text-sm text-text-secondary lg:mt-3 lg:text-base xl:text-lg">{t.auth.loginSub}</p>
           </header>
@@ -39,16 +37,18 @@ export async function AuthShell({ mode, children }: { mode: 'login' | 'register'
           <section className="relative hidden flex-col justify-between p-10 text-white md:flex lg:p-14 xl:p-16" style={{ background: 'var(--auth-panel)' }}>
             <div aria-hidden="true" className="absolute -bottom-16 -right-16 h-56 w-56 rounded-full bg-white/10" />
             <div className="relative">
-              <Icon name="userPlus" size={36} />
+              <Logo size={60} />
               <h2 className="mt-6 font-display text-3xl font-semibold leading-tight lg:text-4xl xl:text-5xl">{t.auth.joinTitle}</h2>
               <p className="mt-4 font-medium leading-relaxed text-white/90 lg:text-lg xl:text-xl">{t.auth.joinText}</p>
             </div>
-            <div className="relative">
-              <div className="mx-auto mb-6 flex h-32 w-32 items-center justify-center rounded-full auth-disc lg:h-44 lg:w-44 xl:h-56 xl:w-56">
-                <RabbitIllustration className="h-28 w-28 lg:h-40 lg:w-40 xl:h-52 xl:w-52" />
-              </div>
-              <p className="flex items-center gap-2 text-sm font-bold lg:text-base"><Icon name="rabbit" size={18} />{t.auth.joinFeature}</p>
-            </div>
+            <ul className="relative mt-8 space-y-4">
+              {t.auth.joinBenefits.map((benefit) => (
+                <li key={benefit} className="flex items-start gap-3 font-semibold lg:text-lg">
+                  <span aria-hidden="true" className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink bg-yellow text-[#2B1B12]"><Icon name="check" size={16} /></span>
+                  {benefit}
+                </li>
+              ))}
+            </ul>
           </section>
           <section className="flex flex-col justify-center p-6 sm:p-10 lg:p-14 xl:p-16">
             <h1 className="font-display text-3xl font-semibold text-green-dark lg:text-4xl xl:text-5xl">{t.auth.createTitle}</h1>
