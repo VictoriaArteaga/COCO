@@ -3,7 +3,9 @@
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { cn } from '@/lib/utils/cn'
 import { usePrefs } from '@/lib/i18n/PreferencesProvider'
+import { friendlyError } from '@/lib/api/friendlyError'
 import { Icon, type IconName } from '@/components/atoms/Icon'
 
 type FieldProps = {
@@ -13,27 +15,36 @@ type FieldProps = {
   reveal?: { show: string; hide: string }
 }
 
+/** Campo del diseño: etiqueta arriba, caja de 50 px con icono a la izquierda y, si aplica, botón para mostrar la contraseña. */
 function Field({ label, name, icon, type = 'text', hint, reveal, error, onValue, ...rest }: FieldProps) {
   const [visible, setVisible] = useState(false)
   const describedBy = error ? `${name}-error` : hint ? `${name}-hint` : undefined
   return (
-    <label className="block text-sm font-bold text-text lg:text-base">
-      {label}
-      <span className="relative mt-1.5 block">
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary"><Icon name={icon} size={18} /></span>
-        <input name={name} type={reveal && visible ? 'text' : type} aria-invalid={error ? true : undefined} aria-describedby={describedBy}
-          onChange={e => error && onValue?.(name, e.target.value, false)} onBlur={e => onValue?.(name, e.target.value, true)} className="input auth-input w-full rounded-xl py-3 pl-11 pr-11 font-medium lg:py-4 lg:pl-12 lg:text-base" {...rest} />
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={name} className="text-[15px] font-bold text-text lg:text-base">{label}</label>
+      <div className={cn(
+        'flex h-[50px] items-center gap-2.5 rounded-xl border-[1.5px] bg-[var(--input-bg)] px-3.5 text-text-secondary transition-[border-color,box-shadow] lg:h-[54px] lg:px-4',
+        'focus-within:border-green focus-within:shadow-[0_0_0_4px_rgb(138_90_59/0.28)]',
+        error ? 'border-coral' : 'border-line',
+      )}>
+        <Icon name={icon} size={20} />
+        <input
+          id={name} name={name} type={reveal && visible ? 'text' : type} aria-invalid={error ? true : undefined} aria-describedby={describedBy}
+          onChange={e => error && onValue?.(name, e.target.value, false)} onBlur={e => onValue?.(name, e.target.value, true)}
+          className="min-w-0 flex-1 !min-h-0 !border-0 !bg-transparent !p-0 text-base text-text placeholder:text-text-secondary/70 focus:!shadow-none lg:text-[17px]"
+          {...rest}
+        />
         {reveal && (
           <button type="button" onClick={() => setVisible(v => !v)} aria-label={visible ? reveal.hide : reveal.show}
-            className="auth-eye absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-text-secondary hover:text-green-dark">
-            <Icon name={visible ? 'eyeOff' : 'eye'} size={18} />
+            className="auth-eye -mr-2.5 inline-flex h-11 w-11 items-center justify-center rounded-full text-green-dark hover:bg-green-light">
+            <Icon name={visible ? 'eyeOff' : 'eye'} size={22} />
           </button>
         )}
-      </span>
+      </div>
       {error
-        ? <span id={`${name}-error`} role="alert" className="auth-error mt-1 flex items-start gap-1 text-xs font-semibold lg:text-sm"><Icon name="close" size={14} className="mt-0.5 shrink-0" />{error}</span>
-        : hint && <span id={`${name}-hint`} className="mt-1 block text-xs font-medium text-text-secondary lg:text-sm">{hint}</span>}
-    </label>
+        ? <span id={`${name}-error`} role="alert" className="auth-error flex items-start gap-1 text-[13px] font-semibold lg:text-sm"><Icon name="alert" size={14} className="mt-0.5 shrink-0" />{error}</span>
+        : hint && <span id={`${name}-hint`} className="text-[13px] text-text-secondary lg:text-sm">{hint}</span>}
+    </div>
   )
 }
 
@@ -82,8 +93,13 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     setBusy(true)
     try {
       const response = await fetch(`/api/auth/${mode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      const data = await response.json()
-      if (!response.ok) { setError(data.message ?? t.auth.requestError); return }
+      if (!response.ok) {
+        // Mensajes propios según lo que ocurrió; nunca el texto crudo del servidor.
+        setError(register && response.status === 409 ? t.auth.emailTaken
+          : !register && (response.status === 400 || response.status === 401) ? t.auth.badCredentials
+          : friendlyError(response.status, t, t.auth.requestError))
+        return
+      }
       router.replace('/dashboard'); router.refresh()
     } catch { setError(t.auth.connectError) }
     finally { setBusy(false) }
@@ -98,27 +114,29 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     setPwd2(String(data.get('confirmPassword') ?? ''))
   }
 
-  return <form className="space-y-5 lg:space-y-7" onSubmit={submit} onChange={track} noValidate>
-    <div className={register ? 'grid gap-5 sm:grid-cols-2 lg:gap-x-7 lg:gap-y-6' : 'space-y-5 lg:space-y-7'}>
-      {register && <Field label={t.auth.name} name="displayName" error={errors.displayName} onValue={onValue} icon="user" placeholder={t.auth.namePh} hint={t.auth.nameHint} autoComplete="name" maxLength={100} />}
-      <Field label={t.auth.email} name="email" error={errors.email} onValue={onValue} type="email" icon="mail" placeholder={t.auth.emailPh} hint={register ? t.auth.emailHint : undefined} autoComplete="email" maxLength={255} />
-      <Field label={t.auth.password} name="password" error={errors.password} onValue={onValue} type="password" icon="lock" placeholder={t.auth.passwordPh} hint={register ? t.auth.passwordHint : undefined}
-        autoComplete={register ? 'new-password' : 'current-password'} reveal={reveal} />
-      {register && <Field label={t.auth.confirm} name="confirmPassword" error={errors.confirmPassword} onValue={onValue} type="password" icon="lock" placeholder={t.auth.passwordPh} hint={t.auth.confirmHint}
-        autoComplete="new-password" reveal={reveal} />}
-    </div>
+  return <form className="flex flex-col gap-[18px] lg:gap-5" onSubmit={submit} onChange={track} noValidate>
+    {register && <Field label={t.auth.name} name="displayName" error={errors.displayName} onValue={onValue} icon="user" placeholder={t.auth.namePh} hint={t.auth.nameHint} autoComplete="name" maxLength={100} />}
+    <Field label={t.auth.email} name="email" error={errors.email} onValue={onValue} type="email" icon="mail" placeholder={t.auth.emailPh} hint={register ? t.auth.emailHint : undefined} autoComplete="email" maxLength={255} />
+    {register ? (
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-[18px] lg:gap-x-6 lg:gap-y-5">
+        <Field label={t.auth.password} name="password" error={errors.password} onValue={onValue} type="password" icon="lock" placeholder={t.auth.passwordPh} autoComplete="new-password" reveal={reveal} />
+        <Field label={t.auth.confirm} name="confirmPassword" error={errors.confirmPassword} onValue={onValue} type="password" icon="lock" placeholder={t.auth.passwordPh} autoComplete="new-password" reveal={reveal} />
+      </div>
+    ) : (
+      <Field label={t.auth.password} name="password" error={errors.password} onValue={onValue} type="password" icon="lock" placeholder={t.auth.passwordPh} autoComplete="current-password" reveal={reveal} />
+    )}
     {register && (
-      <ul className="-mt-1 flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold" aria-live="polite">
+      <ul className="-mt-1.5 flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold lg:text-base" aria-live="polite">
         {[[t.auth.reqLength, pwd.length >= 8], [t.auth.reqMatch, pwd2.length > 0 && pwd === pwd2]].map(([label, ok]) => (
-          <li key={String(label)} className={`flex items-center gap-1.5 ${ok ? 'text-state-normal' : 'text-text-secondary'}`}>
+          <li key={String(label)} className={cn('flex items-center gap-1.5', ok ? 'text-state-normal' : 'text-text-secondary')}>
             <Icon name={ok ? 'check' : 'info'} size={16} />{label}
           </li>
         ))}
       </ul>
     )}
     {error && <p role="alert" className="rounded-coco border border-coral bg-coral-light p-3 text-sm font-medium text-text">{error}</p>}
-    <button className="btn-accent auth-submit w-full rounded-xl py-3 text-base lg:py-4 lg:text-lg" disabled={busy}>{busy ? t.auth.processing : register ? t.auth.register : t.auth.login}</button>
-    <p className="text-center text-sm text-text-secondary lg:text-base">{register
+    <button className="btn-accent auth-submit min-h-[52px] w-full rounded-xl font-display text-[17px] font-semibold lg:min-h-[54px] lg:text-lg" disabled={busy}>{busy ? t.auth.processing : register ? t.auth.register : t.auth.login}</button>
+    <p className="text-center text-[15px] text-text-secondary lg:text-base">{register
       ? <>{t.auth.haveAccount} <Link className="auth-link" href="/login">{t.auth.signIn}</Link></>
       : <>{t.auth.noAccount} <Link className="auth-link" href="/register">{t.auth.signUp}</Link></>}</p>
   </form>
