@@ -15,7 +15,7 @@ export const TILE = {
 export type IconName =
   | 'home' | 'list' | 'trending' | 'search' | 'user' | 'bell' | 'refresh' | 'settings'
   | 'rabbit' | 'food' | 'water' | 'sleep' | 'play' | 'behavior' | 'logout' | 'close'
-  | 'mail' | 'lock' | 'eye' | 'eyeOff' | 'userPlus' | 'login' | 'check' | 'alert' | 'info' | 'bulb' | 'calendar' | 'clock' | 'sun' | 'shield'
+  | 'back' | 'chev' | 'plus' | 'watch' | 'globe' | 'mail' | 'lock' | 'eye' | 'eyeOff' | 'userPlus' | 'login' | 'check' | 'alert' | 'info' | 'bulb' | 'calendar' | 'clock' | 'sun' | 'shield'
 
 /**
  * Iconos de 24x24 en estilo bicolor redondeado: trazo del color del contenedor y un relleno suave
@@ -41,6 +41,11 @@ const PATHS: Record<IconName, ReactNode> = {
   behavior: <><circle {...soft} cx="12" cy="12" r="9" /><path d="M8.300 14.200a4.200 4.200 0 0 0 7.400 0" /><circle {...dot} cx="9" cy="9.700" r="1.100" /><circle {...dot} cx="15" cy="9.700" r="1.100" /></>,
   logout: <><path {...soft} d="M4 5a2 2 0 0 1 2-2h4v18H6a2 2 0 0 1-2-2z" /><path d="M14 8l4 4-4 4M18 12H9.500" /></>,
   close: <path d="M6.500 6.500l11 11M17.500 6.500l-11 11" />,
+  back: <path d="M19 12H5M11 6l-6 6 6 6" />,
+  chev: <path d="M9 6l6 6-6 6" />,
+  watch: <path d="M8 3h8l1 4H7zM8 21h8l1-4H7zM7 7h10v10H7zM12 10v2.5l1.5 1" />,
+  globe: <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />,
+  plus: <path d="M12 5v14M5 12h14" />,
   mail: <><rect {...soft} x="3" y="5" width="18" height="14" rx="3.500" /><path d="m4 7.500 8 5.500 8-5.500" /></>,
   lock: <><rect {...soft} x="4.500" y="10.500" width="15" height="10.500" rx="3" /><path d="M8 10.500V8a4 4 0 0 1 8 0v2.500" /><circle {...dot} cx="12" cy="15.700" r="1.300" /></>,
   eye: <><path {...soft} d="M2.500 12S6 5.500 12 5.500 21.500 12 21.500 12 18 18.500 12 18.500 2.500 12 2.500 12z" /><circle cx="12" cy="12" r="2.800" /></>,
