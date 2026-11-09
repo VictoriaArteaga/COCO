@@ -8,40 +8,39 @@ import { cn } from '@/lib/utils/cn'
 import { Icon, IconTile, type IconName } from '@/components/atoms/Icon'
 import { PageHeader } from '@/components/organisms/PageHeader'
 
-/** Selector de opciones como tarjetas grandes (grupo de radios accesible). */
-function OptionCards<T extends string>({ name, label, value, options, onChange }: {
-  name: string
+/** Control segmentado (grupo de radios accesible): una opción activa, resaltada con color y relleno. */
+function Segmented<T extends string>({ label, value, options, onChange }: {
   label: string
   value: T
-  options: { value: T; label: string; icon?: IconName; hint?: string }[]
+  options: { value: T; label: string }[]
   onChange: (value: T) => void
 }) {
   return (
-    <fieldset className="grid gap-3 sm:grid-cols-2" aria-label={label}>
+    <div role="radiogroup" aria-label={label} className="inline-flex gap-0.5 rounded-2xl border border-line bg-surface p-1">
       {options.map((option) => {
         const active = option.value === value
         return (
-          <label
-            key={option.value}
-            className={cn(
-              'relative flex min-h-[64px] cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-[background-color,border-color,transform] duration-150',
-              'focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-green',
-              active ? 'border-green bg-green-light' : 'border-line bg-card hover:-translate-y-0.5 hover:border-green',
-            )}
+          <button
+            key={option.value} type="button" role="radio" aria-checked={active} onClick={() => onChange(option.value)}
+            className={cn('min-h-[40px] rounded-xl px-4 text-sm font-bold transition-colors', active ? 'bg-green-dark text-white' : 'text-green-dark hover:bg-green-light')}
           >
-            <input type="radio" name={name} value={option.value} checked={active} onChange={() => onChange(option.value)} className="sr-only" />
-            {option.icon && <IconTile name={option.icon} color={active ? '#8A5A3B' : '#6D5545'} size={40} />}
-            <span className="min-w-0 flex-1">
-              <span className="block font-display text-lg font-semibold text-text">{option.label}</span>
-              {option.hint && <span className="block text-xs font-medium text-text-secondary">{option.hint}</span>}
-            </span>
-            <span aria-hidden="true" className={cn('flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-2', active ? 'border-green bg-green text-white' : 'border-line')}>
-              {active && <Icon name="check" size={14} />}
-            </span>
-          </label>
+            {option.label}
+          </button>
         )
       })}
-    </fieldset>
+    </div>
+  )
+}
+
+function SettingRow({ title, help, children }: { title: string; help: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3 border-t border-line py-4">
+      <div className="min-w-0 flex-1 basis-64">
+        <p className="text-lg font-extrabold text-text">{title}</p>
+        <p className="text-sm text-text-secondary">{help}</p>
+      </div>
+      {children}
+    </div>
   )
 }
 
@@ -74,20 +73,17 @@ export default function SettingsPage() {
     <PageHeader title={s.title} sub={s.sub} icon="settings" />
 
     {/* Apariencia */}
-    <section className="card space-y-6" aria-labelledby="appearance">
+    <section className="card" aria-labelledby="appearance">
       <h2 id="appearance" className="font-display text-xl font-semibold text-green-dark">{s.appearance}</h2>
-      <div>
-        <p className="font-bold text-text">{s.language}</p>
-        <p className="mb-3 text-sm text-text-secondary">{s.languageHelp} {s.langNote}</p>
-        <OptionCards<Lang> name="lang" label={s.language} value={lang} onChange={setLang}
-          options={[{ value: 'es', label: s.spanish, hint: 'ES' }, { value: 'en', label: s.english, hint: 'EN' }]} />
-      </div>
-      <div>
-        <p className="font-bold text-text">{s.theme}</p>
-        <p className="mb-3 text-sm text-text-secondary">{s.themeHelp}</p>
-        <OptionCards<Theme> name="theme" label={s.theme} value={theme} onChange={setTheme}
-          options={[{ value: 'light', label: s.light, icon: 'sun' }, { value: 'dark', label: s.dark, icon: 'sleep' }]} />
-      </div>
+      <p className="mb-2 text-sm text-text-secondary">{s.langNote}</p>
+      <SettingRow title={s.language} help={s.languageHelp}>
+        <Segmented<Lang> label={s.language} value={lang} onChange={setLang}
+          options={[{ value: 'es', label: s.spanish }, { value: 'en', label: s.english }]} />
+      </SettingRow>
+      <SettingRow title={s.theme} help={s.themeHelp}>
+        <Segmented<Theme> label={s.theme} value={theme} onChange={setTheme}
+          options={[{ value: 'light', label: s.light }, { value: 'dark', label: s.dark }]} />
+      </SettingRow>
     </section>
 
     <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
@@ -120,6 +116,31 @@ export default function SettingsPage() {
         <div className="mt-auto"><Link href="/analysis" className="btn-secondary"><Icon name="search" size={18} />{s.goAnalysis}</Link></div>
       </section>
     </div>
+
+    {/* Accesos rápidos */}
+    <section aria-labelledby="quick">
+      <h2 id="quick" className="mb-3 font-display text-xl font-semibold text-green-dark">{s.shortcutsTitle}</h2>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {([['/reminders', 'bell', t.nav.reminders, s.remindersDesc], ['/synchronization', 'refresh', t.nav.sync, s.syncDesc], ['/profile', 'user', t.nav.profile, s.profileDesc]] as const).map(([href, icon, title, desc]) => (
+          <Link key={href} href={href} className="card card-interactive flex min-h-[84px] items-center gap-4 !p-4">
+            <IconTile name={icon} color="#7D4D31" size={46} />
+            <span className="min-w-0 flex-1">
+              <span className="block font-display text-lg font-semibold text-green-dark">{title}</span>
+              <span className="block text-sm text-text-secondary">{desc}</span>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
+
+    {/* Datos demo */}
+    <section className="card flex items-start gap-4">
+      <IconTile name="info" color="#6D5545" size={44} />
+      <div>
+        <h2 className="font-display text-lg font-semibold text-green-dark">{s.demoData}</h2>
+        <p className="mt-1 max-w-3xl text-sm text-text-secondary">{s.demoDataText}</p>
+      </div>
+    </section>
 
   </div>
 }
