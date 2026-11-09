@@ -2,6 +2,10 @@ package com.coco.backend.infrastructure.adapter.output.ai;
 
 import com.coco.backend.infrastructure.exception.AiProviderException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import org.slf4j.LoggerFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -85,6 +89,38 @@ class GeminiAnalysisAdapterTest {
         assertThatThrownBy(() -> new GeminiAnalysisAdapter(mapper, "test-only-key", "test-model", builder)
                 .analyze(Map.of())).isInstanceOf(AiProviderException.class).hasMessage("Gemini returned an invalid analysis");
         server.verify();
+    }
+    @Test
+    void convertsHttpClientFailureToSanitizedUnavailableError() throws Exception {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo(uri)).andRespond(withSuccess(wrap(valid), MediaType.TEXT_PLAIN));
+        assertThatThrownBy(() -> new GeminiAnalysisAdapter(mapper, "test-only-key", "test-model", builder)
+                .analyze(Map.of())).isInstanceOf(AiProviderException.class)
+                .hasMessage("Gemini analysis is temporarily unavailable").hasNoCause();
+        server.verify();
+    }
+    @Test
+    void logsOnlySafeCauseTypeWhenProviderReturnsMalformedJson() throws Exception {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo(uri)).andRespond(withSuccess(wrap("{not-json SECRET_SENTINEL"), MediaType.APPLICATION_JSON));
+        Logger logger = (Logger) LoggerFactory.getLogger(GeminiAnalysisAdapter.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            assertThatThrownBy(() -> new GeminiAnalysisAdapter(mapper, "test-only-key", "test-model", builder)
+                    .analyze(Map.of())).isInstanceOf(AiProviderException.class)
+                    .hasMessage("Gemini returned an invalid analysis");
+            assertThat(appender.list).extracting(ILoggingEvent::getFormattedMessage)
+                    .anySatisfy(message -> assertThat(message).startsWith("Gemini response processing failed; causeType=JsonParseException, rootCauseType=JsonParseException").doesNotContain("SECRET_SENTINEL"))
+                    .noneMatch(message -> message.contains("SECRET_SENTINEL"));
+            server.verify();
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
     }
     private String wrap(String generated) throws Exception {
         return mapper.writeValueAsString(Map.of("candidates", List.of(Map.of("content", Map.of("parts", List.of(Map.of("text", generated)))))));
