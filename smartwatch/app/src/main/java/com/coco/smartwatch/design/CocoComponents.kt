@@ -15,6 +15,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
+import kotlin.math.min
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +49,18 @@ val ControlShape = RoundedCornerShape(12.dp)
 
 /** Fondo café de marca (degradado vertical, como el inicio de sesión de la web). Deja margen para pantallas redondas. */
 @Composable fun CocoScreen(content: @Composable ColumnScope.() -> Unit) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        // Responsive: todo el diseño (dp y sp) se escala según el tamaño real de la pantalla.
+        // La referencia es un reloj redondo de 227 dp; en uno de 192 dp todo se reduce a ~85 %, y en uno mayor crece hasta 115 %.
+        val factor = (min(maxWidth.value, maxHeight.value) / 227f).coerceIn(0.8f, 1.15f)
+        val base = LocalDensity.current
+        CompositionLocalProvider(LocalDensity provides Density(base.density * factor, base.fontScale)) {
+            ScaledScreen(content)
+        }
+    }
+}
+
+@Composable private fun ScaledScreen(content: @Composable ColumnScope.() -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(CocoColors.BrownLight, CocoColors.Brown)))) {
         // Márgenes proporcionales: el contenido queda dentro de la curva de la pantalla redonda.
         val side = maxWidth * 0.165f
@@ -68,7 +85,7 @@ val ControlShape = RoundedCornerShape(12.dp)
     Surface(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onClick), shape = ControlShape, color = CocoColors.Surface, border = BorderStroke(1.dp, CocoColors.Line)) {
         Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             LogoTile(32.dp)
-            Text(label, color = CocoColors.Text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+            Text(label, color = CocoColors.Text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -97,12 +114,22 @@ val ControlShape = RoundedCornerShape(12.dp)
     ) { Text(text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
 }
 
-/** Fila táctil (mínimo 48 dp) con mosaico de icono y etiqueta, sobre fondo blanco. */
-@Composable fun CocoRow(@DrawableRes icon: Int, color: Color, label: String, onClick: () -> Unit) {
+/**
+ * Fila táctil con mosaico de icono y etiqueta, sobre fondo blanco.
+ * done = null: fila sin estado; true = ya registrada hoy (check verde); false = pendiente (reloj ámbar).
+ */
+@Composable fun CocoRow(@DrawableRes icon: Int, color: Color, label: String, done: Boolean? = null, onClick: () -> Unit) {
     Surface(Modifier.fillMaxWidth().heightIn(min = 38.dp).clickable(onClick = onClick), shape = ControlShape, color = CocoColors.Surface, border = BorderStroke(1.dp, CocoColors.Line)) {
         Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconTile(icon, color, 26.dp)
-            Text(label, color = CocoColors.Text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+            Text(label, color = CocoColors.Text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            if (done != null) {
+                Icon(
+                    painterResource(if (done) R.drawable.ic_check else R.drawable.ic_history),
+                    contentDescription = if (done) "Registrada hoy" else "Pendiente",
+                    tint = if (done) CocoColors.Normal else CocoColors.Attention, modifier = Modifier.size(18.dp),
+                )
+            }
         }
     }
 }
