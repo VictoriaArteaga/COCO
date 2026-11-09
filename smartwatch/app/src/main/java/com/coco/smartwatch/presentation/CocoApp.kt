@@ -54,7 +54,7 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
     val types = HabitType.entries
     CocoScreen {
         when (section) {
-            Section.HOME -> Home(types) { selectedType = it; section = Section.REGISTER }
+            Section.HOME -> Home(types, records) { selectedType = it; section = Section.REGISTER }
             Section.REGISTER -> Registration(selectedType, onType = { selectedType = it }, onSave = { value, note -> viewModel.save(selectedType, value, note); haptic.performHapticFeedback(HapticFeedbackType.LongPress); section = Section.HOME })
             Section.TRENDS -> Trends(records, selectedType, trendPeriod, { selectedType = it }, { trendPeriod = it })
             Section.ANALYSIS -> Analysis(records)
@@ -110,14 +110,26 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
     }
 }
 
-@Composable private fun Home(types: List<HabitType>, onRecord: (HabitType) -> Unit) {
+@Composable private fun Home(types: List<HabitType>, records: List<HabitRecord>, onRecord: (HabitType) -> Unit) {
+    // Rutina de hoy: qué variables ya tienen un registro desde las 00:00
+    val startOfDay = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    val doneToday = records.filter { it.recordedAt >= startOfDay }.map { it.type }.toSet()
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         LogoTile(24.dp)
         Text("Hola, soy Coquito", fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, color = Color.White)
     }
+    Spacer(Modifier.height(4.dp))
+    Text(
+        if (doneToday.size == types.size) "¡Rutina completa por hoy!" else "Hoy: ${doneToday.size} de ${types.size} registradas",
+        color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+    )
+    Spacer(Modifier.height(4.dp))
+    Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = 0.2f)).border(1.dp, Color.White.copy(alpha = 0.45f), RoundedCornerShape(4.dp))) {
+        Box(Modifier.fillMaxWidth(doneToday.size / types.size.toFloat()).fillMaxHeight().background(CocoColors.Yellow))
+    }
     Spacer(Modifier.height(6.dp))
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        types.forEach { type -> CocoRow(type.iconRes(), Color(type.colorHex), type.label) { onRecord(type) } }
+        types.forEach { type -> CocoRow(type.iconRes(), Color(type.colorHex), type.label, done = type in doneToday) { onRecord(type) } }
     }
 }
 
@@ -193,27 +205,37 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
     }
 }
 
+@Composable private fun ProgressRow(label: String, value: Int, goal: Int) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, color = CocoColors.Secondary, fontSize = 12.sp)
+        Text("$value de $goal", color = CocoColors.Text, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+    }
+    Spacer(Modifier.height(3.dp))
+    Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(CocoColors.GreenLight).border(1.dp, CocoColors.Line, RoundedCornerShape(4.dp))) {
+        Box(Modifier.fillMaxWidth(value / goal.toFloat()).fillMaxHeight().background(CocoColors.Yellow))
+    }
+}
+
 @Composable private fun Analysis(records: List<HabitRecord>) {
-    val enough = records.size >= 7
+    // Mismo mínimo que la web: al menos 10 observaciones en 3 días distintos.
+    val days = records.map { SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date(it.recordedAt)) }.toSet().size
+    val enough = records.size >= 10 && days >= 3
     ScreenTitle(if (enough) R.drawable.ic_check else R.drawable.ic_info, if (enough) CocoColors.Normal else CocoColors.Info, "Análisis")
     Spacer(Modifier.height(6.dp))
     CocoCard {
-        Text(if (enough) "Análisis listo. COCO compara tus registros con el patrón de Coquito." else "COCO todavía está conociendo el patrón de Coquito.", color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 17.sp)
+        Text(
+            if (enough) "Ya hay suficientes anotaciones para leer la rutina de Coquito." else "COCO todavía está conociendo la rutina de Coquito.",
+            color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 17.sp,
+        )
         Spacer(Modifier.height(6.dp))
         if (enough) {
-            Text("Factores observados: ${records.take(3).joinToString { it.type.label.lowercase() }}.", color = CocoColors.Secondary, fontSize = 12.sp)
+            Text("Mira la lectura completa en la web, en la sección Análisis.", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
         } else {
-            val shown = min(records.size, 7)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Registros", color = CocoColors.Secondary, fontSize = 12.sp)
-                Text("$shown de 7", color = CocoColors.Text, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
-            Spacer(Modifier.height(3.dp))
-            Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(CocoColors.GreenLight).border(1.dp, CocoColors.Line, RoundedCornerShape(4.dp))) {
-                Box(Modifier.fillMaxWidth(shown / 7f).fillMaxHeight().background(CocoColors.Yellow))
-            }
+            ProgressRow("Observaciones", min(records.size, 10), 10)
+            Spacer(Modifier.height(5.dp))
+            ProgressRow("Días distintos", min(days, 3), 3)
             Spacer(Modifier.height(6.dp))
-            Text("No hay suficiente información para realizar un análisis.", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
+            Text("Aún no hay suficiente información para hacer un análisis.", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
         }
     }
     Spacer(Modifier.height(6.dp))
@@ -247,28 +269,28 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
 
 @Composable private fun Sync(pending: Int, syncState: SyncState, onSyncNow: () -> Unit) {
     val (statusText, statusColor, icon) = when (syncState) {
-        is SyncState.Idle       -> Triple("Sin cambios pendientes", CocoColors.Normal, R.drawable.ic_check)
-        is SyncState.Syncing    -> Triple("Sincronizando… (${syncState.count} registros)", CocoColors.Info, R.drawable.ic_refresh)
-        is SyncState.Synced     -> Triple("Sincronizado (${syncState.count} registros)", CocoColors.Normal, R.drawable.ic_check)
-        is SyncState.PartialSync-> Triple("Parcial: ${syncState.synced} enviados, ${syncState.remaining} pendientes", CocoColors.Attention, R.drawable.ic_alert)
-        is SyncState.Offline    -> Triple("Sin conexión", CocoColors.Offline, R.drawable.ic_alert)
-        is SyncState.Failed     -> Triple("No se pudo sincronizar", CocoColors.HighAttention, R.drawable.ic_alert)
+        is SyncState.Idle       -> Triple("Todo guardado", CocoColors.Normal, R.drawable.ic_check)
+        is SyncState.Syncing    -> Triple("Enviando tus anotaciones…", CocoColors.Info, R.drawable.ic_refresh)
+        is SyncState.Synced     -> Triple("Todo guardado", CocoColors.Normal, R.drawable.ic_check)
+        is SyncState.PartialSync-> Triple("Se enviaron ${syncState.synced}; faltan ${syncState.remaining}", CocoColors.Attention, R.drawable.ic_alert)
+        is SyncState.Offline    -> Triple("Sin internet por ahora", CocoColors.Offline, R.drawable.ic_alert)
+        is SyncState.Failed     -> Triple("No pudimos enviar tus anotaciones", CocoColors.HighAttention, R.drawable.ic_alert)
     }
     ScreenTitle(R.drawable.ic_refresh, CocoColors.Normal, "Sincronización")
     Spacer(Modifier.height(6.dp))
     CocoCard {
-        Text("Tus registros se guardan localmente en el reloj.", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
+        Text("Tus anotaciones se guardan en el reloj aunque no haya internet.", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
         Spacer(Modifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconTile(icon, statusColor, 26.dp)
             Column {
                 Text(statusText, color = statusColor, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 15.sp)
-                Text("$pending pendientes de enviar", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 14.sp)
+                Text("$pending en espera de enviarse", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 14.sp)
             }
         }
     }
     Spacer(Modifier.height(6.dp))
-    CocoButton(if (syncState is SyncState.Syncing) "Sincronizando…" else "Sincronizar ahora", onClick = onSyncNow, enabled = syncState !is SyncState.Syncing)
+    CocoButton(if (syncState is SyncState.Syncing) "Enviando…" else "Enviar ahora", onClick = onSyncNow, enabled = syncState !is SyncState.Syncing)
     Spacer(Modifier.height(5.dp))
     Text("COCO no diagnostica enfermedades.", color = Color.White, fontSize = 12.sp, textAlign = TextAlign.Center)
 }
