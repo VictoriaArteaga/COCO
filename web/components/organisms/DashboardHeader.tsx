@@ -8,15 +8,19 @@ interface DashboardHeaderProps {
   rabbits?: Rabbit[]
 }
 
-/** Cabecera del tablero: título, fecha y selector de conejo. */
+/** Cabecera del tablero: saludo con el nombre del conejo, fecha y selector de conejo. */
 export async function DashboardHeader({ rabbit, rabbits }: DashboardHeaderProps) {
   const { t, locale } = await getServerPrefs()
   const today = new Date().toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
   return (
-    <PageHeader title={t.dashboard.title} icon="home" sub={<time className="capitalize" dateTime={new Date().toISOString().split('T')[0]}>{today}</time>}>
+    <PageHeader
+      title={rabbit ? t.dashboard.greeting(rabbit.name) : t.dashboard.title}
+      icon="home"
+      sub={<time className="capitalize" dateTime={new Date().toISOString().split('T')[0]}>{today}</time>}
+    >
       {rabbit && (
-        <div className="rounded-xl border border-white/30 bg-white/15 px-4 py-2 text-white">
+        <div className="rounded-xl border border-line bg-card px-4 py-2 text-text">
           <RabbitSelector rabbits={rabbits ?? [rabbit]} selected={rabbit} />
         </div>
       )}

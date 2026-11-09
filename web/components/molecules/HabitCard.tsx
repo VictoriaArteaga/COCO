@@ -28,7 +28,11 @@ export async function HabitCard({ habitType, latestRecord, className }: HabitCar
 
   return (
     <article
-      className={cn('card card-interactive group flex flex-col gap-3', className)}
+      className={cn(
+        'group flex flex-col gap-3 rounded-2xl border-[1.5px] p-4',
+        latestRecord ? 'border-line bg-surface' : 'border-green-dark bg-card',
+        className,
+      )}
       aria-label={`${label}: ${valueText}`}
     >
       <div className="flex items-center gap-3">

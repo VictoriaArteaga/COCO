@@ -25,9 +25,9 @@ export async function HabitOverview({ records }: HabitOverviewProps) {
   const missing = HABIT_TYPES.filter((type) => !doneTypes.includes(type)).map((type) => t.habits[type])
 
   return (
-    <div className="space-y-4">
+    <div className="card space-y-5">
       {/* Progreso de la rutina de hoy: qué falta, de un vistazo */}
-      <div className="card !p-4 sm:!p-5">
+      <div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-display text-lg font-semibold text-green-dark">{t.dashboard.routineTitle}</h3>
           <span className="badge bg-green-light text-green-dark"><Icon name="check" size={14} />{t.reminders.doneOf(doneTypes.length)}</span>

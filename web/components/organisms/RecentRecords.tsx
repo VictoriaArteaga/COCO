@@ -1,5 +1,7 @@
 import type { HabitRecord } from '@/types'
-import { HabitTypeBadge, RecordStatusBadge } from '@/components/atoms/Badge'
+import { HABIT_TYPE_INFO } from '@/types'
+import { HABIT_ICON, IconTile } from '@/components/atoms/Icon'
+import { RecordStatusBadge } from '@/components/atoms/Badge'
 import { getServerPrefs } from '@/lib/i18n/server'
 
 interface RecentRecordsProps {
@@ -9,10 +11,10 @@ interface RecentRecordsProps {
 }
 
 /**
- * Organism: table / list of recent habit records.
- * Accessible: proper table semantics, header cells, sortable columns prepared.
+ * Organism: lista de los registros más recientes.
+ * Cada fila: icono de la variable, valor o nota con fecha y origen, y el estado con icono y texto.
  */
-export async function RecentRecords({ records, limit = 10 }: RecentRecordsProps) {
+export async function RecentRecords({ records, limit = 5 }: RecentRecordsProps) {
   const { t, locale } = await getServerPrefs()
   const displayed = [...records]
     .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))
@@ -29,49 +31,27 @@ export async function RecentRecords({ records, limit = 10 }: RecentRecordsProps)
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[34rem] text-sm" aria-label={t.records.table}>
-        <thead>
-          <tr className="border-b-2 border-line text-left">
-            <th scope="col" className="pb-3 pr-4 font-semibold text-text">{t.records.variable}</th>
-            <th scope="col" className="pb-3 pr-4 font-semibold text-text">{t.records.value}</th>
-            <th scope="col" className="pb-3 pr-4 font-semibold text-text">{t.records.note}</th>
-            <th scope="col" className="pb-3 pr-4 font-semibold text-text">{t.records.date}</th>
-            <th scope="col" className="pb-3 font-semibold text-text">{t.records.status}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {displayed.map((record) => (
-            <tr
-              key={record.id}
-              className="border-b border-line last:border-0 hover:bg-green-light/50"
-            >
-              <td className="py-3 pr-4">
-                <HabitTypeBadge habitType={record.habitType} />
-              </td>
-              <td className="py-3 pr-4 text-text">
-                {record.value != null ? record.value : t.common.noValue}
-              </td>
-              <td className="py-3 pr-4 text-text-secondary max-w-[180px] truncate">
-                {record.note ?? t.common.noValue}
-              </td>
-              <td className="py-3 pr-4 text-text-secondary whitespace-nowrap">
+    <ul className="divide-y divide-line" aria-label={t.records.table}>
+      {displayed.map((record) => {
+        const info = HABIT_TYPE_INFO[record.habitType]
+        const detail = record.note || (record.value != null ? `${record.value} ${t.units[info.unit] ?? info.unit}` : t.common.noValue)
+        return (
+          <li key={record.id} className="flex flex-wrap items-center gap-3 py-3">
+            <IconTile name={HABIT_ICON[record.habitType]} color={info.color} size={38} />
+            <div className="min-w-0 flex-1 basis-40">
+              <p className="font-extrabold text-text">{t.habits[record.habitType]}</p>
+              <p className="truncate text-sm text-text-secondary">
+                {detail} ·{' '}
                 <time dateTime={record.recordedAt}>
-                  {new Date(record.recordedAt).toLocaleString(locale, {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </time>
-              </td>
-              <td className="py-3">
-                <RecordStatusBadge status={record.status} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                  {new Date(record.recordedAt).toLocaleString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </time>{' '}
+                · {record.source === 'WATCH' ? t.history.watch : t.history.webShort}
+              </p>
+            </div>
+            <RecordStatusBadge status={record.status} />
+          </li>
+        )
+      })}
+    </ul>
   )
 }
