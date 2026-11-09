@@ -1,16 +1,19 @@
 import { Sidebar } from '@/components/organisms/Sidebar'
+import { getAuthenticated } from '@/lib/api/server'
+import type { Rabbit } from '@/types'
 
 /**
- * Marco de las rutas autenticadas: fondo turquesa con patrón (como el inicio de sesión),
- * menú lateral y barra superior fijos, y contenido sobre tarjetas blancas que se desplaza.
- * El margen/relleno de <main> reserva el espacio del menú (izquierda) y de la barra (arriba).
+ * Marco de las rutas autenticadas: fondo crema plano, menú lateral con degradado café y
+ * contenido sobre tarjetas blancas. Cada página trae su propio encabezado dentro del contenido.
+ * El conejo activo (el primero de la cuenta) se muestra en el menú para saber siempre a quién se observa.
  */
-export function AppShell({ children }: { children: React.ReactNode }) {
+export async function AppShell({ children }: { children: React.ReactNode }) {
+  const rabbits = await getAuthenticated<Rabbit[]>('rabbits').catch(() => [] as Rabbit[])
   return (
     <div className="app-bg min-h-screen">
-      <Sidebar />
-      <main id="main-content" className="relative z-10 min-w-0 pt-[4.5rem] md:ml-[5.5rem] md:pt-20 xl:ml-64" tabIndex={-1}>
-        <div className="mx-auto w-full max-w-[110rem] animate-none [&>*>header:first-child+*]:!mt-0">{children}</div>
+      <Sidebar rabbitName={rabbits[0]?.name ?? null} />
+      <main id="main-content" className="relative z-10 min-w-0 md:ml-[5.5rem] xl:ml-64" tabIndex={-1}>
+        <div className="mx-auto w-full max-w-[110rem]">{children}</div>
       </main>
     </div>
   )
