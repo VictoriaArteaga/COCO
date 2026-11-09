@@ -14,21 +14,21 @@ const TYPES: HabitType[] = ['FOOD', 'WATER', 'SLEEP', 'PLAY', 'BEHAVIOR']
 const DAY = 86_400_000
 
 /** Color e icono de cada estado, con tokens del proyecto. El texto nunca depende solo del color. */
-const STATUS_STYLE: Record<AnalysisStatus, { color: string; icon: IconName }> = {
-  NORMAL: { color: 'rgb(var(--c-state-normal))', icon: 'check' },
-  LEARNING: { color: 'rgb(var(--c-state-info))', icon: 'info' },
-  ATTENTION: { color: 'rgb(var(--c-state-attention))', icon: 'alert' },
-  HIGH_ATTENTION: { color: 'rgb(var(--c-state-alert))', icon: 'alert' },
+const STATUS_STYLE: Record<AnalysisStatus, { color: string; icon: IconName; badge: string }> = {
+  NORMAL: { color: 'rgb(var(--c-state-normal))', icon: 'check', badge: 'bg-[#E3F1E8] text-[#1F5C38]' },
+  LEARNING: { color: 'rgb(var(--c-state-info))', icon: 'info', badge: 'bg-[#E1ECF7] text-[#2A5686]' },
+  ATTENTION: { color: 'rgb(var(--c-state-attention))', icon: 'alert', badge: 'bg-[#FBEFD5] text-[#7A4F0B]' },
+  HIGH_ATTENTION: { color: 'rgb(var(--c-state-alert))', icon: 'alert', badge: 'bg-[#FFE3E8] text-[#9E1F3A]' },
 }
 
 function Kpi({ icon, label, value, hint }: { icon: IconName; label: string; value: string; hint: string }) {
   return (
-    <div className="card flex items-center gap-4 !p-4 sm:!p-5">
-      <span className="auth-badge flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"><Icon name={icon} size={22} /></span>
+    <div className="card flex items-center gap-3.5 !px-5 !py-[18px]">
+      <span className="flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink bg-green-light text-green-dark"><Icon name={icon} size={22} /></span>
       <div className="min-w-0">
         <p className="truncate text-sm font-bold text-text-secondary">{label}</p>
-        <p className="truncate font-display text-2xl font-semibold leading-tight text-text">{value}</p>
-        <p className="truncate text-xs font-medium text-text-secondary">{hint}</p>
+        <p className="truncate font-display text-[26px] font-semibold leading-tight text-text">{value}</p>
+        <p className="truncate text-[13px] text-text-secondary">{hint}</p>
       </div>
     </div>
   )
@@ -93,31 +93,35 @@ export default function AnalysisPage() {
       {/* Estado general */}
       <section className="card" aria-label={a.summaryLabel}>
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-          <span className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full text-white" style={{ background: status.color }}>
-            <Icon name={status.icon} size={32} />
+          <span className="flex h-[72px] w-[72px] flex-shrink-0 items-center justify-center rounded-full text-white" style={{ background: status.color }}>
+            <Icon name={status.icon} size={36} />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="badge text-white" style={{ background: status.color }}>{a.status[result.status]}</span>
-              <span className="text-sm font-medium text-text-secondary">{a.statusHint[result.status]}</span>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className={`badge h-7 rounded-full border-0 px-2.5 text-[13px] font-bold ${status.badge}`}><Icon name={status.icon} size={14} />{a.status[result.status]}</span>
+              <span className="text-[15px] font-semibold text-text-secondary">{a.statusHint[result.status]}</span>
             </div>
-            <h2 className="mt-3 font-display text-xl font-semibold leading-snug text-text sm:text-2xl">{result.summary}</h2>
+            <h2 className="mt-3 font-display text-2xl font-semibold leading-tight text-text sm:text-[28px]">{result.summary}</h2>
             {result.status === 'LEARNING' && (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {([[a.progressRecords, progress.obs, 10], [a.progressDays, progress.days, 3]] as [string, number, number][]).map(([label, value, goal]) => (
-                  <div key={label}>
-                    <div className="mb-1 flex justify-between text-sm font-bold"><span>{label}</span><span className="tabular-nums">{Math.min(value, goal)} / {goal}</span></div>
-                    <div className="h-3 overflow-hidden rounded-full border border-line bg-surface" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={goal} aria-valuenow={Math.min(value, goal)}>
-                      <div className="h-full rounded-full" style={{ width: `${(Math.min(value, goal) / goal) * 100}%`, background: status.color }} />
+              <>
+                <p className="mt-2.5 text-base leading-relaxed text-text-secondary">{a.progressHint}</p>
+                <div className="mt-[18px] grid gap-5 sm:grid-cols-2">
+                  {([[a.progressRecords, progress.obs, 10], [a.progressDays, progress.days, 3]] as [string, number, number][]).map(([label, value, goal]) => (
+                    <div key={label}>
+                      <div className="mb-1.5 flex justify-between text-[15px] font-bold"><span>{label}</span><span className="tabular-nums">{Math.min(value, goal)} {a.of} {goal}</span></div>
+                      <div className="h-3 overflow-hidden rounded-full border border-line bg-surface" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={goal} aria-valuenow={Math.min(value, goal)}>
+                        <div className="h-full" style={{ width: `${(Math.min(value, goal) / goal) * 100}%`, background: status.color }} />
+                      </div>
                     </div>
-                  </div>
-                ))}
-                <p className="text-sm text-text-secondary sm:col-span-2">{a.progressHint}</p>
-              </div>
+                  ))}
+                </div>
+              </>
             )}
-            <p className="mt-3 flex items-center gap-2 text-sm font-bold text-green-dark"><Icon name="bulb" size={16} />{result.status === 'LEARNING' ? a.aiPending : a.aiReady}</p>
-            <p className="mt-3 text-xs font-medium text-text-secondary">
-              {result.source === 'backend' ? a.fromBackend : a.fromMock} · {a.generated} {new Date(result.generatedAt).toLocaleString(locale)}
+            <p className="mt-4 flex flex-wrap items-center gap-x-3.5 gap-y-2 text-sm text-text-secondary">
+              {(result.status === 'LEARNING' || result.source === 'backend') && (
+                <span className="inline-flex items-center gap-1.5 font-bold text-green-dark"><Icon name="bulb" size={16} />{result.status === 'LEARNING' ? a.aiPending : a.aiReady}</span>
+              )}
+              <span>{result.source === 'backend' ? a.fromBackend : a.fromMock} · {a.generated} {new Date(result.generatedAt).toLocaleString(locale)}</span>
             </p>
           </div>
         </div>
@@ -146,13 +150,13 @@ export default function AnalysisPage() {
           <ul className="space-y-4">
             {stats.perType.map(({ type, count }) => (
               <li key={type} className="flex items-center gap-3">
-                <IconTile name={HABIT_ICON[type]} color={HABIT_TYPE_INFO[type].color} size={36} />
+                <IconTile name={HABIT_ICON[type]} color={HABIT_TYPE_INFO[type].color} size={38} />
                 <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
-                    <span className="font-bold text-text">{t.habits[type]}</span>
-                    <span className="font-bold tabular-nums text-text-secondary">{count === 0 ? a.noVariableData : count}</span>
+                  <div className="mb-1 flex items-baseline justify-between gap-2 text-[15px]">
+                    <span className="font-extrabold text-text">{t.habits[type]}</span>
+                    <span className="font-extrabold tabular-nums text-text-secondary">{count === 0 ? a.noVariableData : count}</span>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-surface" aria-hidden="true">
+                  <div className="h-3 overflow-hidden rounded-full border border-line bg-surface" aria-hidden="true">
                     <div className="h-full rounded-full" style={{ width: `${(count / stats.maxType) * 100}%`, background: HABIT_TYPE_INFO[type].color, animation: 'grow-x 0.8s var(--ease-out) backwards', transformOrigin: 'left' }} />
                   </div>
                 </div>
@@ -164,29 +168,33 @@ export default function AnalysisPage() {
         <section className="card" aria-labelledby="daily">
           <h2 id="daily" className="font-display text-xl font-semibold text-green-dark">{a.daily}</h2>
           <p className="mb-5 text-sm text-text-secondary">{a.dailySub}</p>
-          <ul className="flex h-52 items-end justify-between gap-2 sm:gap-3">
-            {stats.days.map((day) => (
-              <li key={day.key} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2">
-                <span className="text-sm font-bold tabular-nums text-text">{day.count}</span>
-                <div className="flex w-full flex-1 items-end rounded-xl bg-surface" aria-hidden="true">
-                  <div className="w-full rounded-xl bg-green" style={{ height: `${day.count === 0 ? 4 : Math.max(10, (day.count / stats.maxDay) * 100)}%`, opacity: day.count === 0 ? 0.35 : 1, animation: 'fade-up 0.6s var(--ease-out) backwards' }} />
-                </div>
-                <span className="w-full truncate text-center text-xs font-bold capitalize text-text-secondary">{day.label}</span>
+          <ul className="flex h-[210px] items-end gap-3">
+            {stats.days.map((day, index) => (
+              <li key={day.key} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
+                <span className="text-[15px] font-extrabold tabular-nums text-text">{day.count}</span>
+                <div
+                  aria-hidden="true"
+                  className="w-full rounded-t-[10px] rounded-b border-[1.5px] border-ink"
+                  style={{ height: `${Math.max(8, Math.round((day.count / stats.maxDay) * 140))}px`, background: index === 6 ? '#7D4D31' : '#C9A887', animation: 'fade-up 0.6s var(--ease-out) backwards' }}
+                />
+                <span className="w-full truncate text-center text-[13px] font-bold capitalize text-text-secondary">{index === 6 ? t.common.today.toLowerCase() : day.label}</span>
               </li>
             ))}
           </ul>
+          <p className="mt-3 text-sm text-text-secondary">{a.mock.factorsFew[1]}</p>
         </section>
       </div>
 
       {/* Factores considerados como tarjetas */}
       {result.factors.length > 0 && (
         <section aria-labelledby="factors">
-          <h2 id="factors" className="sr-only">{a.factors}</h2>
-          <ul className="flex gap-4 overflow-x-auto pb-1">
+          <h2 id="factors" className="font-display text-xl font-semibold text-green-dark">{a.factors}</h2>
+          <p className="mb-3.5 text-sm text-text-secondary">{a.factorsSub}</p>
+          <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-5">
             {result.factors.map((factor, index) => (
-              <li key={`${index}-${factor}`} className="card flex min-w-[15rem] flex-1 items-start gap-3 !p-4">
-                <span className="auth-badge flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"><Icon name="check" size={18} /></span>
-                <p className="pt-1 text-sm font-semibold text-text">{factor}</p>
+              <li key={`${index}-${factor}`} className="card flex items-start gap-3 !px-5 !py-[18px]">
+                <span className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink bg-green-light text-green-dark"><Icon name="check" size={18} /></span>
+                <p className="pt-1 text-base font-bold leading-snug text-text">{factor}</p>
               </li>
             ))}
           </ul>
@@ -195,10 +203,10 @@ export default function AnalysisPage() {
 
       {/* Recomendación */}
       <section className="card flex flex-col gap-4 sm:flex-row sm:items-start" aria-labelledby="recommendation">
-        <IconTile name="bulb" color="#8A5A3B" size={52} />
+        <IconTile name="bulb" color="#7D4D31" size={56} />
         <div>
           <h2 id="recommendation" className="font-display text-xl font-semibold text-green-dark">{a.recommendation}</h2>
-          <p className="mt-2 text-text-secondary">{result.recommendation}</p>
+          <p className="mt-2.5 text-[17px] leading-relaxed text-text-secondary">{result.recommendation}</p>
         </div>
       </section>
 
