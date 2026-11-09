@@ -91,9 +91,8 @@ export default function AnalysisPage() {
     ) : <div className="space-y-5 lg:space-y-6" aria-live="polite">
 
       {/* Estado general */}
-      <section className="card relative overflow-hidden" aria-label={a.summaryLabel}>
-        <div aria-hidden="true" className="absolute inset-y-0 left-0 w-2" style={{ background: status.color }} />
-        <div className="flex flex-col gap-5 pl-3 sm:flex-row sm:items-start">
+      <section className="card" aria-label={a.summaryLabel}>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
           <span className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full text-white" style={{ background: status.color }}>
             <Icon name={status.icon} size={32} />
           </span>
