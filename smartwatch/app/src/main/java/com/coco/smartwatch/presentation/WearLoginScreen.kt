@@ -1,7 +1,15 @@
 package com.coco.smartwatch.presentation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +27,19 @@ import com.coco.smartwatch.data.remote.dto.RabbitDto
 import com.coco.smartwatch.design.*
 import kotlinx.coroutines.launch
 
+/** Campo blanco compacto (40 dp) con texto de ayuda; cabe en la pantalla redonda sin cortar. */
+@Composable private fun LoginField(value: String, hint: String, keyboard: KeyboardType, secret: Boolean, onChange: (String) -> Unit) {
+    Box(Modifier.fillMaxWidth().height(40.dp).clip(ControlShape).background(Color.White).border(1.dp, CocoColors.Line, ControlShape).padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
+        if (value.isEmpty()) Text(hint, color = CocoColors.Secondary, fontSize = 13.sp)
+        BasicTextField(
+            value, onChange, singleLine = true, modifier = Modifier.fillMaxWidth(),
+            textStyle = TextStyle(color = CocoColors.Text, fontSize = 14.sp, fontFamily = CocoFonts.Body),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboard),
+            visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
+        )
+    }
+}
+
 @Composable
 fun WearLoginScreen(api: CocoApiService, session: SessionStore, canChangeRabbit: suspend () -> Boolean, onPaired: () -> Unit) {
     var email by remember { mutableStateOf("") }
@@ -29,17 +50,14 @@ fun WearLoginScreen(api: CocoApiService, session: SessionStore, canChangeRabbit:
     val scope = rememberCoroutineScope()
 
     CocoScreen {
-        // Cabecera: icono circular con el conejo y el nombre, igual que el inicio de sesión de la web
-        IconTile(R.drawable.ic_rabbit, CocoColors.GreenDark, 48.dp, borderColor = Color.White.copy(alpha = 0.6f))
-        Spacer(Modifier.height(6.dp))
-        Text("COCO", fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, color = Color.White)
-        Text("Inicia sesión y elige tu conejo", fontSize = 12.sp, color = Color.White.copy(alpha = 0.9f), textAlign = TextAlign.Center)
+        // Cabecera compacta: logo a color + nombre, para que todo quepa en la pantalla redonda
+        LogoTile(44.dp)
+        Text("COCO", fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, color = Color.White)
+        Text("Inicia sesión para empezar", fontSize = 12.sp, color = Color.White, textAlign = TextAlign.Center)
         Spacer(Modifier.height(10.dp))
-        CocoCard {
-            OutlinedTextField(email, { email = it }, label = { Text("Correo") }, singleLine = true, shape = ControlShape, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(6.dp))
-            OutlinedTextField(password, { password = it }, label = { Text("Contraseña") }, visualTransformation = PasswordVisualTransformation(), singleLine = true, shape = ControlShape, modifier = Modifier.fillMaxWidth())
-        }
+        LoginField(email, "Correo", KeyboardType.Email, false) { email = it }
+        Spacer(Modifier.height(6.dp))
+        LoginField(password, "Contraseña", KeyboardType.Password, true) { password = it }
         Spacer(Modifier.height(8.dp))
         CocoButton(if (loading) "Conectando…" else "Iniciar sesión", enabled = !loading && email.isNotBlank() && password.isNotBlank(), onClick = {
             scope.launch {
@@ -64,7 +82,7 @@ fun WearLoginScreen(api: CocoApiService, session: SessionStore, canChangeRabbit:
         if (rabbits.isNotEmpty()) Spacer(Modifier.height(8.dp))
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             rabbits.forEach { rabbit ->
-                CocoRow(R.drawable.ic_rabbit, CocoColors.Green, rabbit.name) {
+                CocoRabbitRow(rabbit.name) {
                     scope.launch {
                         if (session.rabbitId != null && session.rabbitId != rabbit.id && !canChangeRabbit()) {
                             message = "Sincroniza los registros pendientes del conejo asociado antes de cambiarlo."
