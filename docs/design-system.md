@@ -4,11 +4,11 @@
 
 | Hábito | Color |
 | --- | --- |
-| Alimentación | `#5B8E69` |
-| Agua | `#4387A8` |
-| Sueño | `#70659A` |
-| Juego | `#C4778C` |
-| Comportamiento | `#C87945` |
+| Alimentación | `#0B8A72` |
+| Agua | `#2A78AE` |
+| Sueño | `#6B4C9A` |
+| Juego | `#D0406A` |
+| Comportamiento | `#B85F0E` |
 
 Los tokens de superficie, marca y estado semántico están en `web/app/globals.css` y `web/tailwind.config.ts`; las etiquetas de variables se centralizan en `web/types/index.ts`. Componentes reutilizables: `components/atoms`, `components/molecules` y `components/organisms`.
 
