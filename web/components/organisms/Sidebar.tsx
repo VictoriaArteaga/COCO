@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import { cn } from '@/lib/utils/cn'
 import { Icon, IconTile, TILE, type IconName } from '@/components/atoms/Icon'
+import { Logo } from '@/components/atoms/Logo'
 import { usePrefs } from '@/lib/i18n/PreferencesProvider'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
@@ -49,7 +50,7 @@ export function Sidebar() {
       {/* Marca + botón de menú (móvil) */}
       <div className="flex items-center justify-between gap-3 px-4 py-3 md:mb-2 md:justify-center md:px-3 md:pt-6 xl:justify-start xl:px-5">
         <div className="flex items-center gap-3">
-          <IconTile name="rabbit" size={40} />
+          <Logo size={40} />
           <div className="md:hidden xl:block">
             <span className="block font-display text-2xl font-semibold leading-none text-white">COCO</span>
             <span className="mt-1 block text-xs text-white/75">{t.brand.tagline}</span>

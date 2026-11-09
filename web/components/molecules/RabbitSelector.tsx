@@ -1,5 +1,5 @@
 import type { Rabbit } from '@/types'
-import { IconTile } from '@/components/atoms/Icon'
+import { Logo } from '@/components/atoms/Logo'
 import { getServerPrefs } from '@/lib/i18n/server'
 
 interface RabbitSelectorProps {
@@ -31,7 +31,7 @@ export async function RabbitSelector({ rabbits = [], selected, onSelect }: Rabbi
   if (rabbits.length <= 1) {
     return (
       <div className="flex items-center gap-2">
-        <IconTile name="rabbit" size={36} />
+        <Logo size={36} />
         <span className="font-semibold">{current.name}</span>
       </div>
     )

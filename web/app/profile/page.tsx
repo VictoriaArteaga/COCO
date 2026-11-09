@@ -4,6 +4,7 @@ import { getServerPrefs } from '@/lib/i18n/server'
 import type { HabitRecord, HabitType, PaginatedResponse, Rabbit } from '@/types'
 import { HABIT_TYPE_INFO } from '@/types'
 import { HABIT_ICON, Icon, IconTile, type IconName } from '@/components/atoms/Icon'
+import { Logo } from '@/components/atoms/Logo'
 import { PageHeader } from '@/components/organisms/PageHeader'
 import { RenameRabbitForm } from '@/components/organisms/RenameRabbitForm'
 import { CreateRabbitForm } from '@/components/organisms/CreateRabbitForm'
@@ -82,7 +83,7 @@ export default async function ProfilePage() {
               const last = lastOf(own)
               return (
                 <li key={rabbit.id} className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-4 sm:flex-row sm:items-center">
-                  <IconTile name="rabbit" size={56} />
+                  <Logo size={56} />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="truncate font-display text-lg font-semibold text-text">{rabbit.name}</h3>
