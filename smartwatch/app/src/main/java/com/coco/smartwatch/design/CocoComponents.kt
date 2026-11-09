@@ -2,6 +2,7 @@ package com.coco.smartwatch.design
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,19 +44,39 @@ val ControlShape = RoundedCornerShape(12.dp)
 
 /** Fondo café de marca (degradado vertical, como el inicio de sesión de la web). Deja margen para pantallas redondas. */
 @Composable fun CocoScreen(content: @Composable ColumnScope.() -> Unit) {
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(CocoColors.BrownLight, CocoColors.Brown)))) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(CocoColors.BrownLight, CocoColors.Brown)))) {
+        // Márgenes proporcionales: el contenido queda dentro de la curva de la pantalla redonda.
+        val side = maxWidth * 0.165f
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 18.dp, end = 18.dp, top = 28.dp, bottom = 28.dp),
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = side, end = side, top = maxHeight * 0.09f, bottom = maxHeight * 0.12f),
             horizontalAlignment = Alignment.CenterHorizontally,
             content = content,
         )
     }
 }
 
+/** Logo de COCO: conejo a todo color sobre mosaico amarillo con borde tinta. */
+@Composable fun LogoTile(size: Dp = 44.dp) {
+    val shape = RoundedCornerShape(size * 0.3f)
+    Box(Modifier.size(size).clip(shape).background(CocoColors.Yellow).border(1.5.dp, CocoColors.Ink, shape), contentAlignment = Alignment.Center) {
+        Image(painterResource(R.drawable.ic_logo), contentDescription = "COCO", modifier = Modifier.size(size * 0.86f))
+    }
+}
+
+/** Fila de conejo (selección en el inicio de sesión): logo + nombre. */
+@Composable fun CocoRabbitRow(label: String, onClick: () -> Unit) {
+    Surface(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onClick), shape = ControlShape, color = CocoColors.Surface, border = BorderStroke(1.dp, CocoColors.Line)) {
+        Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            LogoTile(32.dp)
+            Text(label, color = CocoColors.Text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+        }
+    }
+}
+
 /** Tarjeta blanca con esquinas suaves, igual que las tarjetas de la web. */
 @Composable fun CocoCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Surface(modifier.fillMaxWidth(), shape = CardShape, color = CocoColors.Surface, shadowElevation = 2.dp, border = BorderStroke(1.dp, CocoColors.Line.copy(alpha = 0.6f))) {
-        Column(Modifier.padding(12.dp), content = content)
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), content = content)
     }
 }
 
@@ -70,7 +91,7 @@ val ControlShape = RoundedCornerShape(12.dp)
 /** Botón principal amarillo con texto oscuro (contraste alto), como el botón de acción de la web. */
 @Composable fun CocoButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     Button(
-        onClick = onClick, enabled = enabled, modifier = modifier.fillMaxWidth().heightIn(min = 48.dp), shape = ControlShape,
+        onClick = onClick, enabled = enabled, modifier = modifier.fillMaxWidth().heightIn(min = 46.dp), shape = ControlShape,
         colors = ButtonDefaults.buttonColors(containerColor = CocoColors.Yellow, contentColor = CocoColors.Ink, disabledContainerColor = CocoColors.Yellow.copy(alpha = 0.45f), disabledContentColor = CocoColors.Ink.copy(alpha = 0.6f)),
         border = BorderStroke(1.5.dp, CocoColors.Ink),
     ) { Text(text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
@@ -78,9 +99,9 @@ val ControlShape = RoundedCornerShape(12.dp)
 
 /** Fila táctil (mínimo 48 dp) con mosaico de icono y etiqueta, sobre fondo blanco. */
 @Composable fun CocoRow(@DrawableRes icon: Int, color: Color, label: String, onClick: () -> Unit) {
-    Surface(Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable(onClick = onClick), shape = ControlShape, color = CocoColors.Surface, border = BorderStroke(1.dp, CocoColors.Line)) {
-        Row(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            IconTile(icon, color, 34.dp)
+    Surface(Modifier.fillMaxWidth().heightIn(min = 38.dp).clickable(onClick = onClick), shape = ControlShape, color = CocoColors.Surface, border = BorderStroke(1.dp, CocoColors.Line)) {
+        Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            IconTile(icon, color, 26.dp)
             Text(label, color = CocoColors.Text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
         }
     }
@@ -99,11 +120,11 @@ val ControlShape = RoundedCornerShape(12.dp)
         HabitType.entries.forEach { type ->
             val active = type == selected
             Box(
-                Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).clickable { onSelect(type) }
-                    .background(if (active) Color(type.colorHex) else Color(type.colorHex).copy(alpha = 0.28f))
-                    .border(if (active) 2.dp else 1.dp, if (active) CocoColors.Ink else Color(type.colorHex).copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
+                Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)).clickable { onSelect(type) }
+                    .background(if (active) Color(type.colorHex) else Color(type.colorHex).copy(alpha = 0.6f))
+                    .border(if (active) 2.dp else 1.dp, if (active) CocoColors.Ink else Color.White.copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center,
-            ) { Icon(painterResource(type.iconRes()), contentDescription = type.label, tint = if (active) Color.White else Color(type.colorHex), modifier = Modifier.size(20.dp)) }
+            ) { Icon(painterResource(type.iconRes()), contentDescription = type.label, tint = Color.White, modifier = Modifier.size(22.dp)) }
         }
     }
 }
