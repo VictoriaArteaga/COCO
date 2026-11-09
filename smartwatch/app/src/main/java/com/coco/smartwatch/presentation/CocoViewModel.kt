@@ -49,7 +49,7 @@ class CocoViewModel(
         }
             .onSuccess { id ->
                 _lastSavedId.value = id
-                _message.value = "Registro guardado. ${type.label}."
+                _message.value = "Guardado: ${type.label}."
                 delay(5_000)
                 if (_lastSavedId.value == id) {
                     _lastSavedId.value = null
@@ -59,7 +59,7 @@ class CocoViewModel(
                 triggerSync()
             }
             .onFailure {
-                _message.value = it.message ?: "No pudimos guardar el registro. Inténtalo de nuevo."
+                _message.value = "No pudimos guardar el registro. Inténtalo de nuevo."
             }
     }
 

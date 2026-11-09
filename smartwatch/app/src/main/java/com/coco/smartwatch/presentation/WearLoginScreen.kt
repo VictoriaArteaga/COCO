@@ -65,13 +65,13 @@ fun WearLoginScreen(api: CocoApiService, session: SessionStore, canChangeRabbit:
                 try {
                     val login = api.login(LoginDto(email.trim(), password))
                     val token = login.body()?.token
-                    if (!login.isSuccessful || token == null) { message = "Correo o contraseña incorrectos."; return@launch }
+                    if (!login.isSuccessful || token == null) { message = "El correo o la contraseña no son correctos."; return@launch }
                     session.saveToken(token)
                     val result = api.getRabbits()
-                    if (!result.isSuccessful) { message = if (result.code() == 401) "Sesión vencida. Intenta de nuevo." else "No se pudieron cargar tus conejos."; session.clear() }
+                    if (!result.isSuccessful) { message = if (result.code() == 401) "Tu sesión terminó. Inténtalo de nuevo." else "No pudimos cargar a tus conejos. Inténtalo de nuevo."; session.clear() }
                     else if (result.body().isNullOrEmpty()) message = "Crea un conejo desde la web y vuelve a iniciar sesión."
-                    else { rabbits = result.body().orEmpty(); message = "Selecciona el conejo asociado a este reloj." }
-                } catch (_: Exception) { message = "No se pudo conectar. Tus registros locales se conservan." }
+                    else { rabbits = result.body().orEmpty(); message = "Elige el conejo de este reloj." }
+                } catch (_: Exception) { message = "No pudimos conectar. Tus anotaciones siguen guardadas en el reloj." }
                 finally { loading = false }
             }
         })
@@ -85,7 +85,7 @@ fun WearLoginScreen(api: CocoApiService, session: SessionStore, canChangeRabbit:
                 CocoRabbitRow(rabbit.name) {
                     scope.launch {
                         if (session.rabbitId != null && session.rabbitId != rabbit.id && !canChangeRabbit()) {
-                            message = "Sincroniza los registros pendientes del conejo asociado antes de cambiarlo."
+                            message = "Primero envía las anotaciones en espera; después podrás cambiar de conejo."
                         } else {
                             session.selectRabbit(rabbit.id)
                             onPaired()
