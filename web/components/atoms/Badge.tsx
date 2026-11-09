@@ -1,6 +1,7 @@
 import type { HabitType, RecordStatus } from '@/types'
 import { cn } from '@/lib/utils/cn'
 import { getServerPrefs } from '@/lib/i18n/server'
+import { Icon, type IconName } from '@/components/atoms/Icon'
 
 // ─── Record status badge ───────────────────────────────────────────────────────
 
@@ -9,6 +10,11 @@ const STATUS_STYLES: Record<RecordStatus, string> = {
   PENDING:   'bg-yellow-100 text-yellow-800',
   FAILED:    'bg-red-100 text-red-800',
   DUPLICATE: 'bg-gray-100 text-gray-600',
+}
+
+/** Cada estado lleva icono además de color: el estado nunca depende solo del color. */
+const STATUS_ICONS: Record<RecordStatus, IconName> = {
+  SYNCED: 'check', PENDING: 'clock', FAILED: 'alert', DUPLICATE: 'refresh',
 }
 
 interface RecordStatusBadgeProps {
@@ -24,6 +30,7 @@ export async function RecordStatusBadge({ status, className }: RecordStatusBadge
       className={cn('badge', STATUS_STYLES[status], className)}
       aria-label={`${t.recordStatusLabel}: ${t.recordStatus[status]}`}
     >
+      <Icon name={STATUS_ICONS[status]} size={13} />
       {t.recordStatus[status]}
     </span>
   )
