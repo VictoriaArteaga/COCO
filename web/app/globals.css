@@ -14,9 +14,13 @@
   --c-purple-light: 243 230 216;
   --c-coral: 214 51 79;
   --shell-bg: #4A2E1D;
-  --app-bg: linear-gradient(160deg, #F1E3D1 0%, #E6D0B6 55%, #DBBF9F 100%);
+  --shell-grad: linear-gradient(180deg, #5E3822 0%, #4A2E1D 100%);
+  --card-shadow: 0 14px 30px -22px rgb(90 56 37 / 0.55);
+  --app-glow: none;
+  /* Fondo plano crema, como en el diseño: sin trama ni luces detrás del contenido */
+  --app-bg: #F3E7D8;
   --app-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160' fill='none' stroke='%238A5A3B' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='24' cy='26' r='7'/%3E%3Cpath d='M104 22v14M97 29h14'/%3E%3Ccircle cx='132' cy='84' r='3.5' fill='%238A5A3B' stroke='none'/%3E%3Ccircle cx='78' cy='118' r='9'/%3E%3Cpath d='M30 98c0-5 4-8 8-8s8 3 8 8-4 9-8 9-8-4-8-9z'/%3E%3Ccircle cx='28' cy='84' r='2.6' fill='%238A5A3B' stroke='none'/%3E%3Ccircle cx='38' cy='80' r='2.6' fill='%238A5A3B' stroke='none'/%3E%3Ccircle cx='48' cy='84' r='2.6' fill='%238A5A3B' stroke='none'/%3E%3Cpath d='M126 136l6-6 6 6-6 6z'/%3E%3Ccircle cx='60' cy='60' r='2' fill='%238A5A3B' stroke='none'/%3E%3C/svg%3E");
-  --app-pattern-opacity: 0.22;
+  --app-pattern-opacity: 0;
   --c-yellow: 255 200 61;
   --c-yellow-dark: 242 168 29;
   --c-coral-light: 255 227 232;
@@ -131,6 +135,9 @@
   --auth-btn-bg: rgb(255 200 61);
   --auth-btn-glow: none;
   --shell-bg: #2A1A10;
+  --shell-grad: linear-gradient(180deg, #33200F 0%, #2A1A10 100%);
+  --card-shadow: 0 14px 30px -18px rgb(0 0 0 / 0.75);
+  --app-glow: radial-gradient(ellipse 60% 50% at 85% 5%, rgb(255 255 255 / 0.06), transparent 70%);
   --app-bg: linear-gradient(160deg, #241A13 0%, #1D1510 55%, #17100C 100%);
   --app-pattern-opacity: 0.1;
   --auth-error-bg: #3A1A22;
@@ -140,7 +147,7 @@
 
 /* Menú lateral y barra superior: verde azulado profundo con texto blanco */
 .shell-surface {
-  background: var(--shell-bg);
+  background: var(--shell-grad);
   color: #fff;
   border-color: rgb(255 255 255 / 0.12);
   box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.45);
@@ -165,9 +172,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 60% 50% at 85% 5%, rgb(255 255 255 / 0.22), transparent 70%),
-    radial-gradient(ellipse 50% 45% at 5% 100%, rgb(255 255 255 / 0.14), transparent 70%);
+  background: var(--app-glow);
 }
 
 /* ─── Keyframes ──────────────────────────────────────────────────────────── */
@@ -253,19 +258,6 @@
     animation: fade-up 0.5s var(--ease-out) backwards;
   }
 
-  /* Subrayado de título que se dibuja al entrar */
-  #main-content h1::after {
-    content: '';
-    display: block;
-    width: 3rem;
-    height: 4px;
-    margin-top: 0.5rem;
-    border-radius: 999px;
-    background: var(--color-green);
-    transform-origin: left;
-    animation: grow-x 0.7s 0.2s var(--ease-out) both;
-  }
-
   /* Controles nativos */
   input[type='checkbox'],
   input[type='radio'] {
@@ -336,9 +328,10 @@
 
   /* Card base: blanca, muy redondeada, sombra turquesa suave */
   .card {
-    @apply bg-card rounded-sheet border p-5 sm:p-6;
-    border-color: var(--auth-card-border);
-    box-shadow: var(--auth-card-shadow);
+    @apply bg-card border p-5 sm:p-6;
+    border-radius: 18px;
+    border-color: rgb(var(--c-line));
+    box-shadow: var(--card-shadow);
     animation: fade-up 0.5s var(--ease-out) backwards;
     transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), border-color 0.2s;
   }
