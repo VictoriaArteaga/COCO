@@ -1,5 +1,16 @@
 package com.coco.smartwatch.presentation
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -28,17 +39,38 @@ import com.coco.smartwatch.design.*
 import kotlinx.coroutines.launch
 
 /** Campo blanco compacto (40 dp) con texto de ayuda; cabe en la pantalla redonda sin cortar. */
-@Composable private fun LoginField(value: String, hint: String, keyboard: KeyboardType, secret: Boolean, onChange: (String) -> Unit) {
-    Box(Modifier.fillMaxWidth().height(40.dp).clip(ControlShape).background(Color.White).border(1.dp, CocoColors.Line, ControlShape).padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
-        if (value.isEmpty()) Text(hint, color = CocoColors.Secondary, fontSize = 13.sp)
-        BasicTextField(
-            value, onChange, singleLine = true, modifier = Modifier.fillMaxWidth(),
-            textStyle = TextStyle(color = CocoColors.Text, fontSize = 14.sp, fontFamily = CocoFonts.Body),
-            keyboardOptions = KeyboardOptions(keyboardType = keyboard),
-            visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
-        )
+@Composable private fun LoginField(
+    value: String, hint: String, keyboard: KeyboardType, secret: Boolean,
+    /** Si no es null, muestra un botón de micrófono al final del campo. */
+    mic: MicButton? = null, onChange: (String) -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth().height(40.dp).clip(ControlShape).background(Color.White).border(1.dp, CocoColors.Line, ControlShape).padding(start = 12.dp, end = if (mic != null) 4.dp else 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+            if (value.isEmpty()) Text(hint, color = CocoColors.Secondary, fontSize = 13.sp)
+            BasicTextField(
+                value, onChange, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(color = CocoColors.Text, fontSize = 14.sp, fontFamily = CocoFonts.Body),
+                keyboardOptions = KeyboardOptions(keyboardType = keyboard),
+                visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
+            )
+        }
+        if (mic != null) {
+            Box(
+                Modifier.size(32.dp).clip(CircleShape).background(if (mic.listening) CocoColors.Coral else CocoColors.Brown)
+                    .semantics { contentDescription = if (mic.listening) "Terminar de dictar: $hint" else "Dictar: $hint" }
+                    .clickable(enabled = mic.enabled, onClick = mic.onClick),
+                contentAlignment = Alignment.Center,
+            ) { Icon(painterResource(R.drawable.ic_mic), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(18.dp)) }
+        }
     }
 }
+
+private enum class DictationTarget { EMAIL, PASSWORD }
+
+private class MicButton(val listening: Boolean, val enabled: Boolean, val onClick: () -> Unit)
 
 @Composable
 fun WearLoginScreen(api: CocoApiService, session: SessionStore, canChangeRabbit: suspend () -> Boolean, onPaired: () -> Unit) {
@@ -49,17 +81,58 @@ fun WearLoginScreen(api: CocoApiService, session: SessionStore, canChangeRabbit:
     var loading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
+    // Dictado de correo y contraseña (offline, mismo motor que la nota de comportamiento). Un solo dictado a la vez.
+    val context = LocalContext.current
+    val dictation = remember { VoiceDictation(context, scope) }
+    val hasMic = remember { context.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE) }
+    var micDenied by remember { mutableStateOf(false) }
+    var target by remember { mutableStateOf(DictationTarget.EMAIL) }
+    val startDictation = { field: DictationTarget ->
+        micDenied = false; target = field
+        dictation.shutdown()
+        if (field == DictationTarget.EMAIL) { email = ""; dictation.start { email += DictationText.toEmail(it) } }
+        else { password = ""; dictation.start { password += DictationText.toPassword(it) } }
+    }
+    val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> if (granted) startDictation(target) else micDenied = true }
+    DisposableEffect(Unit) { onDispose { dictation.shutdown() } }
+    val listening = dictation.state == DictationState.LISTENING
+    val dictating = listening || dictation.state == DictationState.PREPARING
+    val micFor = { field: DictationTarget ->
+        if (!hasMic) null else MicButton(listening && target == field, enabled = dictation.state != DictationState.PREPARING) {
+            when {
+                listening && target == field -> dictation.stop()
+                ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED -> startDictation(field)
+                else -> { target = field; micPermission.launch(Manifest.permission.RECORD_AUDIO) }
+            }
+        }
+    }
+    // Ayuda bajo el campo que se está dictando (nunca muestra lo que se dice de la contraseña).
+    val hintFor = { field: DictationTarget ->
+        if (target != field) "" else when {
+            micDenied -> "Sin permiso del micrófono. Escríbelo."
+            dictation.state == DictationState.ERROR -> "No pudimos escuchar. Inténtalo otra vez o escribe."
+            dictation.state == DictationState.PREPARING -> "Preparando…"
+            listening && field == DictationTarget.EMAIL -> "Di: ana punto perez arroba gmail punto com"
+            listening -> "Di tu contraseña. «Mayúscula» antes de una palabra"
+            else -> ""
+        }
+    }
+
     CocoScreen {
         // Cabecera compacta: logo a color + nombre, para que todo quepa en la pantalla redonda
         LogoTile(44.dp)
         Text("COCO", fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, color = Color.White)
         Text("Inicia sesión para empezar", fontSize = 12.sp, color = Color.White, textAlign = TextAlign.Center)
         Spacer(Modifier.height(10.dp))
-        LoginField(email, "Correo", KeyboardType.Email, false) { email = it }
+        LoginField(email, "Correo", KeyboardType.Email, false, micFor(DictationTarget.EMAIL)) { email = it }
+        val emailHint = hintFor(DictationTarget.EMAIL)
+        if (emailHint.isNotEmpty()) Text(emailHint, color = Color.White, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 3.dp))
         Spacer(Modifier.height(6.dp))
-        LoginField(password, "Contraseña", KeyboardType.Password, true) { password = it }
+        LoginField(password, "Contraseña", KeyboardType.Password, true, micFor(DictationTarget.PASSWORD)) { password = it }
+        val passwordHint = hintFor(DictationTarget.PASSWORD)
+        if (passwordHint.isNotEmpty()) Text(passwordHint, color = Color.White, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 3.dp))
         Spacer(Modifier.height(8.dp))
-        CocoButton(if (loading) "Conectando…" else "Iniciar sesión", enabled = !loading && email.isNotBlank() && password.isNotBlank(), onClick = {
+        CocoButton(if (loading) "Conectando…" else "Iniciar sesión", enabled = !loading && !dictating && email.isNotBlank() && password.isNotBlank(), onClick = {
             scope.launch {
                 loading = true; message = ""; rabbits = emptyList()
                 try {
