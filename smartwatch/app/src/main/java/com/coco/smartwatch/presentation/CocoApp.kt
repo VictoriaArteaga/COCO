@@ -1,6 +1,12 @@
 package com.coco.smartwatch.presentation
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -142,10 +148,47 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
 @Composable private fun Registration(type: HabitType, onType: (HabitType) -> Unit, onSave: (Double?, String?) -> Unit) {
     var value by remember(type) { mutableStateOf(if (type == HabitType.BEHAVIOR) "" else "1") }
     var note by remember(type) { mutableStateOf("") }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val dictation = remember { VoiceDictation(context, scope) }
+    var micDenied by remember { mutableStateOf(false) }
+    val hasMic = remember { context.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE) }
+    val startDictation = { micDenied = false; dictation.start { note = DictationText.append(note, it) } }
+    val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> if (granted) startDictation() else micDenied = true }
+    DisposableEffect(Unit) { onDispose { dictation.shutdown() } }
+    LaunchedEffect(type) { if (type != HabitType.BEHAVIOR) dictation.shutdown() }
+    val dictating = dictation.state == DictationState.PREPARING || dictation.state == DictationState.LISTENING
     ScreenTitle(type.iconRes(), Color(type.colorHex), type.label)
     Spacer(Modifier.height(8.dp))
     HabitPicker(type, onType)
     Spacer(Modifier.height(8.dp))
+    if (type == HabitType.BEHAVIOR && hasMic) {
+        val listening = dictation.state == DictationState.LISTENING
+        val label = when (dictation.state) { DictationState.PREPARING -> "Preparando…"; DictationState.LISTENING -> "Toca para terminar"; else -> "Dictar nota" }
+        Row(
+            Modifier.fillMaxWidth().height(48.dp).clip(ControlShape).background(if (listening) CocoColors.Coral else Color.Transparent).border(1.5.dp, Color.White, ControlShape)
+                .clickable(enabled = dictation.state != DictationState.PREPARING) {
+                    when {
+                        listening -> dictation.stop()
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED -> startDictation()
+                        else -> micPermission.launch(Manifest.permission.RECORD_AUDIO)
+                    }
+                },
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center,
+        ) {
+            Icon(painterResource(R.drawable.ic_mic), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(label, color = Color.White, fontFamily = CocoFonts.Display, fontSize = 14.sp)
+        }
+        val hint = when {
+            micDenied -> "Sin permiso del micrófono. Puedes escribir la nota."
+            dictation.state == DictationState.ERROR -> "No pudimos escuchar. Inténtalo otra vez o escribe."
+            dictation.partial.isNotEmpty() -> dictation.partial
+            else -> ""
+        }
+        if (hint.isNotEmpty()) Text(hint, color = Color.White, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+        Spacer(Modifier.height(6.dp))
+    }
     if (type == HabitType.BEHAVIOR) {
         Box(Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(ControlShape).background(Color.White).padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.CenterStart) {
             if (note.isEmpty()) Text("¿Qué notaste?", color = CocoColors.Secondary, fontSize = 13.sp)
@@ -168,7 +211,7 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
         }
     }
     Spacer(Modifier.height(8.dp))
-    CocoButton("Guardar", onClick = { onSave(value.replace(',', '.').toDoubleOrNull(), note.takeIf { it.isNotBlank() }) }, enabled = type != HabitType.BEHAVIOR || note.isNotBlank())
+    CocoButton("Guardar", onClick = { onSave(value.replace(',', '.').toDoubleOrNull(), note.takeIf { it.isNotBlank() }) }, enabled = !dictating && (type != HabitType.BEHAVIOR || note.isNotBlank()))
 }
 
 @Composable private fun Trends(records: List<HabitRecord>, selected: HabitType, period: String, onSelect: (HabitType) -> Unit, onPeriod: (String) -> Unit) {

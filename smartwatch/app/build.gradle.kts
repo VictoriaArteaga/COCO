@@ -57,6 +57,9 @@ android {
         arg("room.incremental", "true")
     }
 
+    // El modelo de voz se lee tal cual desde assets; comprimirlo solo gasta tiempo.
+    androidResources { noCompress += listOf("mdl", "fst", "int", "conf", "mat", "stats", "dubm", "ie", "txt") }
+
     testOptions { unitTests.isReturnDefaultValues = true }
 }
 
@@ -80,6 +83,7 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging)
     implementation(libs.security.crypto)
+    implementation(libs.vosk.android)
     ksp(libs.room.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
