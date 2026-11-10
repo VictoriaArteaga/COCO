@@ -16,6 +16,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
@@ -47,28 +48,45 @@ import com.coco.smartwatch.domain.model.HabitType
 val CardShape = RoundedCornerShape(14.dp)
 val ControlShape = RoundedCornerShape(12.dp)
 
-/** Fondo café de marca (degradado vertical, como el inicio de sesión de la web). Deja margen para pantallas redondas. */
+/**
+ * Fondo café de marca (degradado vertical, como el inicio de sesión de la web).
+ *
+ * Responsive para cualquier reloj (redondo o cuadrado, pequeño o grande):
+ *  - Todo el diseño (dp y sp) se escala según el lado menor de la pantalla; la referencia es un reloj de 227 dp.
+ *    Así el espacio de diseño es siempre casi el mismo y nada se sale de la pantalla.
+ *  - En pantallas redondas los márgenes se calculan con la geometría del círculo, para que ni el primer ni el
+ *    último elemento queden cortados por la curva. En pantallas cuadradas los márgenes son pequeños.
+ *  - El contenido se desplaza si no cabe y se centra verticalmente si sobra espacio.
+ */
 @Composable fun CocoScreen(content: @Composable ColumnScope.() -> Unit) {
+    val round = LocalConfiguration.current.isScreenRound
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        // Responsive: todo el diseño (dp y sp) se escala según el tamaño real de la pantalla.
-        // La referencia es un reloj redondo de 227 dp; en uno de 192 dp todo se reduce a ~85 %, y en uno mayor crece hasta 115 %.
-        val factor = (min(maxWidth.value, maxHeight.value) / 227f).coerceIn(0.8f, 1.15f)
+        val factor = (min(maxWidth.value, maxHeight.value) / 227f).coerceIn(0.55f, 1.3f)
         val base = LocalDensity.current
-        CompositionLocalProvider(LocalDensity provides Density(base.density * factor, base.fontScale)) {
-            ScaledScreen(content)
+        // fontScale limitado: con letra del sistema muy grande el texto sigue cabiendo (y se ajusta en varias líneas).
+        CompositionLocalProvider(LocalDensity provides Density(base.density * factor, base.fontScale.coerceIn(0.85f, 1.15f))) {
+            ScaledScreen(round, content)
         }
     }
 }
 
-@Composable private fun ScaledScreen(content: @Composable ColumnScope.() -> Unit) {
+@Composable private fun ScaledScreen(round: Boolean, content: @Composable ColumnScope.() -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(CocoColors.BrownLight, CocoColors.Brown)))) {
-        // Márgenes proporcionales: el contenido queda dentro de la curva de la pantalla redonda.
-        val side = maxWidth * 0.165f
+        val side = if (round) maxWidth * 0.17f else 14.dp
+        val top = if (round) maxHeight * 0.17f else 12.dp
+        val bottom = if (round) maxHeight * 0.20f else 16.dp
+        val minContent = maxHeight - top - bottom
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = side, end = side, top = maxHeight * 0.09f, bottom = maxHeight * 0.12f),
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = side, end = side, top = top, bottom = bottom),
             horizontalAlignment = Alignment.CenterHorizontally,
-            content = content,
-        )
+        ) {
+            Column(
+                Modifier.fillMaxWidth().heightIn(min = minContent),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                content = content,
+            )
+        }
     }
 }
 
@@ -85,7 +103,7 @@ val ControlShape = RoundedCornerShape(12.dp)
     Surface(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onClick), shape = ControlShape, color = CocoColors.Surface, border = BorderStroke(1.dp, CocoColors.Line)) {
         Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             LogoTile(32.dp)
-            Text(label, color = CocoColors.Text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(label, color = CocoColors.Text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -141,13 +159,14 @@ val ControlShape = RoundedCornerShape(12.dp)
     }
 }
 
-/** Selector de variable: mosaico pequeño con anillo blanco cuando está seleccionado. */
+/** Selector de variable: mosaicos de 40 dp que pasan a una segunda fila si no caben (nunca se salen de la pantalla). */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable fun HabitPicker(selected: HabitType, onSelect: (HabitType) -> Unit) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         HabitType.entries.forEach { type ->
             val active = type == selected
             Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)).clickable { onSelect(type) }
+                Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).clickable { onSelect(type) }
                     .background(if (active) Color(type.colorHex) else Color(type.colorHex).copy(alpha = 0.6f))
                     .border(if (active) 2.dp else 1.dp, if (active) CocoColors.Ink else Color.White.copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center,

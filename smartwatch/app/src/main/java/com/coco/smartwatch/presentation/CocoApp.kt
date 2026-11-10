@@ -28,6 +28,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -93,26 +94,30 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
     }
 }
 
-/** Navegación inferior: una sola fila de 6 iconos de 34 dp (cabe en la curva de la pantalla). El activo es amarillo. */
+/** Navegación inferior: 2 filas de 3 iconos que se reparten el ancho disponible (siempre caben). El activo es amarillo. */
 @Composable private fun SectionBar(current: Section, onSelect: (Section) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        Section.entries.forEach { item ->
-            val active = item == current
-            val shape = RoundedCornerShape(10.dp)
-            Box(
-                Modifier.size(34.dp).clip(shape).background(if (active) CocoColors.Yellow else Color.White.copy(alpha = 0.16f))
-                    .border(1.5.dp, if (active) CocoColors.Ink else Color.White.copy(alpha = 0.45f), shape)
-                    .clickable { onSelect(item) },
-                contentAlignment = Alignment.Center,
-            ) { Icon(painterResource(item.icon), contentDescription = item.title, tint = if (active) CocoColors.Ink else Color(0xFFFFF4E8), modifier = Modifier.size(20.dp)) }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Section.entries.chunked(3).forEach { rowItems ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                rowItems.forEach { item ->
+                    val active = item == current
+                    val shape = RoundedCornerShape(10.dp)
+                    Box(
+                        Modifier.weight(1f).height(38.dp).clip(shape).background(if (active) CocoColors.Yellow else Color.White.copy(alpha = 0.16f))
+                            .border(1.5.dp, if (active) CocoColors.Ink else Color.White.copy(alpha = 0.45f), shape)
+                            .clickable { onSelect(item) },
+                        contentAlignment = Alignment.Center,
+                    ) { Icon(painterResource(item.icon), contentDescription = item.title, tint = if (active) CocoColors.Ink else Color(0xFFFFF4E8), modifier = Modifier.size(20.dp)) }
+                }
+            }
         }
     }
 }
 
 @Composable private fun ScreenTitle(@DrawableRes icon: Int, color: Color, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
         IconTile(icon, color, 24.dp)
-        Text(text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, color = Color.White)
+        Text(text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 18.sp, color = Color.White, modifier = Modifier.weight(1f, fill = false))
     }
 }
 
@@ -120,9 +125,9 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
     // Rutina de hoy: qué variables ya tienen un registro desde las 00:00
     val startOfDay = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
     val doneToday = records.filter { it.recordedAt >= startOfDay }.map { it.type }.toSet()
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
         LogoTile(24.dp)
-        Text("Hola, soy Coquito", fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, color = Color.White)
+        Text("Hola, soy Coquito", fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 18.sp, color = Color.White, modifier = Modifier.weight(1f, fill = false))
     }
     Spacer(Modifier.height(4.dp))
     Text(
@@ -139,8 +144,8 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
     }
 }
 
-@Composable private fun StepButton(text: String, onClick: () -> Unit) {
-    Box(Modifier.width(56.dp).height(48.dp).clip(ControlShape).border(1.5.dp, Color.White, ControlShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+@Composable private fun StepButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(modifier.height(48.dp).clip(ControlShape).border(1.5.dp, Color.White, ControlShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
         Text(text, color = Color.White, fontFamily = CocoFonts.Display, fontSize = 20.sp)
     }
 }
@@ -195,19 +200,20 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
             BasicTextField(note, { note = it }, modifier = Modifier.fillMaxWidth(), textStyle = TextStyle(color = CocoColors.Text, fontSize = 14.sp, fontFamily = CocoFonts.Body))
         }
     } else {
+        Row(Modifier.fillMaxWidth().height(48.dp).clip(ControlShape).background(Color.White), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            BasicTextField(
+                value, { input -> if (input.matches(Regex("""^\d{0,5}([.,]\d{0,1})?$"""))) value = input }, singleLine = true,
+                modifier = Modifier.widthIn(max = 64.dp).width(IntrinsicSize.Min),
+                textStyle = TextStyle(color = CocoColors.Text, fontSize = 24.sp, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(type.unit, color = CocoColors.Secondary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+        }
+        Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            StepButton("−1") { value = max(0.0, (value.replace(',', '.').toDoubleOrNull() ?: 0.0) - 1).toInt().toString() }
-            Row(Modifier.weight(1f).height(48.dp).clip(ControlShape).background(Color.White), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                BasicTextField(
-                    value, { input -> if (input.matches(Regex("""^\d{0,5}([.,]\d{0,1})?$"""))) value = input }, singleLine = true,
-                    modifier = Modifier.widthIn(max = 56.dp),
-                    textStyle = TextStyle(color = CocoColors.Text, fontSize = 24.sp, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(type.unit, color = CocoColors.Secondary, fontSize = 12.sp)
-            }
-            StepButton("+1") { value = ((value.replace(',', '.').toDoubleOrNull() ?: 0.0) + 1).toInt().toString() }
+            StepButton("−1", Modifier.weight(1f)) { value = max(0.0, (value.replace(',', '.').toDoubleOrNull() ?: 0.0) - 1).toInt().toString() }
+            StepButton("+1", Modifier.weight(1f)) { value = ((value.replace(',', '.').toDoubleOrNull() ?: 0.0) + 1).toInt().toString() }
         }
     }
     Spacer(Modifier.height(8.dp))
@@ -220,7 +226,7 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
     HabitPicker(selected, onSelect)
     Spacer(Modifier.height(6.dp))
     CocoCard {
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
             listOf("Hoy", "7 días").forEach { label ->
                 FilterChip(
                     selected = period == label, onClick = { onPeriod(label) }, label = { Text(label, fontWeight = FontWeight.Bold, fontSize = 13.sp) }, shape = RoundedCornerShape(10.dp),
@@ -299,9 +305,9 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
     CocoCard {
         HabitType.entries.forEach { type ->
             val latest = todaysRecords.firstOrNull { it.type == type }
-            Row(Modifier.fillMaxWidth().height(34.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth().heightIn(min = 34.dp).padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 IconTile(type.iconRes(), Color(type.colorHex), 24.dp)
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text(type.label, color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 15.sp)
                     Text(latest?.value?.let { "${it.toInt()} ${type.unit}" } ?: "Sin registros", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 14.sp)
                 }
@@ -326,7 +332,7 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
         Spacer(Modifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconTile(icon, statusColor, 26.dp)
-            Column {
+            Column(Modifier.weight(1f)) {
                 Text(statusText, color = statusColor, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 15.sp)
                 Text("$pending en espera de enviarse", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 14.sp)
             }

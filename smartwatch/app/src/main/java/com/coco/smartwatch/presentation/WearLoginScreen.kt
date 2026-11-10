@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
     mic: MicButton? = null, onChange: (String) -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().height(40.dp).clip(ControlShape).background(Color.White).border(1.dp, CocoColors.Line, ControlShape).padding(start = 12.dp, end = if (mic != null) 4.dp else 12.dp),
+        Modifier.fillMaxWidth().heightIn(min = 40.dp).clip(ControlShape).background(Color.White).border(1.dp, CocoColors.Line, ControlShape).padding(start = 12.dp, end = if (mic != null) 4.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
@@ -122,15 +122,15 @@ fun WearLoginScreen(api: CocoApiService, session: SessionStore, canChangeRabbit:
         // Cabecera compacta: logo a color + nombre, para que todo quepa en la pantalla redonda
         LogoTile(44.dp)
         Text("COCO", fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, color = Color.White)
-        Text("Inicia sesión para empezar", fontSize = 12.sp, color = Color.White, textAlign = TextAlign.Center)
+        Text("Inicia sesión para empezar", fontSize = 12.sp, lineHeight = 14.sp, color = Color.White, textAlign = TextAlign.Center)
         Spacer(Modifier.height(10.dp))
         LoginField(email, "Correo", KeyboardType.Email, false, micFor(DictationTarget.EMAIL)) { email = it }
         val emailHint = hintFor(DictationTarget.EMAIL)
-        if (emailHint.isNotEmpty()) Text(emailHint, color = Color.White, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 3.dp))
+        if (emailHint.isNotEmpty()) Text(emailHint, color = Color.White, fontSize = 12.sp, lineHeight = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 3.dp))
         Spacer(Modifier.height(6.dp))
         LoginField(password, "Contraseña", KeyboardType.Password, true, micFor(DictationTarget.PASSWORD)) { password = it }
         val passwordHint = hintFor(DictationTarget.PASSWORD)
-        if (passwordHint.isNotEmpty()) Text(passwordHint, color = Color.White, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 3.dp))
+        if (passwordHint.isNotEmpty()) Text(passwordHint, color = Color.White, fontSize = 12.sp, lineHeight = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 3.dp))
         Spacer(Modifier.height(8.dp))
         CocoButton(if (loading) "Conectando…" else "Iniciar sesión", enabled = !loading && !dictating && email.isNotBlank() && password.isNotBlank(), onClick = {
             scope.launch {
