@@ -98,4 +98,39 @@ object DictationText {
         val decimal = wholeNumber(words.drop(split + 1)) ?: return null
         return if (decimal in 0..9) "$whole,$decimal" else null
     }
+
+    private val fillerWords = setOf("la", "el", "unos", "unas", "como", "casi", "aproximadamente", "por")
+    private val minuteWords = setOf("minutos", "minuto", "min")
+
+    /** Fracciones de hora dichas con palabras: "media", "un cuarto", "tres cuartos". */
+    private fun fractionOfHour(words: List<String>): Int? = when (words) {
+        listOf("media"), listOf("medio") -> 30
+        listOf("cuarto"), listOf("un", "cuarto") -> 15
+        listOf("tres", "cuartos") -> 45
+        else -> null
+    }
+
+    /**
+     * Convierte una duración dicha en español a minutos: "una hora" -> "60", "hora y media" -> "90",
+     * "dos horas con treinta minutos" -> "150", "tres cuartos de hora" -> "45", "noventa minutos" -> "90".
+     * Un número solo ("noventa") se toma como minutos. Devuelve null si no se entiende (máximo 9 999 minutos).
+     */
+    fun toMinutes(spoken: String): String? {
+        val words = spoken.lowercase().trim().split(Regex("\\s+")).filter { it.isNotEmpty() && it !in fillerWords }
+        if (words.isEmpty()) return null
+        val hourIndex = words.indexOfFirst { it == "hora" || it == "horas" }
+        val total: Int = if (hourIndex < 0) {
+            wholeNumber(words.filter { it !in minuteWords }) ?: return null
+        } else {
+            val before = words.take(hourIndex).dropLastWhile { it == "de" }
+            val base = fractionOfHour(before) ?: if (before.isEmpty()) 60 else (wholeNumber(before) ?: return null) * 60
+            val after = words.drop(hourIndex + 1).dropWhile { it == "y" || it == "con" }.filter { it !in minuteWords }
+            val extra = when {
+                after.isEmpty() -> 0
+                else -> fractionOfHour(after) ?: wholeNumber(after) ?: return null
+            }
+            base + extra
+        }
+        return if (total in 0..9_999) total.toString() else null
+    }
 }

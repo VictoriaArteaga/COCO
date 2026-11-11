@@ -24,7 +24,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -178,6 +182,18 @@ private val Section.label: String get() = if (this == Section.SYNC) tr("Sincroni
 
 private enum class RegTarget { NOTE, VALUE }
 
+/** Muestra los minutos escritos como horas y minutos (90 -> "1h 30 min") sin cambiar el valor guardado. */
+private object DurationTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val minutes = text.text.toIntOrNull()
+        val shown = if (minutes == null) text.text else formatDuration(minutes)
+        return TransformedText(AnnotatedString(shown), object : OffsetMapping {
+            override fun originalToTransformed(offset: Int) = shown.length
+            override fun transformedToOriginal(offset: Int) = text.length
+        })
+    }
+}
+
 @Composable private fun Registration(type: HabitType, onType: (HabitType) -> Unit, onSave: (Double?, String?) -> Unit) {
     var value by remember(type) { mutableStateOf(if (type == HabitType.BEHAVIOR) "" else "1") }
     var note by remember(type) { mutableStateOf("") }
@@ -192,7 +208,13 @@ private enum class RegTarget { NOTE, VALUE }
         micDenied = false; numberHint = ""; target = field
         dictation.shutdown()
         if (field == RegTarget.NOTE) dictation.start { note = DictationText.append(note, it) }
-        else dictation.start { spoken -> DictationText.toNumber(spoken)?.let { value = it } ?: run { numberHint = tr("No entendí «$spoken». Di un número, por ejemplo: doce.", "I didn't understand «$spoken». Say a number in Spanish, e.g. «doce».") } }
+        else dictation.start { spoken ->
+            val parsed = if (type.isDuration) DictationText.toMinutes(spoken) else DictationText.toNumber(spoken)
+            parsed?.let { value = it } ?: run {
+                numberHint = if (type.isDuration) tr("No entendí «$spoken». Di una duración, por ejemplo: una hora y media.", "I didn't understand «$spoken». Say a duration in Spanish, e.g. «una hora y media».")
+                else tr("No entendí «$spoken». Di un número, por ejemplo: doce.", "I didn't understand «$spoken». Say a number in Spanish, e.g. «doce».")
+            }
+        }
     }
     val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> if (granted) startDictation(target) else micDenied = true }
     DisposableEffect(Unit) { onDispose { dictation.shutdown() } }
@@ -220,15 +242,22 @@ private enum class RegTarget { NOTE, VALUE }
             if (hasMic) MicIconButton(listening && target == field, tr("nota", "note"), dictation.state != DictationState.PREPARING) { onMic(field) }
         }
     } else {
+        val isDuration = type.isDuration
         Row(Modifier.fillMaxWidth().height(48.dp).clip(ControlShape).background(CocoColors.Surface).padding(start = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             BasicTextField(
-                value, { input -> if (input.matches(Regex("""^\d{0,5}([.,]\d{0,1})?$"""))) value = input }, singleLine = true,
-                modifier = Modifier.width(60.dp),
-                textStyle = TextStyle(color = CocoColors.Text, fontSize = 24.sp, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                value,
+                { input -> if (input.matches(if (isDuration) Regex("""^\d{0,4}$""") else Regex("""^\d{0,5}([.,]\d{0,1})?$"""))) value = input },
+                singleLine = true,
+                modifier = if (isDuration) Modifier.weight(1f) else Modifier.width(60.dp),
+                textStyle = TextStyle(color = CocoColors.Text, fontSize = if (isDuration) 18.sp else 24.sp, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, textAlign = if (isDuration) TextAlign.Start else TextAlign.End),
+                // En sueño y juego lo escrito (minutos) se muestra en horas: 90 -> "1h 30 min".
+                visualTransformation = if (isDuration) DurationTransformation else VisualTransformation.None,
+                keyboardOptions = KeyboardOptions(keyboardType = if (isDuration) KeyboardType.Number else KeyboardType.Decimal),
             )
-            Spacer(Modifier.width(4.dp))
-            Text(type.displayUnit, color = CocoColors.Secondary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            if (!isDuration) {
+                Spacer(Modifier.width(4.dp))
+                Text(type.displayUnit, color = CocoColors.Secondary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            }
             if (hasMic) MicIconButton(listening && target == field, tr("cantidad", "amount"), dictation.state != DictationState.PREPARING) { onMic(field) }
         }
     }
@@ -239,10 +268,10 @@ private enum class RegTarget { NOTE, VALUE }
         dictation.state == DictationState.PREPARING -> tr("Preparando…", "Getting ready…")
         listening && dictation.micSilent -> tr("No se escucha nada. Revisa que el micrófono esté activo.", "I can't hear anything. Check that the microphone is on.")
         listening && dictation.partial.isNotEmpty() -> dictation.partial
+        listening && target == RegTarget.VALUE && type.isDuration -> tr("Escuchando… di una duración, por ejemplo: una hora y media", "Listening… say a duration in Spanish, e.g. «una hora y media»")
         listening && target == RegTarget.VALUE -> tr("Escuchando… di un número, por ejemplo: doce", "Listening… say a number in Spanish, e.g. «doce»")
         listening -> tr("Escuchando… toca el micrófono para terminar", "Listening… tap the microphone to finish")
         numberHint.isNotEmpty() -> numberHint
-        type.isDuration && (value.replace(',', '.').toDoubleOrNull() ?: 0.0) >= 60 -> "= " + formatDuration((value.replace(',', '.').toDoubleOrNull() ?: 0.0).toInt())
         else -> ""
     }
     if (hint.isNotEmpty()) Text(hint, color = Color.White, fontSize = 12.sp, lineHeight = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp))

@@ -42,4 +42,35 @@ class DictationTextTest {
         assertEquals(null, DictationText.toNumber("hola mundo"))
         assertEquals(null, DictationText.toNumber(""))
     }
+
+    @Test fun minutesFromHours() {
+        assertEquals("60", DictationText.toMinutes("una hora"))
+        assertEquals("180", DictationText.toMinutes("tres horas"))
+    }
+    @Test fun minutesFromHalfHour() {
+        assertEquals("90", DictationText.toMinutes("hora y media"))
+        assertEquals("90", DictationText.toMinutes("la hora y media"))
+        assertEquals("150", DictationText.toMinutes("dos horas y media"))
+        assertEquals("30", DictationText.toMinutes("media hora"))
+    }
+    @Test fun minutesFromQuarters() {
+        assertEquals("75", DictationText.toMinutes("una hora y cuarto"))
+        assertEquals("45", DictationText.toMinutes("tres cuartos de hora"))
+        assertEquals("15", DictationText.toMinutes("un cuarto de hora"))
+        assertEquals("105", DictationText.toMinutes("una hora y tres cuartos"))
+    }
+    @Test fun minutesFromHoursAndMinutes() {
+        assertEquals("150", DictationText.toMinutes("dos horas con treinta minutos"))
+        assertEquals("75", DictationText.toMinutes("una hora y quince minutos"))
+        assertEquals("105", DictationText.toMinutes("una hora y cuarenta y cinco minutos"))
+    }
+    @Test fun minutesFromPlainMinutes() {
+        assertEquals("90", DictationText.toMinutes("noventa minutos"))
+        assertEquals("45", DictationText.toMinutes("cuarenta y cinco minutos"))
+        assertEquals("90", DictationText.toMinutes("noventa"))
+    }
+    @Test fun minutesRejectsNonsense() {
+        assertEquals(null, DictationText.toMinutes("hola mundo"))
+        assertEquals(null, DictationText.toMinutes(""))
+    }
 }
