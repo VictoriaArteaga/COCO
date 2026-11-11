@@ -27,15 +27,6 @@ import com.coco.smartwatch.presentation.CocoViewModel
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
-/**
- * Entry point for the COCO Wear OS application.
- *
- * Manual DI (no Hilt/Dagger):
- *   CocoDatabase → HabitDao → SyncManager → HabitRepositoryImpl → use cases → CocoViewModel
- *
- * The backend URL is configured at build time. A signed-in user selects an
- *   BACKEND_URL env var  →  BuildConfig.BACKEND_URL
- */
 class MainActivity : ComponentActivity() {
 
     private val sessionStore by lazy { SessionStore(applicationContext) }
