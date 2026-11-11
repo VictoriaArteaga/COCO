@@ -3,6 +3,7 @@ import { HABIT_TYPE_INFO } from '@/types'
 import { HABIT_ICON, IconTile } from '@/components/atoms/Icon'
 import { RecordStatusBadge } from '@/components/atoms/Badge'
 import { getServerPrefs } from '@/lib/i18n/server'
+import { formatRecordValue } from '@/lib/utils/format'
 
 interface RecentRecordsProps {
   records: HabitRecord[]
@@ -34,7 +35,7 @@ export async function RecentRecords({ records, limit = 5 }: RecentRecordsProps) 
     <ul className="divide-y divide-line" aria-label={t.records.table}>
       {displayed.map((record) => {
         const info = HABIT_TYPE_INFO[record.habitType]
-        const detail = record.note || (record.value != null ? `${record.value} ${t.units[info.unit] ?? info.unit}` : t.common.noValue)
+        const detail = record.note || (record.value != null ? formatRecordValue(record.value, info.unit, t.units[info.unit]) : t.common.noValue)
         return (
           <li key={record.id} className="flex flex-wrap items-center gap-3 py-3">
             <IconTile name={HABIT_ICON[record.habitType]} color={info.color} size={38} />

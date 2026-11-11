@@ -1,6 +1,7 @@
 import type { HabitType, HabitRecord } from '@/types'
 import { HABIT_TYPE_INFO } from '@/types'
 import { cn } from '@/lib/utils/cn'
+import { formatRecordValue } from '@/lib/utils/format'
 import { HABIT_ICON, Icon, IconTile } from '@/components/atoms/Icon'
 import { RegisterObservation } from '@/components/organisms/RegisterObservation'
 import { getServerPrefs } from '@/lib/i18n/server'
@@ -24,7 +25,7 @@ export async function HabitCard({ habitType, latestRecord, rabbitId, className }
   const label = t.habits[habitType]
 
   const valueText = latestRecord?.value != null
-    ? `${latestRecord.value} ${t.units[info.unit] ?? info.unit}`
+    ? formatRecordValue(latestRecord.value, info.unit, t.units[info.unit])
     : latestRecord?.note
       ? latestRecord.note
       : t.dashboard.noRecordsToday
