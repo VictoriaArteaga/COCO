@@ -44,34 +44,46 @@ import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
 
-private enum class Section(val title: String, @DrawableRes val icon: Int, val label: String = title) {
-    HOME("Inicio", R.drawable.ic_home), REGISTER("Registrar", R.drawable.ic_plus), TRENDS("Tendencias", R.drawable.ic_trending),
-    ANALYSIS("Análisis", R.drawable.ic_search), SUMMARY("Resumen", R.drawable.ic_history), SYNC("Sincronización", R.drawable.ic_refresh, label = "Sincronizar")
+private enum class Section(@DrawableRes val icon: Int) {
+    HOME(R.drawable.ic_home), REGISTER(R.drawable.ic_plus), TRENDS(R.drawable.ic_trending),
+    ANALYSIS(R.drawable.ic_search), SUMMARY(R.drawable.ic_history), SYNC(R.drawable.ic_refresh), SETTINGS(R.drawable.ic_settings)
 }
+
+/** Nombre completo de cada sección (para accesibilidad y títulos). */
+private val Section.title: String
+    get() = when (this) {
+        Section.HOME -> tr("Inicio", "Home"); Section.REGISTER -> tr("Registrar", "Log")
+        Section.TRENDS -> tr("Tendencias", "Trends"); Section.ANALYSIS -> tr("Análisis", "Analysis")
+        Section.SUMMARY -> tr("Resumen", "Summary"); Section.SYNC -> tr("Sincronización", "Sync")
+        Section.SETTINGS -> tr("Ajustes", "Settings")
+    }
+
+/** Rótulo corto bajo cada botón de la barra. */
+private val Section.label: String get() = if (this == Section.SYNC) tr("Sincronizar", "Sync") else title
 
 /** Pantalla breve mientras el modo demo entra a la cuenta. */
 @Composable fun CocoConnecting() {
     CocoScreen {
         Spacer(Modifier.height(40.dp))
-        Text("Conectando con Coquito…", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Text(tr("Conectando con Coquito…", "Connecting to Coquito…"), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
     }
 }
 
 @Composable fun CocoApp(viewModel: CocoViewModel, showLogout: Boolean = true, onLogout: () -> Unit = {}) {
     var section by remember { mutableStateOf(Section.HOME) }
     var selectedType by remember { mutableStateOf(HabitType.FOOD) }
-    var trendPeriod by remember { mutableStateOf("7 días") }
+    var trendToday by remember { mutableStateOf(false) }
     val records by viewModel.records.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val lastSavedId by viewModel.lastSavedId.collectAsStateWithLifecycle()
     val syncState by viewModel.syncState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     val types = HabitType.entries
-    CocoScreen(compact = section == Section.HOME) {
+    CocoScreen {
         when (section) {
-            Section.HOME -> Home(types) { selectedType = it; section = Section.REGISTER }
+            Section.HOME -> Home(types, records) { selectedType = it; section = Section.REGISTER }
             Section.REGISTER -> Registration(selectedType, onType = { selectedType = it }, onSave = { value, note -> viewModel.save(selectedType, value, note); haptic.performHapticFeedback(HapticFeedbackType.LongPress); section = Section.HOME })
-            Section.TRENDS -> Trends(records, selectedType, trendPeriod, { selectedType = it }, { trendPeriod = it })
+            Section.TRENDS -> Trends(records, selectedType, trendToday, { selectedType = it }, { trendToday = it })
             Section.ANALYSIS -> Analysis(records)
             Section.SUMMARY -> Summary(records)
             Section.SYNC -> Sync(
@@ -79,6 +91,7 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
                 syncState = syncState,
                 onSyncNow = { viewModel.retrySync() }
             )
+            Section.SETTINGS -> SettingsScreen()
         }
         message?.let { msg ->
             Spacer(Modifier.height(6.dp))
@@ -87,38 +100,23 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
                 if (lastSavedId != null) {
                     Spacer(Modifier.height(4.dp))
                     OutlinedButton(onClick = { viewModel.undoLast(); haptic.performHapticFeedback(HapticFeedbackType.LongPress) }, shape = ControlShape, border = BorderStroke(1.5.dp, CocoColors.GreenDark), modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp)) {
-                        Text("Deshacer", color = CocoColors.GreenDark, fontWeight = FontWeight.Bold)
+                        Text(tr("Deshacer", "Undo"), color = CocoColors.GreenDark, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
-        Spacer(Modifier.height(if (section == Section.HOME) 6.dp else 10.dp))
-        SectionBar(section, compact = section == Section.HOME) { section = it }
+        Spacer(Modifier.height(10.dp))
+        SectionBar(section) { section = it }
         if (showLogout) TextButton(onClick = onLogout, modifier = Modifier.heightIn(min = 40.dp)) {
             Icon(painterResource(R.drawable.ic_logout), contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
             Spacer(Modifier.width(6.dp))
-            Text("Cerrar sesión", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            Text(tr("Cerrar sesión", "Sign out"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
         }
     }
 }
 
-/** Navegación inferior: 2 filas de 3 iconos que se reparten el ancho disponible (siempre caben). El activo es amarillo. */
-@Composable private fun SectionBar(current: Section, compact: Boolean = false, onSelect: (Section) -> Unit) {
-    if (compact) {
-        // Inicio: una sola fila de 6 iconos (sin nombres) para que todo quepa sin bajar.
-        Row(Modifier.widthIn(max = 132.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            Section.entries.forEach { item ->
-                val active = item == current
-                val shape = RoundedCornerShape(8.dp)
-                Box(
-                    Modifier.weight(1f).height(22.dp).clip(shape).background(if (active) CocoColors.Yellow else Color.White.copy(alpha = 0.16f))
-                        .border(1.dp, if (active) CocoColors.Ink else Color.White.copy(alpha = 0.45f), shape).clickable { onSelect(item) },
-                    contentAlignment = Alignment.Center,
-                ) { Icon(painterResource(item.icon), contentDescription = item.title, tint = if (active) CocoColors.Ink else Color(0xFFFFF4E8), modifier = Modifier.size(13.dp)) }
-            }
-        }
-        return
-    }
+/** Navegación inferior: filas de 3 botones con icono y nombre que se reparten el ancho. El activo es amarillo. */
+@Composable private fun SectionBar(current: Section, onSelect: (Section) -> Unit) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Section.entries.chunked(3).forEach { rowItems ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -148,14 +146,27 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
     }
 }
 
-@Composable private fun Home(types: List<HabitType>, onRecord: (HabitType) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally)) {
-        LogoTile(20.dp)
-        FitText("Hola, soy Coquito", Modifier.weight(1f, fill = false), color = Color.White, fontSize = 14.sp, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, minSize = 10.sp)
+@Composable private fun Home(types: List<HabitType>, records: List<HabitRecord>, onRecord: (HabitType) -> Unit) {
+    // Rutina de hoy: qué variables ya tienen un registro desde las 00:00
+    val startOfDay = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    val doneToday = records.filter { it.recordedAt >= startOfDay }.map { it.type }.toSet()
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
+        LogoTile(24.dp)
+        Text(tr("Hola, soy Coquito", "Hi, I'm Coquito"), fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 18.sp, color = Color.White, modifier = Modifier.weight(1f, fill = false))
+    }
+    Spacer(Modifier.height(4.dp))
+    Text(
+        if (doneToday.size == types.size) tr("¡Rutina completa por hoy!", "Routine complete for today!")
+        else tr("Hoy: ${doneToday.size} de ${types.size} registradas", "Today: ${doneToday.size} of ${types.size} logged"),
+        color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+    )
+    Spacer(Modifier.height(4.dp))
+    Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = 0.2f)).border(1.dp, Color.White.copy(alpha = 0.45f), RoundedCornerShape(4.dp))) {
+        Box(Modifier.fillMaxWidth(doneToday.size / types.size.toFloat()).fillMaxHeight().background(CocoColors.Yellow))
     }
     Spacer(Modifier.height(6.dp))
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        types.forEach { type -> CocoRow(type.iconRes(), Color(type.colorHex), type.label, compact = true) { onRecord(type) } }
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        types.forEach { type -> CocoRow(type.iconRes(), Color(type.colorHex), type.displayName, done = type in doneToday) { onRecord(type) } }
     }
 }
 
@@ -165,6 +176,8 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
     }
 }
 
+private enum class RegTarget { NOTE, VALUE }
+
 @Composable private fun Registration(type: HabitType, onType: (HabitType) -> Unit, onSave: (Double?, String?) -> Unit) {
     var value by remember(type) { mutableStateOf(if (type == HabitType.BEHAVIOR) "" else "1") }
     var note by remember(type) { mutableStateOf("") }
@@ -172,59 +185,75 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
     val scope = rememberCoroutineScope()
     val dictation = remember { VoiceDictation(context, scope) }
     var micDenied by remember { mutableStateOf(false) }
+    var numberHint by remember { mutableStateOf("") }
+    var target by remember { mutableStateOf(RegTarget.NOTE) }
     val hasMic = remember { context.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE) }
-    val startDictation = { micDenied = false; dictation.start { note = DictationText.append(note, it) } }
-    val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> if (granted) startDictation() else micDenied = true }
+    val startDictation = { field: RegTarget ->
+        micDenied = false; numberHint = ""; target = field
+        dictation.shutdown()
+        if (field == RegTarget.NOTE) dictation.start { note = DictationText.append(note, it) }
+        else dictation.start { spoken -> DictationText.toNumber(spoken)?.let { value = it } ?: run { numberHint = tr("No entendí «$spoken». Di un número, por ejemplo: doce.", "I didn't understand «$spoken». Say a number in Spanish, e.g. «doce».") } }
+    }
+    val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> if (granted) startDictation(target) else micDenied = true }
     DisposableEffect(Unit) { onDispose { dictation.shutdown() } }
-    LaunchedEffect(type) { if (type != HabitType.BEHAVIOR) dictation.shutdown() }
-    val dictating = dictation.state == DictationState.PREPARING || dictation.state == DictationState.LISTENING
-    ScreenTitle(type.iconRes(), Color(type.colorHex), type.label)
+    LaunchedEffect(type) { dictation.shutdown(); numberHint = "" }
+    val listening = dictation.state == DictationState.LISTENING
+    val dictating = listening || dictation.state == DictationState.PREPARING
+    val onMic = { field: RegTarget ->
+        when {
+            listening && target == field -> dictation.stop()
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED -> startDictation(field)
+            else -> { target = field; micPermission.launch(Manifest.permission.RECORD_AUDIO) }
+        }
+    }
+    ScreenTitle(type.iconRes(), Color(type.colorHex), type.displayName)
     Spacer(Modifier.height(8.dp))
     HabitPicker(type, onType)
     Spacer(Modifier.height(8.dp))
-    if (type == HabitType.BEHAVIOR && hasMic) {
-        val listening = dictation.state == DictationState.LISTENING
-        val label = when (dictation.state) { DictationState.PREPARING -> "Preparando…"; DictationState.LISTENING -> "Toca para terminar"; else -> "Dictar nota" }
-        Row(
-            Modifier.fillMaxWidth().height(48.dp).clip(ControlShape).background(if (listening) CocoColors.Coral else Color.Transparent).border(1.5.dp, Color.White, ControlShape)
-                .clickable(enabled = dictation.state != DictationState.PREPARING) {
-                    when {
-                        listening -> dictation.stop()
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED -> startDictation()
-                        else -> micPermission.launch(Manifest.permission.RECORD_AUDIO)
-                    }
-                },
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center,
-        ) {
-            Icon(painterResource(R.drawable.ic_mic), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(22.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(label, color = Color.White, fontFamily = CocoFonts.Display, fontSize = 14.sp)
-        }
-        val hint = when {
-            micDenied -> "Sin permiso del micrófono. Puedes escribir la nota."
-            dictation.state == DictationState.ERROR -> "No pudimos escuchar. Inténtalo otra vez o escribe."
-            dictation.partial.isNotEmpty() -> dictation.partial
-            else -> ""
-        }
-        if (hint.isNotEmpty()) Text(hint, color = Color.White, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
-        Spacer(Modifier.height(6.dp))
-    }
+    val field = if (type == HabitType.BEHAVIOR) RegTarget.NOTE else RegTarget.VALUE
     if (type == HabitType.BEHAVIOR) {
-        Box(Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(ControlShape).background(Color.White).padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.CenterStart) {
-            if (note.isEmpty()) Text("¿Qué notaste?", color = CocoColors.Secondary, fontSize = 13.sp)
-            BasicTextField(note, { note = it }, modifier = Modifier.fillMaxWidth(), textStyle = TextStyle(color = CocoColors.Text, fontSize = 14.sp, fontFamily = CocoFonts.Body))
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(ControlShape).background(CocoColors.Surface).padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f).padding(vertical = 4.dp), contentAlignment = Alignment.CenterStart) {
+                if (note.isEmpty()) Text(tr("¿Qué notaste?", "What did you notice?"), color = CocoColors.Secondary, fontSize = 13.sp)
+                BasicTextField(note, { note = it }, modifier = Modifier.fillMaxWidth(), textStyle = TextStyle(color = CocoColors.Text, fontSize = 14.sp, fontFamily = CocoFonts.Body))
+            }
+            if (hasMic) MicIconButton(listening && target == field, tr("nota", "note"), dictation.state != DictationState.PREPARING) { onMic(field) }
         }
     } else {
-        Row(Modifier.fillMaxWidth().height(48.dp).clip(ControlShape).background(Color.White), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+        Row(Modifier.fillMaxWidth().height(48.dp).clip(ControlShape).background(CocoColors.Surface).padding(start = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             BasicTextField(
                 value, { input -> if (input.matches(Regex("""^\d{0,5}([.,]\d{0,1})?$"""))) value = input }, singleLine = true,
-                modifier = Modifier.widthIn(max = 64.dp).width(IntrinsicSize.Min),
+                modifier = Modifier.width(60.dp),
                 textStyle = TextStyle(color = CocoColors.Text, fontSize = 24.sp, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             )
             Spacer(Modifier.width(4.dp))
-            Text(type.unit, color = CocoColors.Secondary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+            Text(type.displayUnit, color = CocoColors.Secondary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            if (hasMic) MicIconButton(listening && target == field, tr("cantidad", "amount"), dictation.state != DictationState.PREPARING) { onMic(field) }
         }
+    }
+    // Ayuda bajo el campo (qué decir, lo que se va entendiendo o por qué no funcionó).
+    val hint = when {
+        micDenied -> tr("Sin permiso del micrófono. Puedes escribirlo.", "No microphone permission. You can type it.")
+        dictation.state == DictationState.ERROR -> tr("No pudimos escuchar. Revisa el micrófono, inténtalo otra vez o escribe.", "We couldn't hear you. Check the microphone, try again or type.")
+        dictation.state == DictationState.PREPARING -> tr("Preparando…", "Getting ready…")
+        listening && dictation.micSilent -> tr("No se escucha nada. Revisa que el micrófono esté activo.", "I can't hear anything. Check that the microphone is on.")
+        listening && dictation.partial.isNotEmpty() -> dictation.partial
+        listening && target == RegTarget.VALUE -> tr("Escuchando… di un número, por ejemplo: doce", "Listening… say a number in Spanish, e.g. «doce»")
+        listening -> tr("Escuchando… toca el micrófono para terminar", "Listening… tap the microphone to finish")
+        numberHint.isNotEmpty() -> numberHint
+        type.isDuration && (value.replace(',', '.').toDoubleOrNull() ?: 0.0) >= 60 -> "= " + formatDuration((value.replace(',', '.').toDoubleOrNull() ?: 0.0).toInt())
+        else -> ""
+    }
+    if (hint.isNotEmpty()) Text(hint, color = Color.White, fontSize = 12.sp, lineHeight = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp))
+    if (listening) {
+        // Indicador de volumen: sube cuando el micrófono capta sonido.
+        Spacer(Modifier.height(4.dp))
+        Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(Color.White.copy(alpha = 0.2f))) {
+            Box(Modifier.fillMaxWidth(dictation.level.coerceAtLeast(0.02f)).fillMaxHeight().background(if (dictation.micSilent) CocoColors.Coral else CocoColors.Yellow))
+        }
+    }
+    if (type != HabitType.BEHAVIOR) {
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             StepButton("−1", Modifier.weight(1f)) { value = max(0.0, (value.replace(',', '.').toDoubleOrNull() ?: 0.0) - 1).toInt().toString() }
@@ -232,39 +261,45 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
         }
     }
     Spacer(Modifier.height(8.dp))
-    CocoButton("Guardar", onClick = { onSave(value.replace(',', '.').toDoubleOrNull(), note.takeIf { it.isNotBlank() }) }, enabled = !dictating && (type != HabitType.BEHAVIOR || note.isNotBlank()))
+    CocoButton(tr("Guardar", "Save"), onClick = { onSave(value.replace(',', '.').toDoubleOrNull(), note.takeIf { it.isNotBlank() }) }, enabled = !dictating && (type != HabitType.BEHAVIOR || note.isNotBlank()))
 }
 
-@Composable private fun Trends(records: List<HabitRecord>, selected: HabitType, period: String, onSelect: (HabitType) -> Unit, onPeriod: (String) -> Unit) {
-    ScreenTitle(R.drawable.ic_trending, CocoColors.Info, "Tendencias")
+@Composable private fun Trends(records: List<HabitRecord>, selected: HabitType, today: Boolean, onSelect: (HabitType) -> Unit, onToday: (Boolean) -> Unit) {
+    ScreenTitle(R.drawable.ic_trending, CocoColors.Info, tr("Tendencias", "Trends"))
     Spacer(Modifier.height(6.dp))
     HabitPicker(selected, onSelect)
     Spacer(Modifier.height(6.dp))
     CocoCard {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
-            listOf("Hoy", "7 días").forEach { label ->
-                FilterChip(
-                    selected = period == label, onClick = { onPeriod(label) }, label = { Text(label, fontWeight = FontWeight.Bold, fontSize = 13.sp) }, shape = RoundedCornerShape(10.dp),
-                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = CocoColors.Yellow, selectedLabelColor = CocoColors.Ink),
-                )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(true to tr("Hoy", "Today"), false to tr("7 días", "7 days")).forEach { (isToday, label) ->
+                val active = today == isToday
+                Box(
+                    Modifier.weight(1f).height(38.dp).clip(ControlShape)
+                        .background(if (active) CocoColors.Yellow else Color.Transparent)
+                        .border(1.5.dp, if (active) CocoColors.Ink else CocoColors.Line, ControlShape)
+                        .clickable { onToday(isToday) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    FitText(label, color = if (active) CocoColors.Ink else CocoColors.Text, fontSize = 13.sp, fontWeight = FontWeight.Bold, minSize = 10.sp, textAlign = TextAlign.Center)
+                }
             }
         }
-        val periodStart = if (period == "Hoy") java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() else System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
+        val periodStart = if (today) java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() else System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
         val values = records.filter { it.type == selected && it.value != null && it.recordedAt >= periodStart }.take(7).reversed().mapNotNull { it.value }
         Spacer(Modifier.height(6.dp))
-        if (values.isEmpty()) { Text("Aún no hay registros de ${selected.label}.", color = CocoColors.Secondary, fontSize = 12.sp) }
+        if (values.isEmpty()) { Text(tr("Aún no hay registros de ${selected.displayName}.", "No ${selected.displayName.lowercase()} records yet."), color = CocoColors.Secondary, fontSize = 12.sp) }
         else {
             val maxValue = (values.maxOrNull() ?: 1.0).coerceAtLeast(1.0)
-            // Las barras viven dentro de la tarjeta blanca: ninguna sobrepasa los 72 dp de alto.
+            // Las barras viven dentro de la tarjeta: ninguna sobrepasa los 72 dp de alto.
             Row(Modifier.fillMaxWidth().height(72.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
                 values.forEach { item -> Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
-                    Text(item.toInt().toString(), fontSize = 10.sp, color = CocoColors.Text, fontWeight = FontWeight.Bold, maxLines = 1)
+                    FitText(if (selected.isDuration) formatDurationShort(item.toInt()) else item.toInt().toString(), color = CocoColors.Text, fontSize = 10.sp, fontWeight = FontWeight.Bold, minSize = 7.sp, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(2.dp))
                     Box(Modifier.fillMaxWidth().height((46 * item / maxValue).coerceAtLeast(6.0).dp).clip(RoundedCornerShape(topStart = 5.dp, topEnd = 5.dp)).background(Color(selected.colorHex)))
                 } }
             }
             Spacer(Modifier.height(4.dp))
-            Text("Últimos ${values.size} registros · ${selected.unit}", color = CocoColors.Secondary, fontSize = 12.sp)
+            Text(tr("Últimos ${values.size} registros · ${selected.displayUnit}", "Last ${values.size} records · ${selected.displayUnit}"), color = CocoColors.Secondary, fontSize = 12.sp)
         }
     }
 }
@@ -272,7 +307,7 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
 @Composable private fun ProgressRow(label: String, value: Int, goal: Int) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label, color = CocoColors.Secondary, fontSize = 12.sp)
-        Text("$value de $goal", color = CocoColors.Text, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text(tr("$value de $goal", "$value of $goal"), color = CocoColors.Text, fontSize = 12.sp, fontWeight = FontWeight.Bold)
     }
     Spacer(Modifier.height(3.dp))
     Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(CocoColors.GreenLight).border(1.dp, CocoColors.Line, RoundedCornerShape(4.dp))) {
@@ -292,8 +327,8 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
     val maxDay = (perDay.maxOrNull() ?: 1).coerceAtLeast(1)
 
     CocoCard {
-        Text("Registros por variable", color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-        Text("Últimos 7 días", color = CocoColors.Secondary, fontSize = 11.sp)
+        Text(tr("Registros por variable", "Records by variable"), color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Text(tr("Últimos 7 días", "Last 7 days"), color = CocoColors.Secondary, fontSize = 11.sp)
         Spacer(Modifier.height(6.dp))
         perType.forEach { (type, count) ->
             Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -312,21 +347,22 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
     }
     Spacer(Modifier.height(6.dp))
     CocoCard {
-        Text("Registros por día", color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-        Text("Cuántas anotaciones hubo cada día", color = CocoColors.Secondary, fontSize = 11.sp, lineHeight = 14.sp)
+        Text(tr("Registros por día", "Records by day"), color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Text(tr("Cuántas anotaciones hubo cada día", "How many notes there were each day"), color = CocoColors.Secondary, fontSize = 11.sp, lineHeight = 14.sp)
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth().height(80.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.Bottom) {
             perDay.forEachIndexed { i, count ->
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
                     Text(count.toString(), fontSize = 10.sp, color = CocoColors.Text, fontWeight = FontWeight.Bold, maxLines = 1)
-                    Box(Modifier.fillMaxWidth().height((50 * count / maxDay.toFloat()).coerceAtLeast(4f).dp).clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)).background(if (i == 6) CocoColors.Brown else Color(0xFFC9A887)))
+                    Box(Modifier.fillMaxWidth().height((50 * count / maxDay.toFloat()).coerceAtLeast(4f).dp).clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)).background(if (i == 6) CocoColors.Yellow else Color(0xFFC9A887)))
                 }
             }
         }
         Spacer(Modifier.height(3.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             days.forEachIndexed { i, day ->
-                val name = if (i == 6) "hoy" else day.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale("es")).replace(".", "").take(3).lowercase()
+                val name = if (i == 6) tr("hoy", "today")
+                else day.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale(CocoSettings.language.code)).replace(".", "").take(3).lowercase()
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     FitText(name, color = CocoColors.Secondary, fontSize = 9.sp, minSize = 7.sp, textAlign = TextAlign.Center)
                 }
@@ -339,22 +375,23 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
     // Mismo mínimo que la web: al menos 10 observaciones en 3 días distintos.
     val days = records.map { SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date(it.recordedAt)) }.toSet().size
     val enough = records.size >= 10 && days >= 3
-    ScreenTitle(if (enough) R.drawable.ic_check else R.drawable.ic_info, if (enough) CocoColors.Normal else CocoColors.Info, "Análisis")
+    ScreenTitle(if (enough) R.drawable.ic_check else R.drawable.ic_info, if (enough) CocoColors.Normal else CocoColors.Info, tr("Análisis", "Analysis"))
     Spacer(Modifier.height(6.dp))
     CocoCard {
         Text(
-            if (enough) "Ya hay suficientes anotaciones para leer la rutina de Coquito." else "COCO todavía está conociendo la rutina de Coquito.",
+            if (enough) tr("Ya hay suficientes anotaciones para leer la rutina de Coquito.", "There are enough notes to read Coquito's routine.")
+            else tr("COCO todavía está conociendo la rutina de Coquito.", "COCO is still getting to know Coquito's routine."),
             color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 17.sp,
         )
         Spacer(Modifier.height(6.dp))
         if (enough) {
-            Text("Mira la lectura completa en la web, en la sección Análisis.", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
+            Text(tr("Mira la lectura completa en la web, en la sección Análisis.", "See the full reading on the web, in the Analysis section."), color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
         } else {
-            ProgressRow("Observaciones", min(records.size, 10), 10)
+            ProgressRow(tr("Observaciones", "Observations"), min(records.size, 10), 10)
             Spacer(Modifier.height(5.dp))
-            ProgressRow("Días distintos", min(days, 3), 3)
+            ProgressRow(tr("Días distintos", "Different days"), min(days, 3), 3)
             Spacer(Modifier.height(6.dp))
-            Text("Aún no hay suficiente información para hacer un análisis.", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
+            Text(tr("Aún no hay suficiente información para hacer un análisis.", "There isn't enough information for an analysis yet."), color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
         }
     }
     Spacer(Modifier.height(6.dp))
@@ -365,14 +402,14 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Icon(painterResource(R.drawable.ic_info), contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp).padding(top = 1.dp))
-        Text("COCO ayuda a observar; no realiza diagnósticos.", fontSize = 12.sp, lineHeight = 16.sp, color = Color.White)
+        Text(tr("COCO ayuda a observar; no realiza diagnósticos.", "COCO helps you observe; it does not diagnose."), fontSize = 12.sp, lineHeight = 16.sp, color = Color.White)
     }
 }
 
 @Composable private fun Summary(records: List<HabitRecord>) {
     val today = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
     val todaysRecords = records.filter { SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date(it.recordedAt)) == today }
-    ScreenTitle(R.drawable.ic_history, CocoColors.Green, "Resumen de hoy")
+    ScreenTitle(R.drawable.ic_history, CocoColors.Green, tr("Resumen de hoy", "Today's summary"))
     Spacer(Modifier.height(6.dp))
     CocoCard {
         HabitType.entries.forEach { type ->
@@ -380,8 +417,8 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
             Row(Modifier.fillMaxWidth().heightIn(min = 34.dp).padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 IconTile(type.iconRes(), Color(type.colorHex), 24.dp)
                 Column(Modifier.weight(1f)) {
-                    Text(type.label, color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 15.sp)
-                    Text(latest?.value?.let { "${it.toInt()} ${type.unit}" } ?: "Sin registros", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 14.sp)
+                    FitText(type.displayName, color = CocoColors.Text, fontSize = 13.sp, fontWeight = FontWeight.Bold, minSize = 9.sp)
+                    Text(latest?.value?.let { formatValue(type, it) } ?: tr("Sin registros", "No records"), color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 14.sp)
                 }
             }
         }
@@ -390,28 +427,71 @@ private enum class Section(val title: String, @DrawableRes val icon: Int, val la
 
 @Composable private fun Sync(pending: Int, syncState: SyncState, onSyncNow: () -> Unit) {
     val (statusText, statusColor, icon) = when (syncState) {
-        is SyncState.Idle       -> Triple("Todo guardado", CocoColors.Normal, R.drawable.ic_check)
-        is SyncState.Syncing    -> Triple("Enviando tus anotaciones…", CocoColors.Info, R.drawable.ic_refresh)
-        is SyncState.Synced     -> Triple("Todo guardado", CocoColors.Normal, R.drawable.ic_check)
-        is SyncState.PartialSync-> Triple("Se enviaron ${syncState.synced}; faltan ${syncState.remaining}", CocoColors.Attention, R.drawable.ic_alert)
-        is SyncState.Offline    -> Triple("Sin internet por ahora", CocoColors.Offline, R.drawable.ic_alert)
-        is SyncState.Failed     -> Triple("No pudimos enviar tus anotaciones", CocoColors.HighAttention, R.drawable.ic_alert)
+        is SyncState.Idle       -> Triple(tr("Todo guardado", "All saved"), CocoColors.Normal, R.drawable.ic_check)
+        is SyncState.Syncing    -> Triple(tr("Enviando tus anotaciones…", "Sending your notes…"), CocoColors.Info, R.drawable.ic_refresh)
+        is SyncState.Synced     -> Triple(tr("Todo guardado", "All saved"), CocoColors.Normal, R.drawable.ic_check)
+        is SyncState.PartialSync-> Triple(tr("Se enviaron ${syncState.synced}; faltan ${syncState.remaining}", "${syncState.synced} sent; ${syncState.remaining} left"), CocoColors.Attention, R.drawable.ic_alert)
+        is SyncState.Offline    -> Triple(tr("Sin internet por ahora", "No internet for now"), CocoColors.Offline, R.drawable.ic_alert)
+        is SyncState.Failed     -> Triple(tr("No pudimos enviar tus anotaciones", "We couldn't send your notes"), CocoColors.HighAttention, R.drawable.ic_alert)
     }
-    ScreenTitle(R.drawable.ic_refresh, CocoColors.Normal, "Sincronización")
+    ScreenTitle(R.drawable.ic_refresh, CocoColors.Normal, tr("Sincronización", "Sync"))
     Spacer(Modifier.height(6.dp))
     CocoCard {
-        Text("Tus anotaciones se guardan en el reloj aunque no haya internet.", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
+        Text(tr("Tus anotaciones se guardan en el reloj aunque no haya internet.", "Your notes are saved on the watch even without internet."), color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
         Spacer(Modifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconTile(icon, statusColor, 26.dp)
             Column(Modifier.weight(1f)) {
                 Text(statusText, color = statusColor, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 15.sp)
-                Text("$pending en espera de enviarse", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 14.sp)
+                Text(tr("$pending en espera de enviarse", "$pending waiting to be sent"), color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 14.sp)
             }
         }
     }
     Spacer(Modifier.height(6.dp))
-    CocoButton(if (syncState is SyncState.Syncing) "Enviando…" else "Enviar ahora", onClick = onSyncNow, enabled = syncState !is SyncState.Syncing)
+    CocoButton(if (syncState is SyncState.Syncing) tr("Enviando…", "Sending…") else tr("Enviar ahora", "Send now"), onClick = onSyncNow, enabled = syncState !is SyncState.Syncing)
     Spacer(Modifier.height(5.dp))
-    Text("COCO no diagnostica enfermedades.", color = Color.White, fontSize = 12.sp, textAlign = TextAlign.Center)
+    Text(tr("COCO no diagnostica enfermedades.", "COCO does not diagnose illnesses."), color = Color.White, fontSize = 12.sp, textAlign = TextAlign.Center)
+}
+
+/** Ajustes: idioma (español o inglés) y modo oscuro. Se guardan en el reloj. */
+@Composable private fun SettingsScreen() {
+    val context = LocalContext.current
+    ScreenTitle(R.drawable.ic_settings, CocoColors.Info, tr("Ajustes", "Settings"))
+    Spacer(Modifier.height(6.dp))
+    CocoCard {
+        Text(tr("Idioma", "Language"), color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Spacer(Modifier.height(6.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            AppLanguage.entries.forEach { language ->
+                val active = CocoSettings.language == language
+                Box(
+                    Modifier.weight(1f).height(38.dp).clip(ControlShape)
+                        .background(if (active) CocoColors.Yellow else Color.Transparent)
+                        .border(1.5.dp, if (active) CocoColors.Ink else CocoColors.Line, ControlShape)
+                        .clickable { CocoSettings.setLanguage(context, language) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    FitText(language.displayName, color = if (active) CocoColors.Ink else CocoColors.Text, fontSize = 13.sp, fontWeight = FontWeight.Bold, minSize = 10.sp, textAlign = TextAlign.Center)
+                }
+            }
+        }
+    }
+    Spacer(Modifier.height(6.dp))
+    CocoCard {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.weight(1f)) {
+                Text(tr("Modo oscuro", "Dark mode"), color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text(if (CocoSettings.dark) tr("Activado", "On") else tr("Apagado", "Off"), color = CocoColors.Secondary, fontSize = 12.sp)
+            }
+            Switch(
+                checked = CocoSettings.dark, onCheckedChange = { CocoSettings.setDark(context, it) },
+                colors = SwitchDefaults.colors(checkedThumbColor = CocoColors.Ink, checkedTrackColor = CocoColors.Yellow, checkedBorderColor = CocoColors.Ink),
+            )
+        }
+    }
+    Spacer(Modifier.height(6.dp))
+    Text(
+        tr("El dictado por voz sigue en español.", "Voice dictation stays in Spanish."),
+        color = Color.White, fontSize = 12.sp, lineHeight = 14.sp, textAlign = TextAlign.Center,
+    )
 }

@@ -25,8 +25,10 @@ object NetworkModule {
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor { chain ->
+                // El login no lleva token: si se manda uno vencido, el backend responde 401 aunque la clave sea correcta.
+                val isAuthCall = chain.request().url.encodedPath.contains("/api/auth/")
                 val request = chain.request().newBuilder().apply {
-                    accessToken()?.let { header("Authorization", "Bearer $it") }
+                    if (!isAuthCall) accessToken()?.let { header("Authorization", "Bearer $it") }
                 }.build()
                 chain.proceed(request)
             }

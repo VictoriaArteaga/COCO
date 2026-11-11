@@ -3,6 +3,8 @@ package com.coco.smartwatch.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.smartwatch.data.sync.SyncState
+import com.coco.smartwatch.design.displayName
+import com.coco.smartwatch.design.tr
 import com.coco.smartwatch.domain.model.HabitRecord
 import com.coco.smartwatch.domain.model.HabitType
 import com.coco.smartwatch.domain.repository.HabitRepository
@@ -49,7 +51,7 @@ class CocoViewModel(
         }
             .onSuccess { id ->
                 _lastSavedId.value = id
-                _message.value = "Guardado: ${type.label}."
+                _message.value = tr("Guardado: ${type.displayName}.", "Saved: ${type.displayName}.")
                 delay(5_000)
                 if (_lastSavedId.value == id) {
                     _lastSavedId.value = null
@@ -59,7 +61,7 @@ class CocoViewModel(
                 triggerSync()
             }
             .onFailure {
-                _message.value = "No pudimos guardar el registro. Inténtalo de nuevo."
+                _message.value = tr("No pudimos guardar el registro. Inténtalo de nuevo.", "We couldn't save the record. Try again.")
             }
     }
 
@@ -67,7 +69,7 @@ class CocoViewModel(
         _lastSavedId.value?.let {
             undo(it)
             _lastSavedId.value = null
-            _message.value = "Registro deshecho."
+            _message.value = tr("Registro deshecho.", "Record undone.")
         }
     }
 

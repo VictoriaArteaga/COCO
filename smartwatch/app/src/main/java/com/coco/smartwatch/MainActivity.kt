@@ -21,6 +21,7 @@ import com.coco.smartwatch.data.local.SessionStore
 import com.coco.smartwatch.data.remote.NetworkModule
 import com.coco.smartwatch.data.repository.HabitRepositoryImpl
 import com.coco.smartwatch.data.sync.SyncManager
+import com.coco.smartwatch.design.CocoSettings
 import com.coco.smartwatch.design.CocoTheme
 import com.coco.smartwatch.domain.usecase.GetHabitHistoryUseCase
 import com.coco.smartwatch.domain.usecase.RegisterHabitUseCase
@@ -75,6 +76,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CocoSettings.load(applicationContext)
 
         // Reset any records stuck in SYNCING state from a previous interrupted session.
         MainScope().launch { syncManager.resetInterruptedSyncs() }

@@ -9,6 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,24 +71,23 @@ val ControlShape = RoundedCornerShape(12.dp)
  *    último elemento queden cortados por la curva. En pantallas cuadradas los márgenes son pequeños.
  *  - El contenido se desplaza si no cabe y se centra verticalmente si sobra espacio.
  */
-@Composable fun CocoScreen(compact: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
+@Composable fun CocoScreen(content: @Composable ColumnScope.() -> Unit) {
     val round = LocalConfiguration.current.isScreenRound
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val factor = (min(maxWidth.value, maxHeight.value) / 227f).coerceIn(0.55f, 1.3f)
         val base = LocalDensity.current
         // fontScale limitado: con letra del sistema muy grande el texto sigue cabiendo (y se ajusta en varias líneas).
         CompositionLocalProvider(LocalDensity provides Density(base.density * factor, base.fontScale.coerceIn(0.85f, 1.15f))) {
-            ScaledScreen(round, compact, content)
+            ScaledScreen(round, content)
         }
     }
 }
 
-@Composable private fun ScaledScreen(round: Boolean, compact: Boolean, content: @Composable ColumnScope.() -> Unit) {
+@Composable private fun ScaledScreen(round: Boolean, content: @Composable ColumnScope.() -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(CocoColors.BrownLight, CocoColors.Brown)))) {
-        // compact (inicio): márgenes menores para que todo el menú quepa en una sola pantalla.
-        val side = if (round) maxWidth * (if (compact) 0.12f else 0.17f) else if (compact) 10.dp else 14.dp
-        val top = if (round) maxHeight * (if (compact) 0.07f else 0.17f) else if (compact) 8.dp else 12.dp
-        val bottom = if (round) maxHeight * (if (compact) 0.10f else 0.20f) else if (compact) 10.dp else 16.dp
+        val side = if (round) maxWidth * 0.17f else 14.dp
+        val top = if (round) maxHeight * 0.17f else 12.dp
+        val bottom = if (round) maxHeight * 0.20f else 16.dp
         val minContent = maxHeight - top - bottom
         val scrollState = rememberScrollState()
         val focus = remember { FocusRequester() }
@@ -107,6 +108,16 @@ val ControlShape = RoundedCornerShape(12.dp)
             )
         }
     }
+}
+
+/** Botón de micrófono para un campo de texto: marrón en reposo, coral mientras escucha. */
+@Composable fun MicIconButton(listening: Boolean, label: String, enabled: Boolean = true, onClick: () -> Unit) {
+    Box(
+        Modifier.size(32.dp).clip(androidx.compose.foundation.shape.CircleShape).background(if (listening) CocoColors.Coral else CocoColors.BrandBrown)
+            .semantics { contentDescription = if (listening) tr("Terminar de dictar: $label", "Stop dictating: $label") else tr("Dictar: $label", "Dictate: $label") }
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Icon(painterResource(R.drawable.ic_mic), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(18.dp)) }
 }
 
 /** Texto de una línea que se achica hasta caber en el ancho disponible (nunca se parte a mitad de palabra). */
@@ -168,11 +179,11 @@ val ControlShape = RoundedCornerShape(12.dp)
  * Fila táctil con mosaico de icono y etiqueta, sobre fondo blanco.
  * done = null: fila sin estado; true = ya registrada hoy (check verde); false = pendiente (reloj ámbar).
  */
-@Composable fun CocoRow(@DrawableRes icon: Int, color: Color, label: String, done: Boolean? = null, compact: Boolean = false, onClick: () -> Unit) {
-    Surface((if (compact) Modifier.fillMaxWidth().height(24.dp) else Modifier.fillMaxWidth().heightIn(min = 38.dp)).clickable(onClick = onClick), shape = ControlShape, color = CocoColors.Surface, border = BorderStroke(1.dp, CocoColors.Line)) {
-        Row(Modifier.padding(horizontal = 8.dp, vertical = if (compact) 0.dp else 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)) {
-            IconTile(icon, color, if (compact) 17.dp else 26.dp)
-            FitText(label, Modifier.weight(1f), color = CocoColors.Text, fontSize = if (compact) 11.sp else 12.sp, minSize = 10.sp, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold)
+@Composable fun CocoRow(@DrawableRes icon: Int, color: Color, label: String, done: Boolean? = null, onClick: () -> Unit) {
+    Surface(Modifier.fillMaxWidth().heightIn(min = 38.dp).clickable(onClick = onClick), shape = ControlShape, color = CocoColors.Surface, border = BorderStroke(1.dp, CocoColors.Line)) {
+        Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            IconTile(icon, color, 26.dp)
+            FitText(label, Modifier.weight(1f), color = CocoColors.Text, fontSize = 15.sp, minSize = 9.sp, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold)
             if (done != null) {
                 Icon(
                     painterResource(if (done) R.drawable.ic_check else R.drawable.ic_history),
@@ -191,12 +202,6 @@ val ControlShape = RoundedCornerShape(12.dp)
     }
 }
 
-/** Nombre corto para rotular los mosaicos del selector (el nombre completo sigue en el título de cada pantalla). */
-fun HabitType.shortLabel(): String = when (this) {
-    HabitType.FOOD -> "Comida"; HabitType.WATER -> "Agua"; HabitType.SLEEP -> "Sueño"
-    HabitType.PLAY -> "Juego"; HabitType.BEHAVIOR -> "Conducta"
-}
-
 /** Selector de variable: mosaicos de 40 dp que pasan a una segunda fila si no caben (nunca se salen de la pantalla). */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable fun HabitPicker(selected: HabitType, onSelect: (HabitType) -> Unit) {
@@ -209,7 +214,7 @@ fun HabitType.shortLabel(): String = when (this) {
                         .background(if (active) Color(type.colorHex) else Color(type.colorHex).copy(alpha = 0.6f))
                         .border(if (active) 2.dp else 1.dp, if (active) CocoColors.Ink else Color.White.copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
                     contentAlignment = Alignment.Center,
-                ) { Icon(painterResource(type.iconRes()), contentDescription = type.label, tint = Color.White, modifier = Modifier.size(22.dp)) }
+                ) { Icon(painterResource(type.iconRes()), contentDescription = type.displayName, tint = Color.White, modifier = Modifier.size(22.dp)) }
                 FitText(type.shortLabel(), color = Color.White, fontSize = 10.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal, minSize = 8.sp, textAlign = TextAlign.Center)
             }
         }

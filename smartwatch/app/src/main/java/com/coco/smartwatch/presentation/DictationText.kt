@@ -57,4 +57,45 @@ object DictationText {
         val joined = if (base.isEmpty()) spoken else "$base $spoken"
         return joined.take(maxLength)
     }
+
+    private val numberWords: Map<String, Int> = buildMap {
+        listOf("cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece",
+            "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve", "veinte").forEachIndexed { i, w -> put(w, i) }
+        put("un", 1); put("una", 1); put("dieciseis", 16)
+        listOf("veintiuno", "veintidós", "veintitrés", "veinticuatro", "veinticinco", "veintiséis", "veintisiete", "veintiocho", "veintinueve")
+            .forEachIndexed { i, w -> put(w, 21 + i) }
+        put("veintiun", 21); put("veintiún", 21); put("veintidos", 22); put("veintitres", 23); put("veintiseis", 26)
+        listOf("treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa").forEachIndexed { i, w -> put(w, 30 + 10 * i) }
+        put("cien", 100); put("ciento", 100)
+        listOf("doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos")
+            .forEachIndexed { i, w -> put(w, 200 + 100 * i) }
+    }
+
+    private fun wholeNumber(words: List<String>): Int? {
+        if (words.isEmpty()) return null
+        var total = 0; var current = 0
+        for (w in words) {
+            when {
+                w == "y" -> Unit
+                w == "mil" -> { total += (if (current == 0) 1 else current) * 1000; current = 0 }
+                w.all { it.isDigit() } -> current += w.toIntOrNull() ?: return null
+                else -> current += numberWords[w] ?: return null
+            }
+        }
+        return total + current
+    }
+
+    /**
+     * Convierte un número dicho en español ("doce", "veinticinco", "dos coma cinco", "ciento veinte") al texto
+     * del campo numérico ("12", "25", "2,5", "120"). Devuelve null si no se entiende o no cabe (máximo 99 999).
+     */
+    fun toNumber(spoken: String): String? {
+        val words = spoken.lowercase().trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        val split = words.indexOfFirst { it == "coma" || it == "punto" }
+        val whole = wholeNumber(if (split >= 0) words.take(split) else words) ?: return null
+        if (whole > 99_999) return null
+        if (split < 0) return whole.toString()
+        val decimal = wholeNumber(words.drop(split + 1)) ?: return null
+        return if (decimal in 0..9) "$whole,$decimal" else null
+    }
 }

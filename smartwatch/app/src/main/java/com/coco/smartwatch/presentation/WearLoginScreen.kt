@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
     mic: MicButton? = null, onChange: (String) -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 40.dp).clip(ControlShape).background(Color.White).border(1.dp, CocoColors.Line, ControlShape).padding(start = 12.dp, end = if (mic != null) 4.dp else 12.dp),
+        Modifier.fillMaxWidth().heightIn(min = 40.dp).clip(ControlShape).background(CocoColors.Surface).border(1.dp, CocoColors.Line, ControlShape).padding(start = 12.dp, end = if (mic != null) 4.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
@@ -59,8 +59,8 @@ import kotlinx.coroutines.launch
         }
         if (mic != null) {
             Box(
-                Modifier.size(32.dp).clip(CircleShape).background(if (mic.listening) CocoColors.Coral else CocoColors.Brown)
-                    .semantics { contentDescription = if (mic.listening) "Terminar de dictar: $hint" else "Dictar: $hint" }
+                Modifier.size(32.dp).clip(CircleShape).background(if (mic.listening) CocoColors.Coral else CocoColors.BrandBrown)
+                    .semantics { contentDescription = if (mic.listening) tr("Terminar de dictar: $hint", "Stop dictating: $hint") else tr("Dictar: $hint", "Dictate: $hint") }
                     .clickable(enabled = mic.enabled, onClick = mic.onClick),
                 contentAlignment = Alignment.Center,
             ) { Icon(painterResource(R.drawable.ic_mic), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(18.dp)) }
@@ -109,11 +109,12 @@ fun WearLoginScreen(api: CocoApiService, session: SessionStore, canChangeRabbit:
     // Ayuda bajo el campo que se está dictando (nunca muestra lo que se dice de la contraseña).
     val hintFor = { field: DictationTarget ->
         if (target != field) "" else when {
-            micDenied -> "Sin permiso del micrófono. Escríbelo."
-            dictation.state == DictationState.ERROR -> "No pudimos escuchar. Inténtalo otra vez o escribe."
-            dictation.state == DictationState.PREPARING -> "Preparando…"
-            listening && field == DictationTarget.EMAIL -> "Di: ana punto perez arroba gmail punto com"
-            listening -> "Di tu contraseña. «Mayúscula» antes de una palabra"
+            micDenied -> tr("Sin permiso del micrófono. Escríbelo.", "No microphone permission. Type it instead.")
+            dictation.state == DictationState.ERROR -> tr("No pudimos escuchar. Inténtalo otra vez o escribe.", "We couldn't hear you. Try again or type.")
+            dictation.state == DictationState.PREPARING -> tr("Preparando…", "Getting ready…")
+            listening && dictation.micSilent -> tr("No se escucha nada. Revisa que el micrófono esté activo.", "I can't hear anything. Check that the microphone is on.")
+            listening && field == DictationTarget.EMAIL -> tr("Di: ana punto perez arroba gmail punto com", "Say (in Spanish): ana punto perez arroba gmail punto com")
+            listening -> tr("Di tu contraseña. «Mayúscula» antes de una palabra", "Say your password in Spanish. «Mayúscula» before a word")
             else -> ""
         }
     }
@@ -122,29 +123,29 @@ fun WearLoginScreen(api: CocoApiService, session: SessionStore, canChangeRabbit:
         // Cabecera compacta: logo a color + nombre, para que todo quepa en la pantalla redonda
         LogoTile(44.dp)
         Text("COCO", fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, color = Color.White)
-        Text("Inicia sesión para empezar", fontSize = 12.sp, lineHeight = 14.sp, color = Color.White, textAlign = TextAlign.Center)
+        Text(tr("Inicia sesión para empezar", "Sign in to get started"), fontSize = 12.sp, lineHeight = 14.sp, color = Color.White, textAlign = TextAlign.Center)
         Spacer(Modifier.height(10.dp))
-        LoginField(email, "Correo", KeyboardType.Email, false, micFor(DictationTarget.EMAIL)) { email = it }
+        LoginField(email, tr("Correo", "Email"), KeyboardType.Email, false, micFor(DictationTarget.EMAIL)) { email = it }
         val emailHint = hintFor(DictationTarget.EMAIL)
         if (emailHint.isNotEmpty()) Text(emailHint, color = Color.White, fontSize = 12.sp, lineHeight = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 3.dp))
         Spacer(Modifier.height(6.dp))
-        LoginField(password, "Contraseña", KeyboardType.Password, true, micFor(DictationTarget.PASSWORD)) { password = it }
+        LoginField(password, tr("Contraseña", "Password"), KeyboardType.Password, true, micFor(DictationTarget.PASSWORD)) { password = it }
         val passwordHint = hintFor(DictationTarget.PASSWORD)
         if (passwordHint.isNotEmpty()) Text(passwordHint, color = Color.White, fontSize = 12.sp, lineHeight = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 3.dp))
         Spacer(Modifier.height(8.dp))
-        CocoButton(if (loading) "Conectando…" else "Iniciar sesión", enabled = !loading && !dictating && email.isNotBlank() && password.isNotBlank(), onClick = {
+        CocoButton(if (loading) tr("Conectando…", "Connecting…") else tr("Iniciar sesión", "Sign in"), enabled = !loading && !dictating && email.isNotBlank() && password.isNotBlank(), onClick = {
             scope.launch {
                 loading = true; message = ""; rabbits = emptyList()
                 try {
                     val login = api.login(LoginDto(email.trim(), password))
                     val token = login.body()?.token
-                    if (!login.isSuccessful || token == null) { message = "El correo o la contraseña no son correctos."; return@launch }
+                    if (!login.isSuccessful || token == null) { message = tr("El correo o la contraseña no son correctos.", "The email or password is incorrect."); return@launch }
                     session.saveToken(token)
                     val result = api.getRabbits()
-                    if (!result.isSuccessful) { message = if (result.code() == 401) "Tu sesión terminó. Inténtalo de nuevo." else "No pudimos cargar a tus conejos. Inténtalo de nuevo."; session.clear() }
-                    else if (result.body().isNullOrEmpty()) message = "Crea un conejo desde la web y vuelve a iniciar sesión."
-                    else { rabbits = result.body().orEmpty(); message = "Elige el conejo de este reloj." }
-                } catch (_: Exception) { message = "No pudimos conectar. Tus anotaciones siguen guardadas en el reloj." }
+                    if (!result.isSuccessful) { message = if (result.code() == 401) tr("Tu sesión terminó. Inténtalo de nuevo.", "Your session ended. Try again.") else tr("No pudimos cargar a tus conejos. Inténtalo de nuevo.", "We couldn't load your rabbits. Try again."); session.clear() }
+                    else if (result.body().isNullOrEmpty()) message = tr("Crea un conejo desde la web y vuelve a iniciar sesión.", "Create a rabbit on the web and sign in again.")
+                    else { rabbits = result.body().orEmpty(); message = tr("Elige el conejo de este reloj.", "Choose this watch's rabbit.") }
+                } catch (_: Exception) { message = tr("No pudimos conectar. Tus anotaciones siguen guardadas en el reloj.", "We couldn't connect. Your notes are still saved on the watch.") }
                 finally { loading = false }
             }
         })
@@ -158,7 +159,7 @@ fun WearLoginScreen(api: CocoApiService, session: SessionStore, canChangeRabbit:
                 CocoRabbitRow(rabbit.name) {
                     scope.launch {
                         if (session.rabbitId != null && session.rabbitId != rabbit.id && !canChangeRabbit()) {
-                            message = "Primero envía las anotaciones en espera; después podrás cambiar de conejo."
+                            message = tr("Primero envía las anotaciones en espera; después podrás cambiar de conejo.", "Send the pending notes first; then you can switch rabbits.")
                         } else {
                             session.selectRabbit(rabbit.id)
                             onPaired()
