@@ -27,6 +27,11 @@ android {
             "\"${System.getenv("BACKEND_URL") ?: "http://10.0.2.2:8080/"}\""
         )
 
+        // Modo demo (opcional): si ambas variables existen al compilar, la app entra sola a esa cuenta
+        // y oculta el inicio de sesión. No se guardan en el repositorio; quedan dentro del APK generado.
+        buildConfigField("String", "DEMO_EMAIL", "\"${System.getenv("DEMO_EMAIL") ?: ""}\"")
+        buildConfigField("String", "DEMO_PASSWORD", "\"${System.getenv("DEMO_PASSWORD") ?: ""}\"")
+
         // Placeholder rabbit ID — will be replaced by the authenticated user's rabbit in week 5.
     }
 

@@ -12,6 +12,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import com.coco.smartwatch.BuildConfig
+import androidx.compose.runtime.LaunchedEffect
+import com.coco.smartwatch.data.demo.DemoSession
+import com.coco.smartwatch.presentation.CocoConnecting
+import kotlinx.coroutines.delay
 import com.coco.smartwatch.data.local.CocoDatabase
 import com.coco.smartwatch.data.local.SessionStore
 import com.coco.smartwatch.data.remote.NetworkModule
@@ -75,10 +79,23 @@ class MainActivity : ComponentActivity() {
         // Reset any records stuck in SYNCING state from a previous interrupted session.
         MainScope().launch { syncManager.resetInterruptedSyncs() }
 
+        val demo = BuildConfig.DEMO_EMAIL.isNotBlank() && BuildConfig.DEMO_PASSWORD.isNotBlank()
+        val demoSession = if (demo) DemoSession(apiService, sessionStore, database.habitDao(), BuildConfig.DEMO_EMAIL, BuildConfig.DEMO_PASSWORD) else null
+
         setContent {
             CocoTheme {
                 var paired by remember { mutableStateOf(sessionStore.isPaired) }
-                if (paired) CocoApp(viewModel) { sessionStore.logout(); paired = false }
+                if (demoSession != null) {
+                    // Demo: sin pantalla de inicio de sesión; entra sola y renueva la sesión mientras la app está abierta.
+                    LaunchedEffect(Unit) {
+                        while (true) {
+                            val ok = try { demoSession.connect() } catch (_: Exception) { false }
+                            if (ok) { paired = true; syncManager.sync() }
+                            delay(if (ok) DemoSession.REFRESH_MS else 10_000L)
+                        }
+                    }
+                    if (paired) CocoApp(viewModel, showLogout = false) else CocoConnecting()
+                } else if (paired) CocoApp(viewModel) { sessionStore.logout(); paired = false }
                 else WearLoginScreen(apiService, sessionStore, { database.habitDao().pendingCount() == 0 }) { paired = true }
             }
         }

@@ -9,6 +9,8 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.GET
+import retrofit2.http.Query
+import com.coco.smartwatch.data.remote.dto.HabitPageDto
 
 /**
  * Interfaz Retrofit para la API REST del backend COCO.
@@ -21,6 +23,10 @@ interface CocoApiService {
 
     @GET("api/rabbits")
     suspend fun getRabbits(): Response<List<RabbitDto>>
+
+    /** Descarga registros de la cuenta (paginado, del más reciente al más antiguo). */
+    @GET("api/habits")
+    suspend fun listHabits(@Query("page") page: Int, @Query("size") size: Int): Response<HabitPageDto>
 
     /**
      * Envía un lote de registros pendientes al backend para sincronización.

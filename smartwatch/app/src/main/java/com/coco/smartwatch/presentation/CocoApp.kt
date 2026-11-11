@@ -44,12 +44,20 @@ import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
 
-private enum class Section(val title: String, @DrawableRes val icon: Int) {
+private enum class Section(val title: String, @DrawableRes val icon: Int, val label: String = title) {
     HOME("Inicio", R.drawable.ic_home), REGISTER("Registrar", R.drawable.ic_plus), TRENDS("Tendencias", R.drawable.ic_trending),
-    ANALYSIS("Análisis", R.drawable.ic_search), SUMMARY("Resumen", R.drawable.ic_history), SYNC("Sincronización", R.drawable.ic_refresh)
+    ANALYSIS("Análisis", R.drawable.ic_search), SUMMARY("Resumen", R.drawable.ic_history), SYNC("Sincronización", R.drawable.ic_refresh, label = "Sincronizar")
 }
 
-@Composable fun CocoApp(viewModel: CocoViewModel, onLogout: () -> Unit = {}) {
+/** Pantalla breve mientras el modo demo entra a la cuenta. */
+@Composable fun CocoConnecting() {
+    CocoScreen {
+        Spacer(Modifier.height(40.dp))
+        Text("Conectando con Coquito…", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+@Composable fun CocoApp(viewModel: CocoViewModel, showLogout: Boolean = true, onLogout: () -> Unit = {}) {
     var section by remember { mutableStateOf(Section.HOME) }
     var selectedType by remember { mutableStateOf(HabitType.FOOD) }
     var trendPeriod by remember { mutableStateOf("7 días") }
@@ -59,9 +67,9 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
     val syncState by viewModel.syncState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     val types = HabitType.entries
-    CocoScreen {
+    CocoScreen(compact = section == Section.HOME) {
         when (section) {
-            Section.HOME -> Home(types, records) { selectedType = it; section = Section.REGISTER }
+            Section.HOME -> Home(types) { selectedType = it; section = Section.REGISTER }
             Section.REGISTER -> Registration(selectedType, onType = { selectedType = it }, onSave = { value, note -> viewModel.save(selectedType, value, note); haptic.performHapticFeedback(HapticFeedbackType.LongPress); section = Section.HOME })
             Section.TRENDS -> Trends(records, selectedType, trendPeriod, { selectedType = it }, { trendPeriod = it })
             Section.ANALYSIS -> Analysis(records)
@@ -84,9 +92,9 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
                 }
             }
         }
-        Spacer(Modifier.height(10.dp))
-        SectionBar(section) { section = it }
-        TextButton(onClick = onLogout, modifier = Modifier.heightIn(min = 40.dp)) {
+        Spacer(Modifier.height(if (section == Section.HOME) 6.dp else 10.dp))
+        SectionBar(section, compact = section == Section.HOME) { section = it }
+        if (showLogout) TextButton(onClick = onLogout, modifier = Modifier.heightIn(min = 40.dp)) {
             Icon(painterResource(R.drawable.ic_logout), contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
             Spacer(Modifier.width(6.dp))
             Text("Cerrar sesión", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
@@ -95,19 +103,38 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
 }
 
 /** Navegación inferior: 2 filas de 3 iconos que se reparten el ancho disponible (siempre caben). El activo es amarillo. */
-@Composable private fun SectionBar(current: Section, onSelect: (Section) -> Unit) {
+@Composable private fun SectionBar(current: Section, compact: Boolean = false, onSelect: (Section) -> Unit) {
+    if (compact) {
+        // Inicio: una sola fila de 6 iconos (sin nombres) para que todo quepa sin bajar.
+        Row(Modifier.widthIn(max = 132.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            Section.entries.forEach { item ->
+                val active = item == current
+                val shape = RoundedCornerShape(8.dp)
+                Box(
+                    Modifier.weight(1f).height(22.dp).clip(shape).background(if (active) CocoColors.Yellow else Color.White.copy(alpha = 0.16f))
+                        .border(1.dp, if (active) CocoColors.Ink else Color.White.copy(alpha = 0.45f), shape).clickable { onSelect(item) },
+                    contentAlignment = Alignment.Center,
+                ) { Icon(painterResource(item.icon), contentDescription = item.title, tint = if (active) CocoColors.Ink else Color(0xFFFFF4E8), modifier = Modifier.size(13.dp)) }
+            }
+        }
+        return
+    }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Section.entries.chunked(3).forEach { rowItems ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 rowItems.forEach { item ->
                     val active = item == current
                     val shape = RoundedCornerShape(10.dp)
-                    Box(
-                        Modifier.weight(1f).height(38.dp).clip(shape).background(if (active) CocoColors.Yellow else Color.White.copy(alpha = 0.16f))
+                    val tint = if (active) CocoColors.Ink else Color(0xFFFFF4E8)
+                    Column(
+                        Modifier.weight(1f).height(48.dp).clip(shape).background(if (active) CocoColors.Yellow else Color.White.copy(alpha = 0.16f))
                             .border(1.5.dp, if (active) CocoColors.Ink else Color.White.copy(alpha = 0.45f), shape)
-                            .clickable { onSelect(item) },
-                        contentAlignment = Alignment.Center,
-                    ) { Icon(painterResource(item.icon), contentDescription = item.title, tint = if (active) CocoColors.Ink else Color(0xFFFFF4E8), modifier = Modifier.size(20.dp)) }
+                            .clickable { onSelect(item) }.padding(horizontal = 2.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
+                    ) {
+                        Icon(painterResource(item.icon), contentDescription = item.title, tint = tint, modifier = Modifier.size(18.dp))
+                        FitText(item.label, color = tint, fontSize = 10.sp, fontWeight = FontWeight.Bold, minSize = 8.sp, textAlign = TextAlign.Center)
+                    }
                 }
             }
         }
@@ -117,30 +144,18 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
 @Composable private fun ScreenTitle(@DrawableRes icon: Int, color: Color, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
         IconTile(icon, color, 24.dp)
-        Text(text, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 18.sp, color = Color.White, modifier = Modifier.weight(1f, fill = false))
+        FitText(text, Modifier.weight(1f, fill = false), color = Color.White, fontSize = 16.sp, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold)
     }
 }
 
-@Composable private fun Home(types: List<HabitType>, records: List<HabitRecord>, onRecord: (HabitType) -> Unit) {
-    // Rutina de hoy: qué variables ya tienen un registro desde las 00:00
-    val startOfDay = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
-    val doneToday = records.filter { it.recordedAt >= startOfDay }.map { it.type }.toSet()
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
-        LogoTile(24.dp)
-        Text("Hola, soy Coquito", fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 18.sp, color = Color.White, modifier = Modifier.weight(1f, fill = false))
-    }
-    Spacer(Modifier.height(4.dp))
-    Text(
-        if (doneToday.size == types.size) "¡Rutina completa por hoy!" else "Hoy: ${doneToday.size} de ${types.size} registradas",
-        color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
-    )
-    Spacer(Modifier.height(4.dp))
-    Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = 0.2f)).border(1.dp, Color.White.copy(alpha = 0.45f), RoundedCornerShape(4.dp))) {
-        Box(Modifier.fillMaxWidth(doneToday.size / types.size.toFloat()).fillMaxHeight().background(CocoColors.Yellow))
+@Composable private fun Home(types: List<HabitType>, onRecord: (HabitType) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally)) {
+        LogoTile(20.dp)
+        FitText("Hola, soy Coquito", Modifier.weight(1f, fill = false), color = Color.White, fontSize = 14.sp, fontFamily = CocoFonts.Display, fontWeight = FontWeight.SemiBold, minSize = 10.sp)
     }
     Spacer(Modifier.height(6.dp))
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        types.forEach { type -> CocoRow(type.iconRes(), Color(type.colorHex), type.label, done = type in doneToday) { onRecord(type) } }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        types.forEach { type -> CocoRow(type.iconRes(), Color(type.colorHex), type.label, compact = true) { onRecord(type) } }
     }
 }
 
@@ -265,6 +280,61 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
     }
 }
 
+/** Gráficas de la semana (igual que la web): registros por variable y registros por día de los últimos 7 días. */
+@Composable private fun AnalysisCharts(records: List<HabitRecord>) {
+    val zone = java.time.ZoneId.systemDefault()
+    val today = java.time.LocalDate.now(zone)
+    val days = (6 downTo 0).map { today.minusDays(it.toLong()) }
+    val week = records.filter { r -> java.time.Instant.ofEpochMilli(r.recordedAt).atZone(zone).toLocalDate() in days.first()..today }
+    val perDay = days.map { d -> week.count { java.time.Instant.ofEpochMilli(it.recordedAt).atZone(zone).toLocalDate() == d } }
+    val perType = HabitType.entries.map { t -> t to week.count { it.type == t } }
+    val maxType = (perType.maxOfOrNull { it.second } ?: 1).coerceAtLeast(1)
+    val maxDay = (perDay.maxOrNull() ?: 1).coerceAtLeast(1)
+
+    CocoCard {
+        Text("Registros por variable", color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Text("Últimos 7 días", color = CocoColors.Secondary, fontSize = 11.sp)
+        Spacer(Modifier.height(6.dp))
+        perType.forEach { (type, count) ->
+            Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                IconTile(type.iconRes(), Color(type.colorHex), 18.dp)
+                Column(Modifier.weight(1f)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        FitText(type.shortLabel(), Modifier.weight(1f, fill = false), color = CocoColors.Text, fontSize = 11.sp, fontWeight = FontWeight.Bold, minSize = 8.sp)
+                        Text(if (count == 0) "—" else count.toString(), color = CocoColors.Secondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(CocoColors.GreenLight)) {
+                        Box(Modifier.fillMaxWidth(count / maxType.toFloat()).fillMaxHeight().clip(RoundedCornerShape(3.dp)).background(Color(type.colorHex)))
+                    }
+                }
+            }
+        }
+    }
+    Spacer(Modifier.height(6.dp))
+    CocoCard {
+        Text("Registros por día", color = CocoColors.Text, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Text("Cuántas anotaciones hubo cada día", color = CocoColors.Secondary, fontSize = 11.sp, lineHeight = 14.sp)
+        Spacer(Modifier.height(6.dp))
+        Row(Modifier.fillMaxWidth().height(80.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.Bottom) {
+            perDay.forEachIndexed { i, count ->
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
+                    Text(count.toString(), fontSize = 10.sp, color = CocoColors.Text, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Box(Modifier.fillMaxWidth().height((50 * count / maxDay.toFloat()).coerceAtLeast(4f).dp).clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)).background(if (i == 6) CocoColors.Brown else Color(0xFFC9A887)))
+                }
+            }
+        }
+        Spacer(Modifier.height(3.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            days.forEachIndexed { i, day ->
+                val name = if (i == 6) "hoy" else day.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale("es")).replace(".", "").take(3).lowercase()
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    FitText(name, color = CocoColors.Secondary, fontSize = 9.sp, minSize = 7.sp, textAlign = TextAlign.Center)
+                }
+            }
+        }
+    }
+}
+
 @Composable private fun Analysis(records: List<HabitRecord>) {
     // Mismo mínimo que la web: al menos 10 observaciones en 3 días distintos.
     val days = records.map { SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date(it.recordedAt)) }.toSet().size
@@ -287,6 +357,8 @@ private enum class Section(val title: String, @DrawableRes val icon: Int) {
             Text("Aún no hay suficiente información para hacer un análisis.", color = CocoColors.Secondary, fontSize = 12.sp, lineHeight = 16.sp)
         }
     }
+    Spacer(Modifier.height(6.dp))
+    AnalysisCharts(records)
     Spacer(Modifier.height(6.dp))
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.14f)).border(1.dp, Color.White.copy(alpha = 0.4f), RoundedCornerShape(10.dp)).padding(horizontal = 8.dp, vertical = 5.dp),
